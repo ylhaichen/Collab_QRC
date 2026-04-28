@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import os
 import sys
+from pathlib import Path
 
 # sys.path must be amended BEFORE the `from modules.*` imports below — when
 # ros2 launch loads this file it doesn't add the launch dir to sys.path.
@@ -31,7 +32,7 @@ if _here not in sys.path:
 
 import xacro
 import yaml
-from ament_index_python.packages import get_package_share_directory
+from ament_index_python.packages import PackageNotFoundError, get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
@@ -45,6 +46,7 @@ from launch.actions import (
 from launch.event_handlers import OnProcessExit
 from launch.substitutions import LaunchConfiguration, TextSubstitution
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 from modules import _find_mujoco_plugin_dir
 from modules.assets import build_dual_robot_stack, build_namespaced_robot_description
@@ -57,6 +59,16 @@ def _as_bool(v: str) -> bool:
 
 def _get(ctx, key: str) -> str:
     return LaunchConfiguration(key).perform(ctx)
+
+
+def _workspace_root() -> Path:
+    for candidate in (Path(__file__).resolve(), Path.cwd()):
+        for parent in (candidate, *candidate.parents):
+            if (parent / "scripts" / "runtime").is_dir() and (parent / "src").is_dir():
+                return parent
+    # Symlink-install launches normally hit the source tree above. This
+    # fallback preserves the old relative assumption for unusual installs.
+    return Path(__file__).resolve().parents[4]
 
 
 # Executables we KEEP visible on the terminal when `debug:=true`. Everything
@@ -342,6 +354,27 @@ def _build_sensor_bridges(ns: str, mjcf_path: str, base_body: str, imu_site: str
     ]
 
 
+def _build_robot_state_publisher(ns: str, robot_description: str, use_sim_time: bool):
+    """Minimal TF publisher for sensor/SLAM-only validation runs."""
+    return Node(
+        package="robot_state_publisher",
+        executable="robot_state_publisher",
+        namespace=ns,
+        parameters=[
+            {"robot_description": ParameterValue(robot_description, value_type=str)},
+            {"use_tf_static": False},
+            {"publish_frequency": 200.0},
+            {"ignore_timestamp": True},
+            {"use_sim_time": use_sim_time},
+        ],
+        remappings=[
+            ("/tf", f"/{ns}/tf"),
+            ("/tf_static", f"/{ns}/tf_static"),
+        ],
+        output="screen",
+    )
+
+
 def _build_fastlio_nav_stack(
     *,
     ns: str,
@@ -353,9 +386,15 @@ def _build_fastlio_nav_stack(
     slam_delay: float,
     nav_delay: float,
     go2w_config_pkg: str,
+    slam_config_path: str,
+    adapter_num_rings: int,
+    adapter_min_vert_angle_deg: float,
+    adapter_max_vert_angle_deg: float,
     local_planner_paths_dir: str,
     far_tuning_yaml: str,
     far_default_yaml: str,
+    octomap_min_z: float = 0.20,
+    enable_nav: bool = True,
     has_wheels: bool = True,
     peer_namespaces: list | None = None,
 ):
@@ -492,7 +531,9 @@ def _build_fastlio_nav_stack(
                 {"use_sim_time": use_sim_time},
                 {"input_topic": fastlio_input_topic},
                 {"output_topic": f"/{ns}/velodyne_points"},
-                {"num_rings": 16},
+                {"num_rings": adapter_num_rings},
+                {"min_vert_angle_deg": adapter_min_vert_angle_deg},
+                {"max_vert_angle_deg": adapter_max_vert_angle_deg},
             ],
             output="screen",
         )
@@ -563,14 +604,13 @@ def _build_fastlio_nav_stack(
         )
 
     # ── Fast-LIO2 SLAM ──
-    slam_config = os.path.join(go2w_config_pkg, "config", "slam", "pointlio_gazebo.yaml")
     slam_nodes = [
         Node(
             package="fast_lio",
             executable="fastlio_mapping",
             namespace=ns,
             name="slam_node",
-            parameters=[slam_config, {"use_sim_time": use_sim_time}],
+            parameters=[slam_config_path, {"use_sim_time": use_sim_time}],
             # Fast-LIO hard-codes a `camera_init -> body` TF
             # (laserMapping.cpp:654). Letting it hit /{ns}/tf gives `body`
             # two parents (ours: base_link, Fast-LIO's: camera_init) and
@@ -650,9 +690,9 @@ def _build_fastlio_nav_stack(
             "sensor_model.miss": 0.35,
             "sensor_model.min": 0.12,
             "sensor_model.max": 0.97,
-            "point_cloud_min_z": 0.20,
+            "point_cloud_min_z": octomap_min_z,
             "point_cloud_max_z": 1.10,
-            "occupancy_min_z": 0.20,
+            "occupancy_min_z": octomap_min_z,
             "occupancy_max_z": 1.00,
             # filter_ground_plane would need min_z <= 0 to see ground; our
             # min_z=0.20 already excludes the floor, so leave ground-filter
@@ -693,8 +733,8 @@ def _build_fastlio_nav_stack(
     #    own occupancy representation, peer contributions arrive via
     #    /merged_map (or whatever swarm-comm channel replaces it on
     #    real hardware) and get reconciled into the local map.
-    map_augmenter_script = os.path.expanduser(
-        "~/Collab_QRC/scripts/runtime/map_augmenter.py"
+    map_augmenter_script = str(
+        _workspace_root() / "scripts" / "runtime" / "map_augmenter.py"
     )
     actions.append(
         TimerAction(
@@ -715,6 +755,9 @@ def _build_fastlio_nav_stack(
             ],
         )
     )
+
+    if not enable_nav:
+        return actions
 
     # ── A* / Hybrid A* branch: nav_node + twist_bridge (+ hybrid_router on Go2W) ──
     # Both backends share the same I/O contract and supporting infra — they
@@ -1400,6 +1443,7 @@ def _launch_setup(context):
     gui = _as_bool(_get(context, "gui"))
     rviz = _as_bool(_get(context, "rviz"))
     explore = _as_bool(_get(context, "explore"))
+    slam_only = _as_bool(_get(context, "slam_only"))
     cleanup_stale = _as_bool(_get(context, "cleanup_stale"))
     debug = _as_bool(_get(context, "debug"))
     map_merge_enabled = _as_bool(_get(context, "map_merge"))
@@ -1429,6 +1473,8 @@ def _launch_setup(context):
     if nav_backend_b not in _allowed:
         raise ValueError(
             f"nav_backend_b must be one of {_allowed}, got '{nav_backend_b}'")
+    if slam_only:
+        explore = False
 
     go2_gazebo_pkg = get_package_share_directory("go2_gazebo_sim")
     go2w_config_pkg = get_package_share_directory("go2w_config")
@@ -1471,11 +1517,16 @@ def _launch_setup(context):
     far_tuning_yaml = os.path.join(go2w_config_pkg, "config", "nav", "far_planner_tuning.yaml")
     far_default_yaml = os.path.join(far_pkg, "config", "default.yaml")
     local_planner_paths_dir = os.path.join(local_planner_pkg, "paths")
+    slam_config_l1 = os.path.join(go2w_config_pkg, "config", "slam", "pointlio_gazebo_l1.yaml")
+    slam_config_mid360 = os.path.join(go2w_config_pkg, "config", "slam", "pointlio_gazebo_mid360.yaml")
+    workspace_root = _workspace_root()
 
     mujoco_plugin_dir = _find_mujoco_plugin_dir()
     sim_ns = "mujoco_sim"
 
     actions = [LogInfo(msg="[nav_test_mujoco_fastlio_mixed] starting heterogeneous dual-robot nav (Go2W + Go2)")]
+    if slam_only:
+        actions.append(LogInfo(msg="[nav_test_mujoco_fastlio_mixed] slam_only:=true — starting MuJoCo, RSP, sensor bridges, Fast-LIO, octomap; skipping CHAMP/controller/nav/explore stacks"))
 
     # ── T=0: cleanup stale ──
     if cleanup_stale:
@@ -1538,63 +1589,74 @@ def _launch_setup(context):
     # gives mujoco_ros2_control time to come up before controller_manager
     # service calls begin, and staggers A's spawners before B's to avoid
     # load_controller service-timeout races.
-    robot_a_stack = build_dual_robot_stack(
-        ns="robot_a",
-        spawn_x="4.0", spawn_y="2.0", spawn_yaw="0.0",
-        use_sim_time=use_sim_time,
-        robot_description=robot_a_urdf,
-        joints_config=joints_a, links_config=links_a,
-        gait_config=gait_config,
-        ekf_base_to_footprint=ekf_base,
-        ekf_footprint_to_odom=ekf_odom,
-        activate_controllers_on_spawn=True,
-        stand_up_joint_preset="go2",
-        cmd_vel_input_topic="cmd_vel_legged",
-        wheel_controller_name="robot_a_wheel_velocity_controller",
-        use_mujoco=True,
-        controller_manager_name=f"/{sim_ns}/controller_manager",
-    )
-    actions.append(TimerAction(period=7.0, actions=robot_a_stack))
+    if slam_only:
+        actions.append(
+            TimerAction(
+                period=6.5,
+                actions=[
+                    _build_robot_state_publisher("robot_a", robot_a_urdf, use_sim_time),
+                    _build_robot_state_publisher("robot_b", robot_b_urdf, use_sim_time),
+                ],
+            )
+        )
+    else:
+        robot_a_stack = build_dual_robot_stack(
+            ns="robot_a",
+            spawn_x="4.0", spawn_y="2.0", spawn_yaw="0.0",
+            use_sim_time=use_sim_time,
+            robot_description=robot_a_urdf,
+            joints_config=joints_a, links_config=links_a,
+            gait_config=gait_config,
+            ekf_base_to_footprint=ekf_base,
+            ekf_footprint_to_odom=ekf_odom,
+            activate_controllers_on_spawn=True,
+            stand_up_joint_preset="go2",
+            cmd_vel_input_topic="cmd_vel_legged",
+            wheel_controller_name="robot_a_wheel_velocity_controller",
+            use_mujoco=True,
+            controller_manager_name=f"/{sim_ns}/controller_manager",
+        )
+        actions.append(TimerAction(period=7.0, actions=robot_a_stack))
 
-    robot_b_stack = build_dual_robot_stack(
-        ns="robot_b",
-        spawn_x="4.0", spawn_y="-6.0", spawn_yaw="0.0",
-        use_sim_time=use_sim_time,
-        robot_description=robot_b_urdf,
-        joints_config=joints_b, links_config=links_b,
-        gait_config=gait_config,
-        ekf_base_to_footprint=ekf_base,
-        ekf_footprint_to_odom=ekf_odom,
-        activate_controllers_on_spawn=True,
-        stand_up_joint_preset="go2",
-        # robot_b's joints in the MJCF / ros2_control yaml are b-prefixed
-        # (b_FL_hip_joint, b_FL_thigh_joint, ...). Without this prefix,
-        # stand_up_slowly publishes unprefixed joint names to the
-        # /mujoco_sim/robot_b_joint_group_effort_controller/joint_trajectory
-        # topic, which the controller rejects with
-        # "Incoming joint FL_hip_joint doesn't match the controller's joints."
-        # → standup never fires → robot_b stays in MJCF default pose.
-        stand_up_joint_prefix="b_",
-        # Go2 has no wheels → no hybrid router → CHAMP subscribes to /cmd_vel
-        # directly (no need for a cmd_vel → cmd_vel_legged relay).
-        cmd_vel_input_topic="cmd_vel",
-        wheel_controller_name=None,
-        use_mujoco=True,
-        controller_manager_name=f"/{sim_ns}/controller_manager",
-    )
-    actions.append(TimerAction(period=10.0, actions=robot_b_stack))
+        robot_b_stack = build_dual_robot_stack(
+            ns="robot_b",
+            spawn_x="4.0", spawn_y="-6.0", spawn_yaw="0.0",
+            use_sim_time=use_sim_time,
+            robot_description=robot_b_urdf,
+            joints_config=joints_b, links_config=links_b,
+            gait_config=gait_config,
+            ekf_base_to_footprint=ekf_base,
+            ekf_footprint_to_odom=ekf_odom,
+            activate_controllers_on_spawn=True,
+            stand_up_joint_preset="go2",
+            # robot_b's joints in the MJCF / ros2_control yaml are b-prefixed
+            # (b_FL_hip_joint, b_FL_thigh_joint, ...). Without this prefix,
+            # stand_up_slowly publishes unprefixed joint names to the
+            # /mujoco_sim/robot_b_joint_group_effort_controller/joint_trajectory
+            # topic, which the controller rejects with
+            # "Incoming joint FL_hip_joint doesn't match the controller's joints."
+            # → standup never fires → robot_b stays in MJCF default pose.
+            stand_up_joint_prefix="b_",
+            # Go2 has no wheels → no hybrid router → CHAMP subscribes to /cmd_vel
+            # directly (no need for a cmd_vel → cmd_vel_legged relay).
+            cmd_vel_input_topic="cmd_vel",
+            wheel_controller_name=None,
+            use_mujoco=True,
+            controller_manager_name=f"/{sim_ns}/controller_manager",
+        )
+        actions.append(TimerAction(period=10.0, actions=robot_b_stack))
 
     # ── Per-robot Fast-LIO + FAR nav stacks ──
-    slam_delay = 20.0   # after both standups complete
+    slam_delay = 10.0 if slam_only else 20.0   # after RSP/sensors or both standups
     nav_delay = slam_delay + 5.0
 
     actions.extend(
         _build_fastlio_nav_stack(
             ns="robot_a",
             # Plugin publishes under /mujoco_sim/ — the sim's controller_manager
-            # namespace — NOT per-robot. Robot A's LiDAR site is "livox_mid360"
-            # (no prefix), so the topic is /mujoco_sim/mujoco_lidar_sensor/
-            # registered_scan.
+            # namespace — NOT per-robot. Robot A's LiDAR site is
+            # "unitree_l1" (the plugin prefers it over livox_mid360), so
+            # the topic remains /mujoco_sim/mujoco_lidar_sensor/registered_scan.
             mujoco_lidar_topic="/mujoco_sim/mujoco_lidar_sensor/registered_scan",
             # Robot A's URDF uses bare link names (no prefix) — its TF tree
             # has `base_link` as the root and `imu` as the IMU link.
@@ -1605,9 +1667,15 @@ def _launch_setup(context):
             slam_delay=slam_delay,
             nav_delay=nav_delay,
             go2w_config_pkg=go2w_config_pkg,
+            slam_config_path=slam_config_l1,
+            adapter_num_rings=60,
+            adapter_min_vert_angle_deg=0.0,
+            adapter_max_vert_angle_deg=90.0,
             local_planner_paths_dir=local_planner_paths_dir,
             far_tuning_yaml=far_tuning_yaml,
             far_default_yaml=far_default_yaml,
+            octomap_min_z=0.20,
+            enable_nav=not slam_only,
             has_wheels=True,  # robot_a = Go2W
             peer_namespaces=["robot_b"],
         )
@@ -1630,9 +1698,15 @@ def _launch_setup(context):
             slam_delay=slam_delay,
             nav_delay=nav_delay,
             go2w_config_pkg=go2w_config_pkg,
+            slam_config_path=slam_config_mid360,
+            adapter_num_rings=20,
+            adapter_min_vert_angle_deg=-7.0,
+            adapter_max_vert_angle_deg=52.0,
             local_planner_paths_dir=local_planner_paths_dir,
             far_tuning_yaml=far_tuning_yaml,
             far_default_yaml=far_default_yaml,
+            octomap_min_z=0.30,
+            enable_nav=not slam_only,
             has_wheels=False,  # robot_b = Go2 (no wheels)
             peer_namespaces=["robot_a"],
         )
@@ -1696,8 +1770,8 @@ def _launch_setup(context):
     #    planner-stuck, plus the legacy inter-robot collision pair tracker.
     #    Same script name kept for backward-compatible launch wiring; see
     #    dual_robot_collision_monitor.py for the expanded checker stack.
-    collision_monitor_script = os.path.expanduser(
-        "~/Collab_QRC/scripts/runtime/dual_robot_collision_monitor.py"
+    collision_monitor_script = str(
+        workspace_root / "scripts" / "runtime" / "dual_robot_collision_monitor.py"
     )
     collision_args = [
         "python3", "-u", collision_monitor_script,
@@ -1708,26 +1782,25 @@ def _launch_setup(context):
     ]
     if collision_output:
         collision_args += ["--output", collision_output]
-    actions.append(
-        TimerAction(
-            period=3.5,  # right after MuJoCo comes up (T=3)
-            actions=[
-                ExecuteProcess(
-                    cmd=collision_args,
-                    name="dual_robot_collision_monitor",
-                    output="screen",
-                ),
-            ],
+    if not slam_only:
+        actions.append(
+            TimerAction(
+                period=3.5,  # right after MuJoCo comes up (T=3)
+                actions=[
+                    ExecuteProcess(
+                        cmd=collision_args,
+                        name="dual_robot_collision_monitor",
+                        output="screen",
+                    ),
+                ],
+            )
         )
-    )
 
     # ── Session reporter(s) ──
     # Per-robot reporter if session_duration_sec > 0 and output dir given.
     if session_duration_sec > 0 and session_output_dir:
         os.makedirs(session_output_dir, exist_ok=True)
-        reporter_script = os.path.expanduser(
-            "~/Collab_QRC/scripts/bench/session_reporter.py"
-        )
+        reporter_script = str(workspace_root / "scripts" / "bench" / "session_reporter.py")
         last_reporter = None
         for ns in ("robot_a", "robot_b"):
             out_path = os.path.join(session_output_dir, f"{ns}.json")
@@ -1768,54 +1841,67 @@ def _launch_setup(context):
     # message from each, writes a params YAML, and exits. An OnProcessExit
     # handler chains the map_merge node onto that exit.
     if map_merge_enabled:
-        bootstrap_script = os.path.expanduser(
-            "~/Collab_QRC/scripts/runtime/bootstrap_map_merge_poses.py"
-        )
-        merge_params_path = "/tmp/map_merge_params.yaml"
-        bootstrap_proc = ExecuteProcess(
-            cmd=[
-                "python3", "-u", bootstrap_script,
-                "--robots", "robot_a", "robot_b",
-                "--gt-topic-suffix", "odom/ground_truth",
-                "--output", merge_params_path,
-                "--timeout-sec", "30",
-                "--merged-map-topic", "merged_map",
-                "--merging-rate", "2.0",
-                "--discovery-rate", "0.5",
-            ],
-            name="bootstrap_map_merge_poses",
-            output="screen",
-        )
-        map_merge_node = Node(
-            package="multirobot_map_merge",
-            executable="map_merge",
-            name="map_merge",
-            parameters=[merge_params_path, {"use_sim_time": use_sim_time}],
-            output="screen",
-        )
-        actions.append(TimerAction(period=slam_delay + 2.0, actions=[bootstrap_proc]))
-
-        def _on_bootstrap_exit(event, _context):
-            rc = getattr(event, "returncode", None)
-            if rc == 0:
-                return [map_merge_node]
-            return [
+        try:
+            get_package_share_directory("multirobot_map_merge")
+        except PackageNotFoundError:
+            actions.append(
                 LogInfo(
                     msg=(
-                        f"[map_merge] bootstrap_map_merge_poses exited with "
-                        f"code {rc}; skipping map_merge (no valid init poses)."
+                        "[map_merge] package 'multirobot_map_merge' not found; "
+                        "skipping map_merge. Per-robot map_augmenter will pass "
+                        "local octomap output through to /robot_*/map."
                     )
                 )
-            ]
+            )
+        else:
+            bootstrap_script = str(
+                workspace_root / "scripts" / "runtime" / "bootstrap_map_merge_poses.py"
+            )
+            merge_params_path = "/tmp/map_merge_params.yaml"
+            bootstrap_proc = ExecuteProcess(
+                cmd=[
+                    "python3", "-u", bootstrap_script,
+                    "--robots", "robot_a", "robot_b",
+                    "--gt-topic-suffix", "odom/ground_truth",
+                    "--output", merge_params_path,
+                    "--timeout-sec", "30",
+                    "--merged-map-topic", "merged_map",
+                    "--merging-rate", "2.0",
+                    "--discovery-rate", "0.5",
+                ],
+                name="bootstrap_map_merge_poses",
+                output="screen",
+            )
+            map_merge_node = Node(
+                package="multirobot_map_merge",
+                executable="map_merge",
+                name="map_merge",
+                parameters=[merge_params_path, {"use_sim_time": use_sim_time}],
+                output="screen",
+            )
+            actions.append(TimerAction(period=slam_delay + 2.0, actions=[bootstrap_proc]))
 
-        actions.append(
-            RegisterEventHandler(
-                OnProcessExit(
-                    target_action=bootstrap_proc,
-                    on_exit=_on_bootstrap_exit,
+            def _on_bootstrap_exit(event, _context):
+                rc = getattr(event, "returncode", None)
+                if rc == 0:
+                    return [map_merge_node]
+                return [
+                    LogInfo(
+                        msg=(
+                            f"[map_merge] bootstrap_map_merge_poses exited with "
+                            f"code {rc}; skipping map_merge (no valid init poses)."
+                        )
+                    )
+                ]
+
+            actions.append(
+                RegisterEventHandler(
+                    OnProcessExit(
+                        target_action=bootstrap_proc,
+                        on_exit=_on_bootstrap_exit,
+                    )
                 )
             )
-        )
 
     # ── RViz ──
     # Namespaced /tf is invisible to RViz's default global /tf listener. We
@@ -1898,6 +1984,14 @@ def generate_launch_description():
         DeclareLaunchArgument("gui", default_value="false"),
         DeclareLaunchArgument("rviz", default_value="false"),
         DeclareLaunchArgument("explore", default_value="true"),
+        DeclareLaunchArgument(
+            "slam_only", default_value="false",
+            description=(
+                "Sensor/SLAM validation mode: run MuJoCo, per-robot RSP, "
+                "sensor bridges, Fast-LIO and octomap, but skip CHAMP "
+                "controllers, stand-up, nav planners and CFPA2."
+            ),
+        ),
         DeclareLaunchArgument("cleanup_stale", default_value="true"),
         DeclareLaunchArgument(
             "map_merge", default_value="true",

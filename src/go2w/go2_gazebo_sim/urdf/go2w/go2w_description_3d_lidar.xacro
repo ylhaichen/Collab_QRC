@@ -10,6 +10,24 @@
   
   <!-- Instantiate Livox MID-360 LiDAR attached to IMU frame -->
   <xacro:livox_mid360 parent="imu" name="livox_mid360"/>
+
+  <!-- Simulated Unitree L1 / UTLidar frame.
+       The mixed MuJoCo scene uses this frame for robot_a (Go2W) to model
+       the weaker built-in LiDAR while robot_b keeps the Mid-360.  It is a
+       TF-only frame: the actual raycast is produced by the MuJoCo plugin
+       from the matching MJCF site. -->
+  <link name="unitree_l1">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.001"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
+    </inertial>
+  </link>
+  <joint name="unitree_l1_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="unitree_l1"/>
+    <origin xyz="0.29 0 -0.04" rpy="0 0 0"/>
+  </joint>
   
 
   <link name="base">

@@ -176,7 +176,7 @@ namespace mujoco_ros2_sensors {
         const int mid360_hz = env_int("MUJOCO_LIDAR_HZ_SAMPLES", 1000);
         const int mid360_vt = env_int("MUJOCO_LIDAR_VT_SAMPLES", 20);
         const std::vector<std::pair<std::string, LidarSensorConfig>> known_lidars = {
-            {"unitree_l1", {"unitree_l1", "base_link", "livox_mid360",
+            {"unitree_l1", {"unitree_l1", "base_link", "unitree_l1",
                             360, 60, 360.0, 0.0, 90.0, 0.1, 20.0, 11.0}},
             {"livox_mid360", {"livox_mid360", "base_link", "livox_mid360",
                               mid360_hz, mid360_vt, 360.0, -7.0, 52.0, 0.1, 40.0, 10.0}},

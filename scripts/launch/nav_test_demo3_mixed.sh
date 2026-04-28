@@ -9,6 +9,7 @@
 #   ./scripts/launch/nav_test_demo3_mixed.sh                        # Go2W=astar, Go2=astar
 #   ./scripts/launch/nav_test_demo3_mixed.sh gui:=true rviz:=true
 #   ./scripts/launch/nav_test_demo3_mixed.sh explore:=false         # manual goals only
+#   ./scripts/launch/nav_test_demo3_mixed.sh slam_only:=true explore:=false  # sensor/SLAM validation
 #   ./scripts/launch/nav_test_demo3_mixed.sh nav_backend_a:=far nav_backend_b:=far  # both FAR
 #   ./scripts/launch/nav_test_demo3_mixed.sh nav_backend_b:=far     # mixed: A=astar, B=FAR
 #   ./scripts/launch/nav_test_demo3_mixed.sh debug:=true            # nav-only diagnostic terminal:

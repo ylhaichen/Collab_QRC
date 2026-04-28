@@ -32,15 +32,24 @@ class PointCloudAdapter(Node):
         self.declare_parameter('input_topic', '/registered_scan')
         self.declare_parameter('output_topic', '/velodyne_points')
         self.declare_parameter('num_rings', 16)
+        self.declare_parameter('min_vert_angle_deg', -15.0)
+        self.declare_parameter('max_vert_angle_deg', 15.0)
 
         input_topic = self.get_parameter('input_topic').value
         output_topic = self.get_parameter('output_topic').value
         self.num_rings = self.get_parameter('num_rings').value
+        min_vert_angle_deg = float(self.get_parameter('min_vert_angle_deg').value)
+        max_vert_angle_deg = float(self.get_parameter('max_vert_angle_deg').value)
+        if self.num_rings < 1:
+            raise ValueError('num_rings must be >= 1')
+        if max_vert_angle_deg <= min_vert_angle_deg:
+            raise ValueError('max_vert_angle_deg must be greater than min_vert_angle_deg')
 
-        # Compute ring boundaries from URDF vertical FOV: -15° to +15°
-        self.min_vert_angle = -15.0 * math.pi / 180.0
-        self.max_vert_angle = 15.0 * math.pi / 180.0
-        self.ring_step = (self.max_vert_angle - self.min_vert_angle) / self.num_rings
+        # Compute ring boundaries from the simulated LiDAR vertical FOV.
+        # Go2W L1 and Go2 Mid-360 use different vertical spans in MuJoCo.
+        self.min_vert_angle = min_vert_angle_deg * math.pi / 180.0
+        self.max_vert_angle = max_vert_angle_deg * math.pi / 180.0
+        self.ring_step = (self.max_vert_angle - self.min_vert_angle) / max(self.num_rings - 1, 1)
 
         # Subscribe with BestEffort (Gazebo default)
         qos_sub = QoSProfile(
@@ -63,7 +72,8 @@ class PointCloudAdapter(Node):
         self.msg_count = 0
         self.get_logger().info(
             f'PointCloud adapter: {input_topic} -> {output_topic} '
-            f'(adding ring/time fields, {self.num_rings} rings)'
+            f'(adding ring/time fields, {self.num_rings} rings, '
+            f'vertical FOV {min_vert_angle_deg:.1f}..{max_vert_angle_deg:.1f} deg)'
         )
 
     def callback(self, msg: PointCloud2):
@@ -101,10 +111,8 @@ class PointCloudAdapter(Node):
         # Compute ring from vertical angle
         xy_range = np.sqrt(x*x + y*y)
         vert_angle = np.arctan2(z, np.maximum(xy_range, 1e-6))
-        ring = np.clip(
-            ((vert_angle - self.min_vert_angle) / self.ring_step).astype(np.uint16),
-            0, self.num_rings - 1
-        )
+        ring_float = np.rint((vert_angle - self.min_vert_angle) / self.ring_step)
+        ring = np.clip(ring_float, 0, self.num_rings - 1).astype(np.uint16)
 
         # Time field: Gazebo gpu_ray captures all points instantaneously,
         # but Fast-LIO needs varying per-point timestamps for scan sorting and

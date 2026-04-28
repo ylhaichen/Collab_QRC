@@ -32,6 +32,7 @@ import math
 import os
 import signal
 import sys
+import threading
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -650,8 +651,14 @@ class SessionReporter(Node):
 
     def _finalize_and_exit(self, code: int) -> None:
         if getattr(self, "_already_finalized", False):
-            return
+            sys.stdout.flush()
+            sys.stderr.flush()
+            os._exit(code)
         self._already_finalized = True
+        # In some ROS/sandbox combinations stdout/stderr flushing during
+        # launch shutdown can block after the JSON has been written. Arm a
+        # hard process exit before final printing so OnProcessExit cannot hang.
+        threading.Timer(1.0, lambda: os._exit(code)).start()
         self._flush_json(final=True)
         try:
             self.destroy_node()

@@ -1,8 +1,10 @@
 """Assets/spawn-domain launch builders."""
 
 import yaml
+from pathlib import Path
 from xml.dom import minidom
 
+from ament_index_python.packages import PackageNotFoundError, get_package_share_directory
 from launch.actions import ExecuteProcess, RegisterEventHandler, TimerAction
 from launch.event_handlers import OnProcessExit
 from launch_ros.actions import Node
@@ -293,36 +295,45 @@ def build_dual_robot_stack(
     # CHAMP's state_estimation_node namespaces frame IDs (e.g. "robot/odom",
     # "robot/base_footprint") which don't match the EKF's expected bare frames.
     # In MuJoCo mode, mujoco_odom_bridge provides ground-truth odom→base_link
-    # TF instead, so EKF TF is disabled to avoid conflicts.
-    base_to_footprint_ekf = Node(
-        package="robot_localization",
-        executable="ekf_node",
-        namespace=ns,
-        name="base_to_footprint_ekf",
-        parameters=[
-            _load_ekf_params(ekf_base_to_footprint),
-            {"base_link_frame": "base_link"},
-            {"use_sim_time": use_sim_time},
-            {"publish_tf": not use_mujoco},
-        ],
-        remappings=tf_remaps + [("odometry/filtered", "odom/local")],
-        output="screen",
-    )
-
-    footprint_to_odom_ekf = Node(
-        package="robot_localization",
-        executable="ekf_node",
-        namespace=ns,
-        name="footprint_to_odom_ekf",
-        parameters=[
-            _load_ekf_params(ekf_footprint_to_odom),
-            {"base_link_frame": "base_link"},
-            {"use_sim_time": use_sim_time},
-            {"publish_tf": not use_mujoco},
-        ],
-        remappings=tf_remaps + [("odometry/filtered", "odom")],
-        output="screen",
-    )
+    # TF instead, so EKF TF is disabled to avoid conflicts.  Some minimal sim
+    # environments do not have ros-humble-robot-localization installed; skip
+    # these optional EKFs there instead of aborting the whole launch.
+    ekf_nodes = []
+    try:
+        get_package_share_directory("robot_localization")
+    except PackageNotFoundError:
+        pass
+    else:
+        ekf_nodes = [
+            Node(
+                package="robot_localization",
+                executable="ekf_node",
+                namespace=ns,
+                name="base_to_footprint_ekf",
+                parameters=[
+                    _load_ekf_params(ekf_base_to_footprint),
+                    {"base_link_frame": "base_link"},
+                    {"use_sim_time": use_sim_time},
+                    {"publish_tf": not use_mujoco},
+                ],
+                remappings=tf_remaps + [("odometry/filtered", "odom/local")],
+                output="screen",
+            ),
+            Node(
+                package="robot_localization",
+                executable="ekf_node",
+                namespace=ns,
+                name="footprint_to_odom_ekf",
+                parameters=[
+                    _load_ekf_params(ekf_footprint_to_odom),
+                    {"base_link_frame": "base_link"},
+                    {"use_sim_time": use_sim_time},
+                    {"publish_tf": not use_mujoco},
+                ],
+                remappings=tf_remaps + [("odometry/filtered", "odom")],
+                output="screen",
+            ),
+        ]
 
     spawn_entity_node = Node(
         package="go2w_spawn",
@@ -378,9 +389,11 @@ def build_dual_robot_stack(
     # stays UNCONFIGURED, stand_up_slowly blocks forever. Our spawner takes
     # a configurable (default 60 s) per-call timeout and treats
     # "already-loaded" as benign. See docs/claude/go2_integration.md:385.
-    import os
-    _ROBUST_SPAWNER = os.path.expanduser(
-        "~/Collab_QRC/scripts/runtime/robust_controller_spawner.py"
+    _ROBUST_SPAWNER = str(
+        Path(__file__).resolve().parents[5]
+        / "scripts"
+        / "runtime"
+        / "robust_controller_spawner.py"
     )
 
     def _robust_spawner_cmd(controller_name: str) -> list:
@@ -473,9 +486,8 @@ def build_dual_robot_stack(
         stack_actions += [
             quadruped_controller_node,
             state_estimator_node,
-            base_to_footprint_ekf,
-            footprint_to_odom_ekf,
         ]
+        stack_actions += ekf_nodes
     stack_actions += [
         TimerAction(period=joint_state_spawner_delay_sec, actions=[load_joint_state_controller]),
         TimerAction(period=effort_spawner_delay_sec, actions=[load_joint_effort_controller]),

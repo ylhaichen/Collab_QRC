@@ -268,11 +268,11 @@
       <site name="livox_mid360" pos="0.16143 0 0.12262" euler="0 0.2269 0" size="0.01"/>
       <!-- Unitree 4D LiDAR-L1: real mounting is at the CHIN of Go2/Go2W.
            Hemispherical (0°–90° vert), 360 h-rays, 11 Hz.
-           To use L1: uncomment this site (plugin prefers it over MID-360).
-           To use MID-360: keep this commented out.
+           Enabled here for robot_a only: this sim models Go2W with its
+           weaker built-in L1 while robot_b keeps the better Mid-360.
            NOTE: chin position requires adjusting pointcloud_to_laserscan
            min_height to filter ground hits at closer range (LiDAR is lower). -->
-      <!-- <site name="unitree_l1" pos="0.29 0 -0.04" euler="0 0 0" size="0.01"/> -->
+      <site name="unitree_l1" pos="0.29 0 -0.04" euler="0 0 0" size="0.01"/>
 
       <!-- Front camera: on Head_upper (0.285,0,0.01), offset +0.015 fwd, -0.02 down,
            pitched down 5 deg. 1280x720, 120 deg HFOV (matches real Go2 specs).
