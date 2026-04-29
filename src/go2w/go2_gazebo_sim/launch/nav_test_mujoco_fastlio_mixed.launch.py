@@ -30,6 +30,12 @@ _here = os.path.dirname(os.path.abspath(__file__))
 if _here not in sys.path:
     sys.path.insert(0, _here)
 
+# Workspace root resolved via the launch file's realpath — symlink-install
+# means __file__ points into install/, but the actual src lives at
+# <ws>/src/go2w/go2_gazebo_sim/launch/. Walk 4 dirs up to <ws>/. Used to
+# locate scripts under <ws>/scripts/ that aren't installed as a ROS package.
+_ws_root = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "..", "..", ".."))
+
 import xacro
 import yaml
 from ament_index_python.packages import PackageNotFoundError, get_package_share_directory
@@ -324,10 +330,17 @@ def _build_sensor_bridges(ns: str, mjcf_path: str, base_body: str, imu_site: str
                 "base_body_name": base_body,
                 "odom_frame": "odom",
                 "base_frame": base_body,
-                # Fast-LIO needs to own the map→odom→base_link chain.
-                # Setting publish_tf=True here gives an early odom→base_link
-                # identity TF so Fast-LIO has something to seed from.
-                "publish_tf": True,
+                # 2026-04-29: TF chain ownership moved to fast_lio_tf_adapter
+                # (publishes map→base_link from Fast-LIO's `/<ns>/Odometry`).
+                # mujoco_odom_bridge keeps publishing the *topic*
+                # /<ns>/odom/ground_truth for sim-only consumers
+                # (collision_monitor / session_reporter / GT bootstrap), but
+                # NO LONGER writes TF — sim and real now share the same TF
+                # source (Fast-LIO via adapter). Without this change, sim's
+                # mujoco_odom_bridge would compete with the adapter on the
+                # same `odom→base_link` link, producing duplicate TFs and
+                # confusing TF lookups.
+                "publish_tf": False,
                 "pose_topic": f"/mujoco_sim/{pose_sensor}/pose",
                 "imu_topic": f"/mujoco_sim/{imu_sensor}/imu",
                 "republish_imu_topic": "imu/data",
@@ -397,6 +410,7 @@ def _build_fastlio_nav_stack(
     enable_nav: bool = True,
     has_wheels: bool = True,
     peer_namespaces: list | None = None,
+    loop_closure: bool = False,
 ):
     """Per-robot Fast-LIO + octomap + FAR nav stack.
 
@@ -626,27 +640,116 @@ def _build_fastlio_nav_stack(
             ],
             output="screen",
         ),
-        # slam_odom_relay: renames Fast-LIO's Odometry topic for nav consumption
-        Node(
-            package="go2w_perception",
-            executable="slam_odom_relay.py",
-            namespace=ns,
-            name="slam_odom_relay",
-            parameters=[{
-                "use_sim_time": use_sim_time,
-                "input_topic": f"/{ns}/Odometry",
-                "gt_topic": f"/{ns}/odom/ground_truth",
-                "output_topic": f"/{ns}/odom/nav",
-                "output_frame_id": "world",
-                "output_child_frame_id": base_frame,
-                "bootstrap_from_gt": True,
-                "require_gt_for_alignment": True,
-            }],
-            remappings=tf_remaps,
+        # fast_lio_tf_adapter: replaces both slam_odom_relay (frame
+        # remap) and the mujoco_odom_bridge's TF role. Subscribes
+        # Fast-LIO's `/<ns>/Odometry` (frame camera_init→body), applies
+        # one-shot GT bootstrap so map frame's origin aligns with the
+        # world origin, then publishes:
+        #   - /<ns>/odom/nav         (Odometry, frame=map child=base_link)
+        #   - TF map → base_link     (the canonical pose for Nav2)
+        # Real-robot compatible: doesn't depend on mujoco_odom_bridge or
+        # CHAMP's broken state_estimation/odom_raw chain. On real, the
+        # same code path runs; with SC-PGO ported (loop_closure:=true),
+        # adapter prefers /<ns>/corrected_odom over raw when fresh.
+        ExecuteProcess(
+            cmd=[
+                "python3", "-u",
+                os.path.join(_ws_root, "scripts/runtime/fast_lio_tf_adapter.py"),
+                "--ros-args",
+                "-p", f"namespace:={ns}",
+                "-p", f"use_sim_time:={'true' if use_sim_time else 'false'}",
+                "-p", "input_topic:=Odometry",
+                "-p", "output_topic:=odom/nav",
+                # TF parent must match local_costmap's `global_frame: odom`.
+                # The static `map → odom = identity` from the launch's TF
+                # publishers connects this to the map frame for global
+                # planning. With GT bootstrap the alignment offset (dx,
+                # dy, yaw_offset) is baked into the published pose, so
+                # robot's pose in `odom` already equals world coords.
+                "-p", "output_frame_id:=odom",
+                "-p", f"output_child_frame_id:={base_frame}",
+                "-p", "publish_tf:=true",
+                "-p", "bootstrap_from_gt:=true",
+                "-p", "gt_topic:=odom/ground_truth",
+                "-p", "corrected_topic:=corrected_odom",
+                # TransformBroadcaster publishes to global /tf by default;
+                # in this namespaced dual-robot setup, all consumers
+                # subscribe /<ns>/tf. Without this remap, the adapter's
+                # TF is invisible to nav2 (Could not find a connection
+                # between 'odom' and 'base_link').
+                "-r", f"/tf:=/{ns}/tf",
+                "-r", f"/tf_static:=/{ns}/tf_static",
+            ],
+            name=f"fast_lio_tf_adapter_{ns}",
             output="screen",
         ),
     ]
     actions.append(TimerAction(period=slam_delay, actions=slam_nodes))
+
+    # ── Optional: SC-PGO loop-closure post-processor on top of Fast-LIO ──
+    # Toggle via `loop_closure:=true` launch arg. When enabled, attempts to
+    # spawn `sc_pgo_node` from the `sc_pgo` package; subscribes to the
+    # raw Fast-LIO outputs and publishes /{ns}/corrected_odom which
+    # slam_odom_relay prefers over the raw stream. If sc_pgo is not built
+    # (currently the case — vendored sources are ROS 1, see
+    # src/vendor/sc_pgo/COLCON_IGNORE), the toggle silently logs a warn
+    # and continues without correction. This keeps the toggle as a
+    # forward-compatible knob: once sc_pgo is ported and built, just flip
+    # `loop_closure:=true` to engage. Per-namespace because dual-robot
+    # configs need independent PGO graphs.
+    if loop_closure:
+        try:
+            import ament_index_python.packages as _ament_pkg
+            _sc_pgo_share = _ament_pkg.get_package_share_directory("sc_pgo")
+            _sc_pgo_config_candidates = [
+                os.path.join(_sc_pgo_share, "config", "sc_pgo_params.yaml"),
+                os.path.join(_sc_pgo_share, "config", "params.yaml"),
+            ]
+            _sc_pgo_config = next(
+                (p for p in _sc_pgo_config_candidates if os.path.exists(p)),
+                None,
+            )
+            if _sc_pgo_config:
+                actions.append(
+                    TimerAction(
+                        period=slam_delay + 3.0,
+                        actions=[
+                            Node(
+                                package="sc_pgo",
+                                executable="sc_pgo_node",
+                                namespace=ns,
+                                name="sc_pgo",
+                                parameters=[
+                                    _sc_pgo_config,
+                                    {"use_sim_time": use_sim_time},
+                                ],
+                                remappings=[
+                                    ("/aft_mapped_to_init", f"/{ns}/Odometry"),
+                                    ("/cloud_registered", f"/{ns}/cloud_registered_body"),
+                                    ("/corrected_odom", f"/{ns}/corrected_odom"),
+                                    ("/corrected_path", f"/{ns}/corrected_path"),
+                                    ("/corrected_cloud", f"/{ns}/corrected_cloud"),
+                                    ("/corrected_map", f"/{ns}/corrected_map"),
+                                ] + tf_remaps,
+                                output="screen",
+                            ),
+                        ],
+                    )
+                )
+            else:
+                actions.append(LogInfo(msg=(
+                    f"[nav_test_mujoco_fastlio_mixed] loop_closure:=true for ns={ns} "
+                    f"but no sc_pgo_params.yaml found in {_sc_pgo_share}/config/. "
+                    f"Skipping SC-PGO; Fast-LIO2 runs open-loop."
+                )))
+        except Exception as _e:
+            actions.append(LogInfo(msg=(
+                f"[nav_test_mujoco_fastlio_mixed] loop_closure:=true requested for "
+                f"ns={ns} but `sc_pgo` package is not built ({_e}). Skipping SC-PGO; "
+                f"Fast-LIO2 runs open-loop. To enable: port "
+                f"src/vendor/sc_pgo/ to ROS 2 humble (catkin → ament_cmake), "
+                f"remove its COLCON_IGNORE, and rebuild."
+            )))
 
     # ── pointcloud_frame_bridge: body-frame Fast-LIO cloud → map frame for FAR ──
     actions.append(
@@ -942,6 +1045,218 @@ def _build_fastlio_nav_stack(
                 )
             )
         actions.append(TimerAction(period=nav_delay, actions=astar_nodes))
+        return actions
+
+    # ── Nav2 MPPI branch: planner_server + controller_server + ─────────
+    # behavior_server + bt_navigator + lifecycle_manager + the
+    # CFPA2-way_point → Nav2-goal_pose bridge + hybrid_cmd_router. The
+    # full Nav2 stack runs INSIDE this namespace via PushRosNamespace +
+    # RewrittenYaml so per-robot params load correctly. CFPA2 is still
+    # the goal source (via /<ns>/way_point_coord); the bridge synthesises
+    # an orientation pointing toward the goal and republishes as
+    # PoseStamped on /<ns>/goal_pose for bt_navigator to pick up.
+    if nav_backend == "nav2_mppi":
+        from launch_ros.actions import PushRosNamespace
+        from nav2_common.launch import RewrittenYaml
+
+        # Per-platform Nav2 yaml. Go2W (has_wheels=True) uses the wheeled
+        # config (0.70 × 0.40 m footprint, vx_max=0.50, MPPI tuned for
+        # skid-steer wheel mode). Go2 (legged-only) uses the slimmer
+        # 0.65 × 0.30 m footprint, vx_max=0.30, minimum_turning_radius=
+        # 0.05 (CHAMP can pivot in place). Same plugins (SmacHybrid +
+        # MPPI), different geometry/velocity caps.
+        _nav2_yaml_filename = (
+            "nav2_go2w_full_stack.yaml" if has_wheels
+            else "nav2_go2_full_stack.yaml"
+        )
+        nav2_yaml = os.path.join(
+            go2w_config_pkg, "config", "nav", _nav2_yaml_filename
+        )
+        rewritten_nav2 = RewrittenYaml(
+            source_file=nav2_yaml,
+            root_key=ns,
+            param_rewrites={"use_sim_time": str(use_sim_time).lower()},
+            convert_types=True,
+        )
+
+        nav2_inner_nodes = [
+            PushRosNamespace(ns),
+            Node(
+                package="nav2_controller", executable="controller_server",
+                name="controller_server",
+                parameters=[rewritten_nav2],
+                remappings=tf_remaps, output="screen",
+            ),
+            Node(
+                package="nav2_planner", executable="planner_server",
+                name="planner_server",
+                parameters=[rewritten_nav2],
+                remappings=tf_remaps, output="screen",
+            ),
+            Node(
+                package="nav2_behaviors", executable="behavior_server",
+                name="behavior_server",
+                parameters=[rewritten_nav2],
+                remappings=tf_remaps, output="screen",
+            ),
+            Node(
+                package="nav2_bt_navigator", executable="bt_navigator",
+                name="bt_navigator",
+                parameters=[rewritten_nav2],
+                remappings=tf_remaps, output="screen",
+            ),
+            Node(
+                package="nav2_lifecycle_manager", executable="lifecycle_manager",
+                name="lifecycle_manager_navigation",
+                parameters=[rewritten_nav2],
+                output="screen",
+            ),
+        ]
+
+        # CFPA2 → Nav2 bridge: subscribes /<ns>/way_point_coord
+        # (PointStamped, RELIABLE), publishes /<ns>/goal_pose (PoseStamped,
+        # BEST_EFFORT to match bt_navigator's QoS). Lives outside an
+        # installed package so we run it via ExecuteProcess with an
+        # absolute path.
+        bridge_path = os.path.join(_ws_root, "scripts/runtime/cfpa2_to_nav2_bridge.py")
+        bridge_node = ExecuteProcess(
+            cmd=[
+                "python3", "-u", bridge_path,
+                "--ros-args",
+                "-p", f"namespace:={ns}",
+                "-p", f"use_sim_time:={'true' if use_sim_time else 'false'}",
+                "-p", "waypoint_topic:=way_point_coord",
+            ],
+            name=f"cfpa2_to_nav2_bridge_{ns}",
+            output="screen",
+        )
+
+        # Path relay: rename Nav2's /plan → /planned_path so the existing
+        # nav_test_mixed.rviz config (carried over from astar_nav layout)
+        # picks up the visualisation without RViz config changes.
+        path_relay_path = os.path.join(_ws_root, "scripts/runtime/path_relay.py")
+        path_relay_node = ExecuteProcess(
+            cmd=[
+                "python3", "-u", path_relay_path,
+                "--ros-args",
+                "-p", f"namespace:={ns}",
+                "-p", f"use_sim_time:={'true' if use_sim_time else 'false'}",
+            ],
+            name=f"path_relay_{ns}",
+            output="screen",
+        )
+
+        # stuck_watchdog: outer-loop self-recovery. Detects 10 s of no
+        # motion under an active goal, fires a Nav2 BackUp action then
+        # republishes the goal so SmacHybrid replans from the new
+        # (post-backup) pose. Pivot-lock and pivot-stuck-on-tight-turn
+        # are both handled by this — the robot physically backs up by
+        # 0.40 m, clearance recomputes, the new plan can include
+        # forward+reverse Reeds-Shepp segments. Mirrors Nav2's built-in
+        # Backup recovery behaviour, but triggered by EXTERNAL motion
+        # check rather than a controller-reported failure (MPPI in
+        # narrow-pivot scenarios outputs v≈ω≈0 without ever reporting
+        # failure, so the BT never enters its recovery branch).
+        stuck_watchdog_path = os.path.join(_ws_root, "scripts/runtime/stuck_watchdog.py")
+        stuck_watchdog_node = ExecuteProcess(
+            cmd=[
+                "python3", "-u", stuck_watchdog_path,
+                "--ros-args",
+                "-p", f"namespace:={ns}",
+                "-p", f"use_sim_time:={'true' if use_sim_time else 'false'}",
+            ],
+            name=f"stuck_watchdog_{ns}",
+            output="screen",
+        )
+
+        # hybrid_cmd_router: only relevant for Go2W (it splits cmd_vel
+        # into wheel vs legged based on curvature). Go2 (no wheels) has
+        # no `*_wheel_velocity_controller` to publish to; CHAMP for
+        # robot_b listens to /<ns>/cmd_vel directly (the /cmd_vel/smooth
+        # remap is set in the per-namespace champ launch). So for
+        # legged-only platforms we skip the router entirely.
+        if has_wheels:
+            router_node = Node(
+                package="go2w_control",
+                executable="go2w_hybrid_cmd_router.py",
+                namespace=ns,
+                name="go2w_hybrid_cmd_router",
+                parameters=[
+                    os.path.join(go2w_config_pkg, "config", "control",
+                                 "go2w_hybrid_motion.yaml"),
+                    {
+                        "use_sim_time": use_sim_time,
+                        "wheel_command_topic":
+                            f"/mujoco_sim/{ns}_wheel_velocity_controller/commands",
+                    },
+                ],
+                output="screen",
+            )
+        else:
+            router_node = None
+
+        # ros2 bag recorder — captures the full cmd_vel chain so a
+        # post-mortem of any wall-hit can show whether MPPI was
+        # commanding forward (planner / critic issue) or reverse
+        # (inertia issue). Records to /tmp/nav2_run_{ns}/ as MCAP.
+        # Tear off the previous run's bag dir so we don't append.
+        # Wheel-controller topic + cmd_vel_legged + mobility_mode are
+        # only relevant for Go2W (has_wheels). For Go2 we drop them and
+        # keep just cmd_vel + plan + waypoint + goal + collisions.
+        bag_dir = f"/tmp/nav2_run_{ns}"
+        _wheel_bag_topics = (
+            f"/{ns}/cmd_vel_legged "
+            f"/mujoco_sim/{ns}_wheel_velocity_controller/commands "
+            f"/{ns}/mobility_mode "
+        ) if has_wheels else ""
+        bag_record = ExecuteProcess(
+            cmd=[
+                "bash", "-lc",
+                f"rm -rf {bag_dir} && "
+                "ros2 bag record "
+                f"-o {bag_dir} "
+                f"/{ns}/cmd_vel "
+                f"{_wheel_bag_topics}"
+                # CHAMP-side joint cmd: trajectory_msgs/JointTrajectory
+                # carrying hip/thigh/calf positions. If CHAMP commands
+                # large positions while cmd_vel=0, that explains body
+                # drift via leg-pose changes.
+                f"/mujoco_sim/{ns}_joint_group_effort_controller/joint_trajectory "
+                # actual realised joint states from MuJoCo (post-actuator).
+                # Compare with commands above to see if ros2_control is
+                # tracking. If joint_states.velocity for foot_joints stays
+                # nonzero despite wheel cmd=0, the velocity actuator is
+                # being bypassed.
+                "/mujoco_sim/joint_states "
+                f"/{ns}/odom/nav "
+                f"/{ns}/plan "
+                f"/{ns}/way_point_coord "
+                f"/{ns}/goal_pose "
+                "/collision_events"
+            ],
+            name=f"nav2_bag_record_{ns}",
+            output="screen",
+        )
+
+        # Wrap nav2 inner-nodes in a GroupAction so PushRosNamespace
+        # scopes to them only; bridge + router are separate Node entries
+        # at root namespace (their own namespace= arg handles scoping).
+        from launch.actions import GroupAction
+        _nav2_actions = [
+            GroupAction(actions=nav2_inner_nodes),
+            # Bridge + relay + watchdog run at root NS; they compute
+            # namespaced topics internally from their `namespace`
+            # parameter.
+            bridge_node,
+            path_relay_node,
+            stuck_watchdog_node,
+            bag_record,
+        ]
+        if router_node is not None:
+            _nav2_actions.insert(3, router_node)  # before bag_record
+        actions.append(
+            TimerAction(period=nav_delay, actions=_nav2_actions)
+        )
         return actions
 
     if nav_backend != "far":
@@ -1446,6 +1761,7 @@ def _launch_setup(context):
     slam_only = _as_bool(_get(context, "slam_only"))
     cleanup_stale = _as_bool(_get(context, "cleanup_stale"))
     debug = _as_bool(_get(context, "debug"))
+    loop_closure_on = _as_bool(_get(context, "loop_closure"))
     map_merge_enabled = _as_bool(_get(context, "map_merge"))
     mujoco_model_path = _get(context, "mujoco_model_path").strip()
     session_duration_sec = float(_get(context, "session_duration_sec"))
@@ -1466,7 +1782,18 @@ def _launch_setup(context):
               "nav2":   "nav2_hybrid_astar"}
     nav_backend_a = _alias.get(nav_backend_a, nav_backend_a)
     nav_backend_b = _alias.get(nav_backend_b, nav_backend_b)
-    _allowed = {"far", "astar", "hybrid_astar", "nav2_hybrid_astar"}
+    # "none" → spawn perception + SLAM + octomap but NO path planner / controller.
+    # Use this when running an external nav stack alongside (e.g. Nav2's
+    # planner_server + DWB) — the launch supplies the /map and TF, the
+    # external stack publishes /cmd_vel.
+    # "nav2_mppi" → spawn the Nav2 stack (SmacPlannerHybrid planner +
+    # MPPI controller + lifecycle_manager) plus the CFPA2 → Nav2 goal
+    # bridge and the hybrid_cmd_router. Replaces the entire astar /
+    # hybrid_astar / far custom-controller chain with battle-tested
+    # nav2 nodes; planner is still SmacHybrid so RS arcs are produced,
+    # but MPPI samples velocity space (no pure-pursuit overshoot).
+    _allowed = {"far", "astar", "hybrid_astar", "nav2_hybrid_astar",
+                "nav2_mppi", "none"}
     if nav_backend_a not in _allowed:
         raise ValueError(
             f"nav_backend_a must be one of {_allowed}, got '{nav_backend_a}'")
@@ -1678,6 +2005,7 @@ def _launch_setup(context):
             enable_nav=not slam_only,
             has_wheels=True,  # robot_a = Go2W
             peer_namespaces=["robot_b"],
+            loop_closure=loop_closure_on,
         )
     )
     actions.extend(
@@ -1709,6 +2037,7 @@ def _launch_setup(context):
             enable_nav=not slam_only,
             has_wheels=False,  # robot_b = Go2 (no wheels)
             peer_namespaces=["robot_a"],
+            loop_closure=loop_closure_on,
         )
     )
 
@@ -2009,12 +2338,40 @@ def generate_launch_description():
             default_value="/tmp/dual_robot_collision_report.json",
         ),
         DeclareLaunchArgument(
-            "nav_backend_a", default_value="far",
-            description="Nav backend for robot_a (Go2W): 'far' | 'astar'.",
+            "nav_backend_a", default_value="nav2_mppi",
+            description=(
+                "Nav backend for robot_a (Go2W). Default 'nav2_mppi' "
+                "(SmacPlannerHybrid + MPPI + behavior_server, polygon "
+                "footprint, stuck_watchdog) — production stack since "
+                "2026-04-29. Other options: 'far' | 'astar' | 'none'."
+            ),
         ),
         DeclareLaunchArgument(
-            "nav_backend_b", default_value="astar",
-            description="Nav backend for robot_b (Go2): 'far' | 'astar'.",
+            "nav_backend_b", default_value="nav2_mppi",
+            description=(
+                "Nav backend for robot_b (Go2). Default 'nav2_mppi' "
+                "(uses nav2_go2_full_stack.yaml: 0.65×0.30 m footprint, "
+                "vx_max 0.30, in-place pivot via min_turning_radius=0.05). "
+                "Other options: 'far' | 'astar' | 'none'."
+            ),
+        ),
+        DeclareLaunchArgument(
+            "loop_closure", default_value="false",
+            description=(
+                "Enable Fast-LIO2 loop-closure post-processor (per-namespace). "
+                "When true, attempts to launch the `sc_pgo` package node which "
+                "subscribes to /<ns>/Odometry + /<ns>/cloud_registered_body, "
+                "runs ICP-verified loop detection, and publishes "
+                "/<ns>/corrected_odom — slam_odom_relay then prefers the "
+                "corrected source over raw Fast-LIO. When false (default), "
+                "Fast-LIO2 runs alone (open-loop, will accumulate drift over "
+                "long trajectories — see fastlio drift discussion 2026-04-29). "
+                "If the sc_pgo package is not built, the toggle warns and "
+                "skips silently — no crash; equivalent to `false`. "
+                "Note: sc_pgo is currently vendored as ROS 1 source "
+                "(src/vendor/sc_pgo/, COLCON_IGNORE in place) — needs ROS 2 "
+                "porting before this toggle has any effect."
+            ),
         ),
         DeclareLaunchArgument(
             "debug", default_value="false",
