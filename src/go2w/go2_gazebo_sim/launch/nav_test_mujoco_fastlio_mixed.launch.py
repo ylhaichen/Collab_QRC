@@ -411,6 +411,7 @@ def _build_fastlio_nav_stack(
     has_wheels: bool = True,
     peer_namespaces: list | None = None,
     loop_closure: bool = False,
+    peer_obstacle_enabled: bool = False,
 ):
     """Per-robot Fast-LIO + octomap + FAR nav stack.
 
@@ -1169,6 +1170,36 @@ def _build_fastlio_nav_stack(
             output="screen",
         )
 
+        peer_obstacle_node = None
+        if peer_obstacle_enabled and peer_namespaces:
+            peer_ns = str(peer_namespaces[0]).strip("/")
+            peer_base_frame = base_frame
+            peer_obstacle_node = Node(
+                package="reconstruction_awareness",
+                executable="peer_obstacle_scan_node",
+                name=f"peer_obstacle_scan_{ns}",
+                parameters=[{
+                    "use_sim_time": use_sim_time,
+                    "namespace": ns,
+                    "peer_namespace": peer_ns,
+                    "base_frame": peer_base_frame,
+                    # Was 0.55 (1.10 m diameter). Smoke 2026-04-30 stage-1
+                    # caught two robots freezing inside a 0.425 m corridor
+                    # because the peer disc + 0.45 m local_inflation made
+                    # every MPPI sample infeasible. 0.30 = peer body
+                    # half-width 0.20 + 0.10 m peer-pose latency buffer
+                    # (peer_pose_stale_sec ≤ 0.5 → ≤ 0.15 m worst-case lag
+                    # at v=0.30 m/s). Diameter 0.60 m leaves ~0.025 m
+                    # clearance in the narrowest demo3_mixed corridor —
+                    # tight but feasible.
+                    "peer_radius_m": 0.30,
+                    "range_cap_m": 6.0,
+                    "publish_rate_hz": 10.0,
+                    "stale_timeout_sec": 0.5,
+                }],
+                output="screen",
+            )
+
         # hybrid_cmd_router: only relevant for Go2W (it splits cmd_vel
         # into wheel vs legged based on curvature). Go2 (no wheels) has
         # no `*_wheel_velocity_controller` to publish to; CHAMP for
@@ -1252,6 +1283,8 @@ def _build_fastlio_nav_stack(
             stuck_watchdog_node,
             bag_record,
         ]
+        if peer_obstacle_node is not None:
+            _nav2_actions.insert(4, peer_obstacle_node)
         if router_node is not None:
             _nav2_actions.insert(3, router_node)  # before bag_record
         actions.append(
@@ -1773,6 +1806,29 @@ def _launch_setup(context):
     # Accepted values: "far" | "astar".
     nav_backend_a = (_get(context, "nav_backend_a").strip().lower() or "far")
     nav_backend_b = (_get(context, "nav_backend_b").strip().lower() or "far")
+    sensor_trust_robot_a = _get(context, "sensor_trust_robot_a").strip() or "1.00"
+    sensor_trust_robot_b = _get(context, "sensor_trust_robot_b").strip() or "1.00"
+    frontier_trust_enabled = _as_bool(_get(context, "frontier_trust_enabled"))
+    frontier_validation_confidence_threshold = float(
+        _get(context, "frontier_validation_confidence_threshold").strip() or "0.40"
+    )
+    frontier_trust_info_gain_penalty_weight = float(
+        _get(context, "frontier_trust_info_gain_penalty_weight").strip() or "0.20"
+    )
+    frontier_validation_trusted_bonus = float(
+        _get(context, "frontier_validation_trusted_bonus").strip() or "0.25"
+    )
+    frontier_validation_untrusted_penalty = float(
+        _get(context, "frontier_validation_untrusted_penalty").strip() or "0.25"
+    )
+    frontier_validation_robot_namespace = (
+        _get(context, "frontier_validation_robot_namespace").strip().strip("/")
+    )
+    role_awareness_enabled = _as_bool(_get(context, "role_awareness_enabled"))
+    loop_candidates_enabled = _as_bool(_get(context, "loop_candidates_enabled"))
+    morphology_risk_enabled = _as_bool(_get(context, "morphology_risk_enabled"))
+    peer_obstacle_enabled = _as_bool(_get(context, "peer_obstacle_enabled"))
+    loop_risk_output_dir = _get(context, "loop_risk_output_dir").strip()
     # Back-compat aliases from the removed planners.
     # `hybrid` → our v0.1 Hybrid A* + Ceres-smoothed planner.
     # `nav2`   → B-route: nav2_smac_planner library integration.
@@ -1981,9 +2037,9 @@ def _launch_setup(context):
         _build_fastlio_nav_stack(
             ns="robot_a",
             # Plugin publishes under /mujoco_sim/ — the sim's controller_manager
-            # namespace — NOT per-robot. Robot A's LiDAR site is
-            # "unitree_l1" (the plugin prefers it over livox_mid360), so
-            # the topic remains /mujoco_sim/mujoco_lidar_sensor/registered_scan.
+            # namespace — NOT per-robot. Robot A now uses the mounted Livox
+            # MID-360 by default; the old Unitree L1 site is retained only for
+            # explicit sensing-asymmetry ablations.
             mujoco_lidar_topic="/mujoco_sim/mujoco_lidar_sensor/registered_scan",
             # Robot A's URDF uses bare link names (no prefix) — its TF tree
             # has `base_link` as the root and `imu` as the IMU link.
@@ -1994,18 +2050,19 @@ def _launch_setup(context):
             slam_delay=slam_delay,
             nav_delay=nav_delay,
             go2w_config_pkg=go2w_config_pkg,
-            slam_config_path=slam_config_l1,
-            adapter_num_rings=60,
-            adapter_min_vert_angle_deg=0.0,
-            adapter_max_vert_angle_deg=90.0,
+            slam_config_path=slam_config_mid360,
+            adapter_num_rings=20,
+            adapter_min_vert_angle_deg=-7.0,
+            adapter_max_vert_angle_deg=52.0,
             local_planner_paths_dir=local_planner_paths_dir,
             far_tuning_yaml=far_tuning_yaml,
             far_default_yaml=far_default_yaml,
-            octomap_min_z=0.20,
+            octomap_min_z=0.30,
             enable_nav=not slam_only,
             has_wheels=True,  # robot_a = Go2W
             peer_namespaces=["robot_b"],
             loop_closure=loop_closure_on,
+            peer_obstacle_enabled=peer_obstacle_enabled,
         )
     )
     actions.extend(
@@ -2038,8 +2095,62 @@ def _launch_setup(context):
             has_wheels=False,  # robot_b = Go2 (no wheels)
             peer_namespaces=["robot_a"],
             loop_closure=loop_closure_on,
+            peer_obstacle_enabled=peer_obstacle_enabled,
         )
     )
+
+    def _loop_risk_artifact(name: str) -> str:
+        if not loop_risk_output_dir:
+            return ""
+        return os.path.join(loop_risk_output_dir, name)
+
+    # ── Loop-closure proxy + mobility-risk awareness layer ──
+    awareness_nodes = []
+    if explore and (role_awareness_enabled or loop_candidates_enabled):
+        awareness_nodes.append(
+            Node(
+                package="reconstruction_awareness",
+                executable="pose_graph_health_node",
+                name="pose_graph_health_node",
+                parameters=[{
+                    "use_sim_time": use_sim_time,
+                    "namespaces": ["robot_a", "robot_b"],
+                    "output_path": _loop_risk_artifact("pose_graph_health.json"),
+                }],
+                output="screen",
+            )
+        )
+    if explore and loop_candidates_enabled:
+        awareness_nodes.append(
+            Node(
+                package="reconstruction_awareness",
+                executable="loop_closure_candidate_node",
+                name="loop_closure_candidate_node",
+                parameters=[{
+                    "use_sim_time": use_sim_time,
+                    "output_path": _loop_risk_artifact("loop_candidates.json"),
+                    "map_topic": "/merged_map",
+                }],
+                output="screen",
+            )
+        )
+    if explore and morphology_risk_enabled:
+        awareness_nodes.append(
+            Node(
+                package="reconstruction_awareness",
+                executable="morphology_risk_node",
+                name="morphology_risk_node",
+                parameters=[{
+                    "use_sim_time": use_sim_time,
+                    "namespaces": ["robot_a", "robot_b"],
+                    "map_topic": "/merged_map",
+                    "output_path": _loop_risk_artifact("morphology_risk.json"),
+                }],
+                output="screen",
+            )
+        )
+    if awareness_nodes:
+        actions.append(TimerAction(period=nav_delay + 1.0, actions=awareness_nodes))
 
     # ── CFPA2 dual-robot coordinator (shared) ──
     if explore:
@@ -2059,6 +2170,20 @@ def _launch_setup(context):
                             {
                                 "use_sim_time": use_sim_time,
                                 "namespaces": ["robot_a", "robot_b"],
+                                "sensor_trust_by_namespace": [
+                                    f"robot_a={sensor_trust_robot_a}",
+                                    f"robot_b={sensor_trust_robot_b}",
+                                ],
+                                "frontier_trust_enabled": frontier_trust_enabled,
+                                "frontier_validation_confidence_threshold": frontier_validation_confidence_threshold,
+                                "frontier_trust_info_gain_penalty_weight": frontier_trust_info_gain_penalty_weight,
+                                "frontier_validation_trusted_bonus": frontier_validation_trusted_bonus,
+                                "frontier_validation_untrusted_penalty": frontier_validation_untrusted_penalty,
+                                "frontier_validation_robot_namespace": frontier_validation_robot_namespace,
+                                "role_awareness_enabled": role_awareness_enabled,
+                                "role_loop_enabled": loop_candidates_enabled,
+                                "role_mobility_risk_enabled": morphology_risk_enabled,
+                                "scene_area_m2": scene_area_m2,
                                 "goal_topic_suffix": "/way_point_coord",
                                 "marker_frame_override": "map",
                                 # ── Shared-map frontier extraction ──
@@ -2130,6 +2255,7 @@ def _launch_setup(context):
     if session_duration_sec > 0 and session_output_dir:
         os.makedirs(session_output_dir, exist_ok=True)
         reporter_script = str(workspace_root / "scripts" / "bench" / "session_reporter.py")
+        trust_reporter_script = str(workspace_root / "scripts" / "bench" / "frontier_trust_reporter.py")
         last_reporter = None
         for ns in ("robot_a", "robot_b"):
             out_path = os.path.join(session_output_dir, f"{ns}.json")
@@ -2146,6 +2272,24 @@ def _launch_setup(context):
             )
             actions.append(TimerAction(period=nav_delay + 3.0, actions=[proc]))
             last_reporter = proc
+        if frontier_trust_enabled:
+            actions.append(
+                TimerAction(
+                    period=nav_delay + 2.5,
+                    actions=[
+                        ExecuteProcess(
+                            cmd=[
+                                "python3", "-u", trust_reporter_script,
+                                "--duration", str(session_duration_sec),
+                                "--topic", "/cfpa2/frontier_trust",
+                                "--output", os.path.join(session_output_dir, "frontier_trust.json"),
+                            ],
+                            name="frontier_trust_reporter",
+                            output="screen",
+                        ),
+                    ],
+                )
+            )
         # Shut down the whole launch when the last reporter exits.
         actions.append(
             RegisterEventHandler(
@@ -2372,6 +2516,58 @@ def generate_launch_description():
                 "(src/vendor/sc_pgo/, COLCON_IGNORE in place) — needs ROS 2 "
                 "porting before this toggle has any effect."
             ),
+        ),
+        DeclareLaunchArgument(
+            "sensor_trust_robot_a", default_value="1.00",
+            description="Static sensor trust for robot_a / Go2W. Default is 1.00 because both robots now use Livox MID-360; lower values are only for old L1 ablations.",
+        ),
+        DeclareLaunchArgument(
+            "sensor_trust_robot_b", default_value="1.00",
+            description="Static sensor trust for robot_b / Go2 MID-360.",
+        ),
+        DeclareLaunchArgument(
+            "frontier_trust_enabled", default_value="true",
+            description="Enable Stage-2 frontier trust annotation and Stage-3 utility shaping.",
+        ),
+        DeclareLaunchArgument(
+            "frontier_validation_confidence_threshold", default_value="0.40",
+            description="Frontier confidence below this value requests validator bias.",
+        ),
+        DeclareLaunchArgument(
+            "frontier_trust_info_gain_penalty_weight", default_value="0.20",
+            description="Information-gain penalty weight for uncertain frontiers.",
+        ),
+        DeclareLaunchArgument(
+            "frontier_validation_trusted_bonus", default_value="0.25",
+            description="Utility bonus for the validator on validation-required frontiers.",
+        ),
+        DeclareLaunchArgument(
+            "frontier_validation_untrusted_penalty", default_value="0.25",
+            description="Utility penalty for non-validator robots on validation-required frontiers.",
+        ),
+        DeclareLaunchArgument(
+            "frontier_validation_robot_namespace", default_value="robot_b",
+            description="Robot assigned soft validation bias for low-confidence frontiers.",
+        ),
+        DeclareLaunchArgument(
+            "role_awareness_enabled", default_value="false",
+            description="Enable CFPA2 Loop+Risk role-aware scoring inputs.",
+        ),
+        DeclareLaunchArgument(
+            "loop_candidates_enabled", default_value="false",
+            description="Run pose_graph_health + loop_closure_candidate nodes and allow loop_close goals.",
+        ),
+        DeclareLaunchArgument(
+            "morphology_risk_enabled", default_value="false",
+            description="Run morphology_risk_node and feed mobility risk into CFPA2 utility.",
+        ),
+        DeclareLaunchArgument(
+            "peer_obstacle_enabled", default_value="false",
+            description="Publish synthetic peer LaserScan obstacles for Nav2 local costmaps.",
+        ),
+        DeclareLaunchArgument(
+            "loop_risk_output_dir", default_value="",
+            description="Per-trial directory for pose_graph_health / loop_candidates / morphology_risk JSON artifacts.",
         ),
         DeclareLaunchArgument(
             "debug", default_value="false",

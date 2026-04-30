@@ -184,6 +184,52 @@ class CFPA2Coordinator(Node):
         self.declare_parameter("cfpa2_w_c", 0.6)
         self.declare_parameter("cfpa2_w_sw", 0.2)
         self.declare_parameter("cfpa2_lambda_overlap", 1.0)
+        # Static sensor-trust prior for Month-2 heterogeneous assignment.
+        # Values are applied only to the information-gain term so mobility
+        # cost, switching hysteresis, and momentum remain physically grounded.
+        self.declare_parameter("sensor_trust_default", 1.0)
+        self.declare_parameter("sensor_trust_min", 0.05)
+        self.declare_parameter("sensor_trust_max", 1.0)
+        self.declare_parameter("sensor_trust_power", 1.0)
+        self.declare_parameter("sensor_trust_by_namespace", [""])
+        # Stage-2 frontier trust annotation. This is deliberately not a
+        # SLAM rewrite: it annotates planner candidates with source support,
+        # map-state disagreement, and validation need.
+        self.declare_parameter("frontier_trust_enabled", True)
+        self.declare_parameter("frontier_trust_topic", "/cfpa2/frontier_trust")
+        self.declare_parameter("frontier_trust_source_radius_m", 0.75)
+        self.declare_parameter("frontier_trust_conflict_radius_m", 0.20)
+        self.declare_parameter("frontier_confidence_source_bonus", 0.08)
+        self.declare_parameter("frontier_conflict_penalty", 0.45)
+        self.declare_parameter("frontier_validation_confidence_threshold", 0.40)
+        self.declare_parameter("frontier_trust_publish_top_n", 40)
+        # Stage-3 asymmetric allocation controls. These act on the
+        # information-gain term as a multiplicative factor so cost/momentum
+        # remain comparable with earlier CFPA2 tuning.
+        self.declare_parameter("frontier_trust_info_gain_penalty_weight", 0.20)
+        self.declare_parameter("frontier_validation_trusted_bonus", 0.25)
+        self.declare_parameter("frontier_validation_untrusted_penalty", 0.25)
+        self.declare_parameter("frontier_trust_min_utility_factor", 0.05)
+        self.declare_parameter("frontier_trust_max_utility_factor", 1.35)
+        self.declare_parameter("frontier_validation_robot_namespace", "")
+        # Stage-4 Loop+Risk role-aware allocation. Disabled by default so
+        # existing coverage-only CFPA2 behaviour remains the fail-open path.
+        self.declare_parameter("role_awareness_enabled", False)
+        self.declare_parameter("role_loop_enabled", True)
+        self.declare_parameter("role_mobility_risk_enabled", True)
+        self.declare_parameter("pose_graph_health_topic", "/cfpa2/pose_graph_health")
+        self.declare_parameter("loop_candidates_topic", "/cfpa2/loop_candidates")
+        self.declare_parameter("morphology_risk_topic", "/cfpa2/morphology_risk")
+        self.declare_parameter("role_candidate_stale_sec", 3.0)
+        self.declare_parameter("role_w_loop", 0.8)
+        self.declare_parameter("role_w_mob", 1.2)
+        self.declare_parameter("role_w_peer", 1.5)
+        self.declare_parameter("role_loop_gain_scale", 120.0)
+        self.declare_parameter("role_risk_scale", 10.0)
+        self.declare_parameter("role_loop_min_coverage_ratio", 0.70)
+        self.declare_parameter("role_early_loop_scale", 0.40)
+        self.declare_parameter("role_loop_override_states", ["drift_risk", "loop_needed"])
+        self.declare_parameter("scene_area_m2", 384.0)
         # Outer weight applied to the momentum_bonus term. Bumped 0.8 →
         # 2.0 on 2026-04-25 after demo3_mixed showed a 0.4 Hz goal flap
         # for robot_a despite brake-hold; momentum bonus range was too
@@ -294,6 +340,8 @@ class CFPA2Coordinator(Node):
         self.declare_parameter("adaptive_max_skip_ticks", 2)
         self.declare_parameter("debug_no_goal_logging", True)
         self.declare_parameter("debug_no_goal_log_interval_sec", 2.0)
+        self.declare_parameter("goal_sanity_max_abs_m", 100.0)
+        self.declare_parameter("goal_sanity_map_margin_m", 2.0)
 
         self.namespaces = [str(x) for x in self.get_parameter("namespaces").value]
         self.publish_rate = max(0.2, float(self.get_parameter("publish_rate").value))
@@ -357,6 +405,86 @@ class CFPA2Coordinator(Node):
         self.cfpa2_w_c = max(0.0, float(self.get_parameter("cfpa2_w_c").value))
         self.cfpa2_w_sw = max(0.0, float(self.get_parameter("cfpa2_w_sw").value))
         self.cfpa2_lambda_overlap = max(0.0, float(self.get_parameter("cfpa2_lambda_overlap").value))
+        self.sensor_trust_min = max(0.0, float(self.get_parameter("sensor_trust_min").value))
+        self.sensor_trust_max = max(
+            self.sensor_trust_min,
+            float(self.get_parameter("sensor_trust_max").value),
+        )
+        self.sensor_trust_default = self._clamp_sensor_trust(
+            float(self.get_parameter("sensor_trust_default").value)
+        )
+        self.sensor_trust_power = max(
+            0.01, float(self.get_parameter("sensor_trust_power").value)
+        )
+        self.sensor_trust_by_namespace = self._parse_sensor_trust_overrides(
+            self.get_parameter("sensor_trust_by_namespace").value
+        )
+        self.frontier_trust_enabled = bool(self.get_parameter("frontier_trust_enabled").value)
+        self.frontier_trust_topic = str(self.get_parameter("frontier_trust_topic").value).strip()
+        self.frontier_trust_source_radius_m = max(
+            0.05, float(self.get_parameter("frontier_trust_source_radius_m").value)
+        )
+        self.frontier_trust_conflict_radius_m = max(
+            0.0, float(self.get_parameter("frontier_trust_conflict_radius_m").value)
+        )
+        self.frontier_confidence_source_bonus = max(
+            0.0, float(self.get_parameter("frontier_confidence_source_bonus").value)
+        )
+        self.frontier_conflict_penalty = max(
+            0.0, float(self.get_parameter("frontier_conflict_penalty").value)
+        )
+        self.frontier_validation_confidence_threshold = min(
+            1.0,
+            max(0.0, float(self.get_parameter("frontier_validation_confidence_threshold").value)),
+        )
+        self.frontier_trust_publish_top_n = max(
+            0, int(self.get_parameter("frontier_trust_publish_top_n").value)
+        )
+        self.frontier_trust_info_gain_penalty_weight = min(
+            1.0,
+            max(0.0, float(self.get_parameter("frontier_trust_info_gain_penalty_weight").value)),
+        )
+        self.frontier_validation_trusted_bonus = max(
+            0.0, float(self.get_parameter("frontier_validation_trusted_bonus").value)
+        )
+        self.frontier_validation_untrusted_penalty = max(
+            0.0, float(self.get_parameter("frontier_validation_untrusted_penalty").value)
+        )
+        self.frontier_trust_min_utility_factor = max(
+            0.0, float(self.get_parameter("frontier_trust_min_utility_factor").value)
+        )
+        self.frontier_trust_max_utility_factor = max(
+            self.frontier_trust_min_utility_factor,
+            float(self.get_parameter("frontier_trust_max_utility_factor").value),
+        )
+        self.frontier_validation_robot_namespace = (
+            str(self.get_parameter("frontier_validation_robot_namespace").value).strip().strip("/")
+        )
+        self.role_awareness_enabled = bool(self.get_parameter("role_awareness_enabled").value)
+        self.role_loop_enabled = bool(self.get_parameter("role_loop_enabled").value)
+        self.role_mobility_risk_enabled = bool(self.get_parameter("role_mobility_risk_enabled").value)
+        self.pose_graph_health_topic = str(self.get_parameter("pose_graph_health_topic").value).strip()
+        self.loop_candidates_topic = str(self.get_parameter("loop_candidates_topic").value).strip()
+        self.morphology_risk_topic = str(self.get_parameter("morphology_risk_topic").value).strip()
+        self.role_candidate_stale_sec = max(
+            0.5, float(self.get_parameter("role_candidate_stale_sec").value)
+        )
+        self.role_w_loop = max(0.0, float(self.get_parameter("role_w_loop").value))
+        self.role_w_mob = max(0.0, float(self.get_parameter("role_w_mob").value))
+        self.role_w_peer = max(0.0, float(self.get_parameter("role_w_peer").value))
+        self.role_loop_gain_scale = max(1.0, float(self.get_parameter("role_loop_gain_scale").value))
+        self.role_risk_scale = max(1.0, float(self.get_parameter("role_risk_scale").value))
+        self.role_loop_min_coverage_ratio = min(
+            1.0, max(0.0, float(self.get_parameter("role_loop_min_coverage_ratio").value))
+        )
+        self.role_early_loop_scale = min(
+            1.0, max(0.0, float(self.get_parameter("role_early_loop_scale").value))
+        )
+        self.role_loop_override_states = {
+            str(x).strip() for x in self.get_parameter("role_loop_override_states").value
+            if str(x).strip()
+        }
+        self.scene_area_m2 = max(1.0, float(self.get_parameter("scene_area_m2").value))
         self.cfpa2_w_momentum = max(0.0, float(self.get_parameter("cfpa2_w_momentum").value))
         self.cfpa2_momentum_alpha = max(0.0, float(self.get_parameter("cfpa2_momentum_alpha").value))
         self.cfpa2_momentum_beta  = max(0.0, float(self.get_parameter("cfpa2_momentum_beta").value))
@@ -466,6 +594,10 @@ class CFPA2Coordinator(Node):
         self.pivot_lock_max_hold_sec = max(
             0.0, float(self.get_parameter("pivot_lock_max_hold_sec").value)
         )
+        self.declare_parameter("pivot_lock_min_escape_goal_dist_m", 0.75)
+        self.pivot_lock_min_escape_goal_dist_m = max(
+            0.0, float(self.get_parameter("pivot_lock_min_escape_goal_dist_m").value)
+        )
         self._pivot_lock_start_ns: dict[str, int] = {}
         self.cfpa2_close_stop_radius_m = max(
             0.0, float(self.get_parameter("cfpa2_close_stop_radius_m").value)
@@ -568,6 +700,12 @@ class CFPA2Coordinator(Node):
         self.debug_no_goal_log_interval_sec = max(
             0.2, float(self.get_parameter("debug_no_goal_log_interval_sec").value)
         )
+        self.goal_sanity_max_abs_m = max(
+            0.0, float(self.get_parameter("goal_sanity_max_abs_m").value)
+        )
+        self.goal_sanity_map_margin_m = max(
+            0.0, float(self.get_parameter("goal_sanity_map_margin_m").value)
+        )
 
         self.maps: dict[str, OccupancyGrid] = {}
         self.shared_map: Optional[OccupancyGrid] = None
@@ -639,6 +777,7 @@ class CFPA2Coordinator(Node):
         self._last_summary_ns = 0
         self._last_prereq_warn_ns = 0
         self._last_no_goal_debug_ns = 0
+        self._last_goal_sanity_warn_ns: dict[str, int] = {ns: 0 for ns in self.namespaces}
         self._tick_period_ms = 1000.0 / self.publish_rate
         self._perf_tick_durations_ms: deque[float] = deque(maxlen=self.perf_tick_window_size)
         self._last_perf_summary_ns = 0
@@ -649,6 +788,16 @@ class CFPA2Coordinator(Node):
         self._adaptive_exploration_gain_radius_cells = self.exploration_gain_radius_cells
         self._adaptive_skip_ticks = 0
         self._adaptive_tick_skip_counter = 0
+        self.frontier_trust_annotations: dict[tuple[float, float], dict[str, Any]] = {}
+        self._last_frontier_trust_log_ns = 0
+        self.pose_graph_health: dict[str, Any] = {}
+        self.pose_graph_health_rx_ns = 0
+        self.loop_candidates_payload: dict[str, Any] = {}
+        self.loop_candidates_rx_ns = 0
+        self.morphology_risk_payload: dict[str, Any] = {}
+        self.morphology_risk_rx_ns = 0
+        self.role_candidate_annotations: dict[tuple[float, float], dict[str, Any]] = {}
+        self.last_goal_role: dict[str, str] = {ns: "explore" for ns in self.namespaces}
         self._mui_last_solve_ns = 0
         self._mui_last_cell_keys: set[tuple[int, int, int]] = set()
         self._mui_routes: dict[str, list[int]] = {ns: [] for ns in self.namespaces}
@@ -673,6 +822,26 @@ class CFPA2Coordinator(Node):
         self.frontier_markers_pub = self.create_publisher(
             MarkerArray, self.frontier_markers_topic, 10
         )
+        self.frontier_trust_pub = self.create_publisher(String, self.frontier_trust_topic, 10)
+        if self.role_awareness_enabled:
+            self.create_subscription(
+                String,
+                self.pose_graph_health_topic,
+                self._pose_graph_health_cb,
+                10,
+            )
+            self.create_subscription(
+                String,
+                self.loop_candidates_topic,
+                self._loop_candidates_cb,
+                10,
+            )
+            self.create_subscription(
+                String,
+                self.morphology_risk_topic,
+                self._morphology_risk_cb,
+                10,
+            )
         for ns in self.namespaces:
             self.create_subscription(OccupancyGrid, f"/{ns}/map", lambda m, n=ns: self._map_cb(m, n), 1)
             self.create_subscription(Odometry, f"/{ns}/odom/nav", lambda m, n=ns: self._odom_cb(m, n), 10)
@@ -713,6 +882,11 @@ class CFPA2Coordinator(Node):
             f"    w_ig={self.cfpa2_w_ig:.2f}  w_c={self.cfpa2_w_c:.2f}  "
             f"w_sw={self.cfpa2_w_sw:.2f}  w_momentum={self.cfpa2_w_momentum:.2f}  "
             f"min_utility={self.cfpa2_min_utility:.2f}\n"
+            f"    sensor_trust={self._sensor_trust_summary()}  "
+            f"trust_power={self.sensor_trust_power:.2f}  "
+            f"frontier_trust={self.frontier_trust_enabled}  "
+            f"validator={self._validation_robot_namespace() or 'auto'}  "
+            f"role_awareness={self.role_awareness_enabled}\n"
             f"  ── Frontier ──\n"
             f"    sensor_range={self.sensor_range:.1f}m  "
             f"gain_radius={self.exploration_gain_radius_cells}cells  "
@@ -758,6 +932,33 @@ class CFPA2Coordinator(Node):
     def _grid_world_status_cb(self, msg: GridWorldStatus, ns: str) -> None:
         self.grid_world_status[ns] = msg
         self.grid_world_status_rx_time_ns[ns] = self.get_clock().now().nanoseconds
+
+    def _pose_graph_health_cb(self, msg: String) -> None:
+        try:
+            payload = json.loads(msg.data)
+        except json.JSONDecodeError:
+            return
+        if isinstance(payload, dict):
+            self.pose_graph_health = payload
+            self.pose_graph_health_rx_ns = self.get_clock().now().nanoseconds
+
+    def _loop_candidates_cb(self, msg: String) -> None:
+        try:
+            payload = json.loads(msg.data)
+        except json.JSONDecodeError:
+            return
+        if isinstance(payload, dict):
+            self.loop_candidates_payload = payload
+            self.loop_candidates_rx_ns = self.get_clock().now().nanoseconds
+
+    def _morphology_risk_cb(self, msg: String) -> None:
+        try:
+            payload = json.loads(msg.data)
+        except json.JSONDecodeError:
+            return
+        if isinstance(payload, dict):
+            self.morphology_risk_payload = payload
+            self.morphology_risk_rx_ns = self.get_clock().now().nanoseconds
 
     def _nav_status_cb(self, msg: String, ns: str) -> None:
         try:
@@ -887,11 +1088,13 @@ class CFPA2Coordinator(Node):
             self.goal_blacklist_until_ns[ns].get(key, 0),
             until_ns,
         )
+        self._add_blacklist_disk(ns, current_goal, until_ns)
         self.goal_fail_counts[ns][key] = 0
         self.goal_progress_samples[ns].clear()
         self.get_logger().warn(
             f"{ns}: frontier_replan received — blacklisting current goal "
-            f"({current_goal[0]:.2f},{current_goal[1]:.2f}) for {bl_sec:.1f}s."
+            f"({current_goal[0]:.2f},{current_goal[1]:.2f}) for {bl_sec:.1f}s "
+            f"with radius {self.blacklist_cluster_radius_m:.2f}m."
         )
 
     def _shared_map_cb(self, msg: OccupancyGrid) -> None:
@@ -919,6 +1122,72 @@ class CFPA2Coordinator(Node):
             msg.info.origin.position.x + (gx + 0.5) * msg.info.resolution,
             msg.info.origin.position.y + (gy + 0.5) * msg.info.resolution,
         )
+
+    def _point_inside_map_margin(
+        self,
+        msg: Optional[OccupancyGrid],
+        point: tuple[float, float],
+        *,
+        margin_m: Optional[float] = None,
+    ) -> bool:
+        if msg is None:
+            return True
+        margin = self.goal_sanity_map_margin_m if margin_m is None else max(0.0, margin_m)
+        res = float(msg.info.resolution)
+        if res <= 0.0:
+            return False
+        x, y = float(point[0]), float(point[1])
+        min_x = float(msg.info.origin.position.x) - margin
+        min_y = float(msg.info.origin.position.y) - margin
+        max_x = float(msg.info.origin.position.x) + (float(msg.info.width) * res) + margin
+        max_y = float(msg.info.origin.position.y) + (float(msg.info.height) * res) + margin
+        return min_x <= x <= max_x and min_y <= y <= max_y
+
+    def _goal_sane_for_map(
+        self,
+        ns: str,
+        map_msg: Optional[OccupancyGrid],
+        goal_w: tuple[float, float],
+        *,
+        now_ns: Optional[int] = None,
+        context: str = "goal",
+    ) -> bool:
+        if not self._goal_is_finite(goal_w):
+            reason = "non-finite"
+        elif (
+            self.goal_sanity_max_abs_m > 0.0
+            and max(abs(float(goal_w[0])), abs(float(goal_w[1]))) > self.goal_sanity_max_abs_m
+        ):
+            reason = f"abs>{self.goal_sanity_max_abs_m:.1f}m"
+        elif not self._point_inside_map_margin(map_msg, goal_w):
+            reason = "outside_map_margin"
+        else:
+            return True
+
+        stamp_ns = now_ns if now_ns is not None else self.get_clock().now().nanoseconds
+        last_ns = self._last_goal_sanity_warn_ns.get(ns, 0)
+        if stamp_ns - last_ns > int(1e9):
+            self._last_goal_sanity_warn_ns[ns] = stamp_ns
+            self.get_logger().warn(
+                f"{ns}: dropping {context} ({float(goal_w[0]):.2f},{float(goal_w[1]):.2f}) "
+                f"reason={reason}"
+            )
+        return False
+
+    def _current_pose_goal_if_sane(
+        self,
+        ns: str,
+        map_msg: Optional[OccupancyGrid],
+        now_ns: int,
+        *,
+        context: str,
+    ) -> Optional[tuple[float, float]]:
+        if ns not in self.odoms:
+            return None
+        goal = self._robot_xy(ns)
+        if self._goal_sane_for_map(ns, map_msg, goal, now_ns=now_ns, context=context):
+            return goal
+        return None
 
     def _is_free(self, data: list[int], idx: int) -> bool:
         v = data[idx]
@@ -1266,6 +1535,208 @@ class CFPA2Coordinator(Node):
                     return out
         return out
 
+    def _target_near_any(
+        self,
+        goal: tuple[float, float],
+        targets: list[tuple[float, float]],
+        radius_m: float,
+    ) -> bool:
+        r2 = max(0.0, radius_m) * max(0.0, radius_m)
+        gx, gy = float(goal[0]), float(goal[1])
+        for tx, ty in targets:
+            dx = float(tx) - gx
+            dy = float(ty) - gy
+            if (dx * dx + dy * dy) <= r2:
+                return True
+        return False
+
+    def _frontier_center_state(self, msg: OccupancyGrid, goal: tuple[float, float]) -> str:
+        cell = self._world_to_grid(msg, goal[0], goal[1])
+        if cell is None:
+            return "out"
+        gx, gy = cell
+        w = int(msg.info.width)
+        h = int(msg.info.height)
+        idx = self._grid_index(gx, gy, w)
+        value = int(msg.data[idx])
+        if value >= self.occ_thresh:
+            return "occupied"
+        if value != self.unknown_value:
+            return "free"
+
+        res = float(msg.info.resolution)
+        radius_cells = 0
+        if res > 0.0 and self.frontier_trust_conflict_radius_m > 0.0:
+            radius_cells = max(1, int(round(self.frontier_trust_conflict_radius_m / res)))
+        free_seen = False
+        occ_seen = False
+        for yy in range(max(0, gy - radius_cells), min(h, gy + radius_cells + 1)):
+            row = yy * w
+            for xx in range(max(0, gx - radius_cells), min(w, gx + radius_cells + 1)):
+                v = int(msg.data[row + xx])
+                if v >= self.occ_thresh:
+                    occ_seen = True
+                elif v != self.unknown_value:
+                    free_seen = True
+        if free_seen:
+            return "free"
+        if occ_seen:
+            return "occupied"
+        return "unknown"
+
+    def _local_frontier_signal(self, msg: OccupancyGrid, goal: tuple[float, float]) -> bool:
+        cell = self._world_to_grid(msg, goal[0], goal[1])
+        if cell is None:
+            return False
+        gx, gy = cell
+        w = int(msg.info.width)
+        h = int(msg.info.height)
+        res = float(msg.info.resolution)
+        if res <= 0.0:
+            return False
+        data = msg.data
+        center = int(data[self._grid_index(gx, gy, w)])
+        if center >= self.occ_thresh:
+            return False
+
+        radius_cells = max(1, int(round(self.frontier_trust_source_radius_m / res)))
+        unknown_min = max(1, min(5, int(self.cfpa2_frontier_min_unknown_cells)))
+        free_seen = center != self.unknown_value and center < self.occ_thresh
+        unknown_count = 0
+        for yy in range(max(0, gy - radius_cells), min(h, gy + radius_cells + 1)):
+            row = yy * w
+            for xx in range(max(0, gx - radius_cells), min(w, gx + radius_cells + 1)):
+                value = int(data[row + xx])
+                if value == self.unknown_value:
+                    unknown_count += 1
+                elif 0 <= value < self.occ_thresh:
+                    free_seen = True
+        return free_seen and unknown_count >= unknown_min
+
+    def _frontier_map_states(self, goal: tuple[float, float]) -> dict[str, str]:
+        states: dict[str, str] = {}
+        for ns in self.namespaces:
+            msg = self.maps.get(ns)
+            if msg is None:
+                continue
+            states[ns] = self._frontier_center_state(msg, goal)
+        return states
+
+    def _frontier_has_map_conflict(self, states: dict[str, str]) -> bool:
+        has_free = any(state == "free" for state in states.values())
+        has_occupied = any(state == "occupied" for state in states.values())
+        return has_free and has_occupied
+
+    def _validation_robot_namespace(self) -> str:
+        if self.frontier_validation_robot_namespace in self.namespaces:
+            return self.frontier_validation_robot_namespace
+        if not self.namespaces:
+            return ""
+        trust_values = [(ns, self._sensor_trust(ns)) for ns in self.namespaces]
+        max_trust = max(v for _ns, v in trust_values)
+        min_trust = min(v for _ns, v in trust_values)
+        if (max_trust - min_trust) < 1e-6:
+            return ""
+        return max(trust_values, key=lambda item: item[1])[0]
+
+    def _build_frontier_trust_annotations(
+        self,
+        *,
+        targets: list[tuple[float, float]],
+        per_ns_targets: dict[str, list[tuple[float, float]]],
+    ) -> dict[tuple[float, float], dict[str, Any]]:
+        if not self.frontier_trust_enabled:
+            return {}
+
+        annotations: dict[tuple[float, float], dict[str, Any]] = {}
+        validator = self._validation_robot_namespace()
+        source_radius = self.frontier_trust_source_radius_m
+
+        for goal in targets:
+            sources: list[str] = []
+            for ns in self.namespaces:
+                local_targets = per_ns_targets.get(ns, [])
+                source_hit = self._target_near_any(goal, local_targets, source_radius)
+                if not source_hit:
+                    msg = self.maps.get(ns)
+                    source_hit = self._local_frontier_signal(msg, goal) if msg is not None else False
+                if source_hit:
+                    sources.append(ns)
+
+            source_trusts = [self._sensor_trust(ns) for ns in sources]
+            if source_trusts:
+                max_source_trust = max(source_trusts)
+                avg_source_trust = sum(source_trusts) / float(len(source_trusts))
+                confidence = (0.70 * max_source_trust) + (0.30 * avg_source_trust)
+                confidence += self.frontier_confidence_source_bonus * max(0, len(sources) - 1)
+            else:
+                max_source_trust = 0.0
+                # Merged targets with no local frontier support should be
+                # validated instead of treated as medium-confidence evidence.
+                confidence = 0.25 * self.sensor_trust_default
+
+            states = self._frontier_map_states(goal)
+            conflict = self._frontier_has_map_conflict(states)
+            if conflict:
+                confidence -= self.frontier_conflict_penalty
+            confidence = max(0.0, min(1.0, confidence))
+            validation_required = conflict or confidence < self.frontier_validation_confidence_threshold
+
+            annotations[goal] = {
+                "x": float(goal[0]),
+                "y": float(goal[1]),
+                "sources": sources,
+                "source_count": len(sources),
+                "source_trust": float(max_source_trust),
+                "confidence": float(confidence),
+                "map_states": states,
+                "conflict": bool(conflict),
+                "validation_required": bool(validation_required),
+                "validator": validator if validation_required else "",
+            }
+        return annotations
+
+    def _publish_frontier_trust_annotations(
+        self,
+        annotations: dict[tuple[float, float], dict[str, Any]],
+        now_ns: int,
+    ) -> None:
+        if not self.frontier_trust_enabled:
+            return
+        values = list(annotations.values())
+        low_sorted = sorted(values, key=lambda item: float(item.get("confidence", 0.0)))
+        high_sorted = list(reversed(low_sorted))
+        n = self.frontier_trust_publish_top_n
+        payload = {
+            "stamp_ns": int(now_ns),
+            "frontier_count": len(values),
+            "low_confidence_count": sum(
+                1 for ann in values
+                if float(ann.get("confidence", 0.0)) < self.frontier_validation_confidence_threshold
+            ),
+            "conflict_count": sum(1 for ann in values if bool(ann.get("conflict", False))),
+            "validation_required_count": sum(
+                1 for ann in values if bool(ann.get("validation_required", False))
+            ),
+            "validator": self._validation_robot_namespace(),
+            "lowest_confidence": low_sorted[:n],
+            "highest_confidence": high_sorted[:n],
+        }
+        msg = String()
+        msg.data = json.dumps(payload, separators=(",", ":"))
+        self.frontier_trust_pub.publish(msg)
+
+        if (now_ns - self._last_frontier_trust_log_ns) >= int(self._summary_interval_sec * 1e9):
+            self._last_frontier_trust_log_ns = now_ns
+            self.get_logger().info(
+                "FRONTIER_TRUST "
+                f"frontiers={payload['frontier_count']} "
+                f"low_conf={payload['low_confidence_count']} "
+                f"conflicts={payload['conflict_count']} "
+                f"validation={payload['validation_required_count']} "
+                f"validator={payload['validator'] or 'none'}"
+            )
+
     def _goal_key(self, goal: tuple[float, float]) -> tuple[int, int]:
         q = self.blacklist_key_resolution
         return (int(round(goal[0] / q)), int(round(goal[1] / q)))
@@ -1513,19 +1984,34 @@ class CFPA2Coordinator(Node):
                     return True
         return False
 
-    def _set_active_goal(self, ns: str, goal: tuple[float, float], now_ns: int) -> None:
+    def _set_active_goal(self, ns: str, goal: tuple[float, float], now_ns: int) -> tuple[float, float]:
         prev = self.last_goal.get(ns)
         # Narrow-passage pivot lock: if the robot can't pivot at its
         # current pose without scraping a wall, refuse a goal change
         # that would demand reorientation. Keep the previous goal so
         # the executor drives the robot OUT of the corridor in a
         # straight line. Lock auto-releases as soon as clearance opens.
+        should_pivot_lock = False
         if (
             prev is not None
             and goal is not None
             and (abs(prev[0] - goal[0]) > 1e-3 or abs(prev[1] - goal[1]) > 1e-3)
             and self._pivot_clearance_blocked(ns)
         ):
+            prev_dist = self._distance_robot_to_goal(ns, prev) if ns in self.odoms else float("inf")
+            if prev_dist <= self.pivot_lock_min_escape_goal_dist_m:
+                self._pivot_lock_held_since_ns.pop(ns, None)
+            else:
+                held_since_ns = self._pivot_lock_held_since_ns.setdefault(ns, now_ns)
+                held_sec = max(0.0, (now_ns - held_since_ns) / 1e9)
+                if self.pivot_lock_max_hold_sec > 0.0 and held_sec > self.pivot_lock_max_hold_sec:
+                    self._pivot_lock_held_since_ns.pop(ns, None)
+                else:
+                    should_pivot_lock = True
+        else:
+            self._pivot_lock_held_since_ns.pop(ns, None)
+
+        if should_pivot_lock and prev is not None:
             self.get_logger().info(
                 f"{ns}: pivot-lock — clearance < {self.pivot_lock_radius_m:.2f} m "
                 f"at ({self.odoms[ns].pose.pose.position.x:.2f},"
@@ -1535,7 +2021,8 @@ class CFPA2Coordinator(Node):
             )
             self._set_policy_reason(ns, "hold/narrow_passage_pivot_lock")
             goal = prev
-        if prev is None or math.hypot(prev[0] - goal[0], prev[1] - goal[1]) > 1e-6:
+        changed = prev is None or math.hypot(prev[0] - goal[0], prev[1] - goal[1]) > 1e-6
+        if changed:
             self.last_goal_set_time_ns[ns] = now_ns
             self.goal_progress_samples[ns].clear()
             self.goal_lock_start_xy[ns] = self._robot_xy(ns) if ns in self.odoms else None
@@ -1551,6 +2038,12 @@ class CFPA2Coordinator(Node):
         elif self.goal_lock_start_xy.get(ns) is None and ns in self.odoms:
             self.goal_lock_start_xy[ns] = self._robot_xy(ns)
         self.last_goal[ns] = goal
+        role = self._role_for_goal(goal)
+        if changed or role != "explore":
+            self.last_goal_role[ns] = role
+        else:
+            self.last_goal_role[ns] = self.last_goal_role.get(ns, role)
+        return goal
 
     def _max_displacement_in_window(
         self, ns: str, window_ns: int
@@ -1779,6 +2272,7 @@ class CFPA2Coordinator(Node):
             policy = self.last_policy_reason.get(ns, "-")
             # Show assigned goal's utility if available
             util_txt = "-"
+            trust_txt = ""
             top_txt = ""
             if per_ns_utilities and ns in per_ns_utilities:
                 ns_utils = per_ns_utilities[ns]
@@ -1789,6 +2283,15 @@ class CFPA2Coordinator(Node):
                 if sorted_goals:
                     top_parts = [f"({g[0]:.1f},{g[1]:.1f})={s:.2f}" for g, s in sorted_goals]
                     top_txt = f" top3=[{' '.join(top_parts)}]"
+            if goal is not None:
+                ann = self.frontier_trust_annotations.get(goal)
+                if ann is not None:
+                    trust_txt = (
+                        f" conf={float(ann.get('confidence', 0.0)):.2f}"
+                        f" src={int(ann.get('source_count', 0))}"
+                        f" val={'Y' if bool(ann.get('validation_required', False)) else 'N'}"
+                    )
+            role_txt = f" role={self.last_goal_role.get(ns, self._role_for_goal(goal))}"
             speed_txt = ""
             vx, vy = self.odom_velocity_xy.get(ns, (0.0, 0.0))
             spd = math.hypot(float(vx), float(vy))
@@ -1798,7 +2301,7 @@ class CFPA2Coordinator(Node):
                 f"{ns}: fronts={per_ns_frontiers.get(ns, 0)} "
                 f"reach={per_ns_reachable.get(ns, 0)} "
                 f"goal={goal_txt} d={dist_txt} u={util_txt} "
-                f"age={age_txt}s{speed_txt} [{policy}]{top_txt}"
+                f"age={age_txt}s{speed_txt}{trust_txt}{role_txt} [{policy}]{top_txt}"
             )
         self.get_logger().info(
             f"ASSIGN [{self.algorithm_mode}] targets={targets_total}\n  " + "\n  ".join(parts)
@@ -2043,8 +2546,7 @@ class CFPA2Coordinator(Node):
                 self._record_tick_perf(tick_start_ns)
 
     def _publish_goal(self, ns: str, map_msg: OccupancyGrid, goal_w: tuple[float, float]) -> None:
-        if not self._goal_is_finite(goal_w):
-            self.get_logger().warn(f"{ns}: dropping non-finite goal {goal_w}")
+        if not self._goal_sane_for_map(ns, map_msg, goal_w, context="publish_goal"):
             return
         msg = PointStamped()
         msg.header.stamp = self.get_clock().now().to_msg()
@@ -2117,6 +2619,7 @@ class CFPA2Coordinator(Node):
         self,
         target_map: OccupancyGrid,
         targets: list[tuple[float, float]],
+        annotations: Optional[dict[tuple[float, float], dict[str, Any]]] = None,
     ) -> None:
         """Emit a red SPHERE per current frontier + a DELETEALL sentinel.
 
@@ -2153,9 +2656,25 @@ class CFPA2Coordinator(Node):
             m.scale.y = 0.18
             m.scale.z = 0.18
             m.color.a = 0.85
-            m.color.r = 1.0
-            m.color.g = 0.1
-            m.color.b = 0.1
+            ann = annotations.get((wx, wy)) if annotations else None
+            if ann is not None:
+                confidence = float(ann.get("confidence", 0.5))
+                if bool(ann.get("conflict", False)):
+                    m.color.r = 0.65
+                    m.color.g = 0.15
+                    m.color.b = 1.0
+                elif bool(ann.get("validation_required", False)):
+                    m.color.r = 1.0
+                    m.color.g = 0.55
+                    m.color.b = 0.05
+                else:
+                    m.color.r = 1.0 - confidence
+                    m.color.g = confidence
+                    m.color.b = 0.10
+            else:
+                m.color.r = 1.0
+                m.color.g = 0.1
+                m.color.b = 0.1
             markers.markers.append(m)
 
         self.frontier_markers_pub.publish(markers)
@@ -2364,6 +2883,214 @@ class CFPA2Coordinator(Node):
             return 0.0
         return 0.0 if self._goal_key(last) == self._goal_key(goal) else 1.0
 
+    def _clamp_sensor_trust(self, value: float) -> float:
+        if not math.isfinite(value):
+            return self.sensor_trust_default if hasattr(self, "sensor_trust_default") else 1.0
+        return max(self.sensor_trust_min, min(self.sensor_trust_max, value))
+
+    def _parse_sensor_trust_overrides(self, raw: Any) -> dict[str, float]:
+        if raw is None:
+            return {}
+        if isinstance(raw, str):
+            items = raw.replace(";", ",").split(",")
+        else:
+            items = [str(item) for item in raw]
+
+        overrides: dict[str, float] = {}
+        for item in items:
+            item = item.strip()
+            if not item:
+                continue
+            if "=" in item:
+                ns, value = item.split("=", 1)
+            elif ":" in item:
+                ns, value = item.split(":", 1)
+            else:
+                self.get_logger().warn(
+                    f"Ignoring sensor_trust_by_namespace entry without '=': {item!r}"
+                )
+                continue
+            ns = ns.strip().strip("/")
+            if not ns:
+                self.get_logger().warn(
+                    f"Ignoring sensor_trust_by_namespace entry with empty namespace: {item!r}"
+                )
+                continue
+            try:
+                trust = float(value)
+            except ValueError:
+                self.get_logger().warn(
+                    f"Ignoring sensor_trust_by_namespace entry with non-float value: {item!r}"
+                )
+                continue
+            overrides[ns] = self._clamp_sensor_trust(trust)
+        return overrides
+
+    def _sensor_trust(self, ns: str) -> float:
+        trust = self.sensor_trust_by_namespace.get(ns, self.sensor_trust_default)
+        trust = self._clamp_sensor_trust(trust)
+        return self._clamp_sensor_trust(math.pow(trust, self.sensor_trust_power))
+
+    def _sensor_trust_summary(self) -> str:
+        if not self.namespaces:
+            return "{}"
+        entries = [f"{ns}:{self._sensor_trust(ns):.2f}" for ns in self.namespaces]
+        return "{" + ", ".join(entries) + "}"
+
+    def _frontier_trust_utility_factor(
+        self,
+        ns: str,
+        annotation: Optional[dict[str, Any]],
+    ) -> float:
+        if not self.frontier_trust_enabled or annotation is None:
+            return 1.0
+        confidence = max(0.0, min(1.0, float(annotation.get("confidence", 0.5))))
+        uncertainty = 1.0 - confidence
+        factor = 1.0 - (self.frontier_trust_info_gain_penalty_weight * uncertainty)
+
+        if bool(annotation.get("validation_required", False)):
+            validator = str(annotation.get("validator", "")) or self._validation_robot_namespace()
+            if validator:
+                if ns == validator:
+                    factor += self.frontier_validation_trusted_bonus * uncertainty
+                else:
+                    factor -= self.frontier_validation_untrusted_penalty * uncertainty
+
+        return max(
+            self.frontier_trust_min_utility_factor,
+            min(self.frontier_trust_max_utility_factor, factor),
+        )
+
+    def _payload_is_fresh(self, rx_ns: int, now_ns: int) -> bool:
+        return rx_ns > 0 and (now_ns - rx_ns) <= int(self.role_candidate_stale_sec * 1e9)
+
+    def _shared_coverage_ratio(self, map_msg: OccupancyGrid) -> float:
+        res = float(map_msg.info.resolution)
+        if res <= 0.0:
+            return 0.0
+        explored = sum(1 for v in map_msg.data if int(v) >= 0)
+        area = explored * res * res
+        return max(0.0, min(1.0, area / self.scene_area_m2))
+
+    def _pose_health_state(self, ns: str) -> str:
+        robots = self.pose_graph_health.get("robots", {})
+        if not isinstance(robots, dict):
+            return "unknown"
+        state = robots.get(ns, {})
+        if not isinstance(state, dict):
+            return "unknown"
+        return str(state.get("state", "unknown"))
+
+    def _role_for_goal(self, goal: Optional[tuple[float, float]]) -> str:
+        if goal is None:
+            return "none"
+        ann = self.role_candidate_annotations.get(goal)
+        if ann is None:
+            return "explore"
+        return str(ann.get("role", "loop_close"))
+
+    def _morphology_robot_risk(self, ns: str) -> tuple[float, float]:
+        if not self.role_mobility_risk_enabled:
+            return 0.0, 0.0
+        if not self._payload_is_fresh(
+            self.morphology_risk_rx_ns,
+            self.get_clock().now().nanoseconds,
+        ):
+            return 0.0, 0.0
+        robots = self.morphology_risk_payload.get("robots", {})
+        if not isinstance(robots, dict):
+            return 0.0, 0.0
+        data = robots.get(ns, {})
+        if not isinstance(data, dict):
+            return 0.0, 0.0
+        return (
+            max(0.0, min(1.0, float(data.get("risk_score", 0.0) or 0.0))),
+            max(0.0, min(1.0, float(data.get("peer_risk", 0.0) or 0.0))),
+        )
+
+    def _candidate_mobility_risk(self, ns: str, candidate: dict[str, Any]) -> float:
+        key = "mobility_risk_go2w" if ns == "robot_a" else "mobility_risk_go2"
+        cand_risk = max(0.0, min(1.0, float(candidate.get(key, 0.0) or 0.0)))
+        robot_risk, _ = self._morphology_robot_risk(ns)
+        return max(cand_risk, robot_risk)
+
+    def _loop_candidates_as_targets(
+        self,
+        *,
+        now_ns: int,
+        planning_map: OccupancyGrid,
+        coverage_ratio: float,
+    ) -> tuple[list[tuple[float, float]], dict[tuple[float, float], dict[str, Any]]]:
+        if (
+            not self.role_awareness_enabled
+            or not self.role_loop_enabled
+            or not self._payload_is_fresh(self.loop_candidates_rx_ns, now_ns)
+        ):
+            return [], {}
+        candidates = self.loop_candidates_payload.get("candidates", [])
+        if not isinstance(candidates, list):
+            return [], {}
+        out: list[tuple[float, float]] = []
+        annotations: dict[tuple[float, float], dict[str, Any]] = {}
+        early_scale = 1.0 if coverage_ratio >= self.role_loop_min_coverage_ratio else self.role_early_loop_scale
+        for raw in candidates:
+            if not isinstance(raw, dict):
+                continue
+            target_robot = str(raw.get("target_robot", "")).strip("/")
+            if target_robot and target_robot not in self.namespaces:
+                continue
+            try:
+                goal = (round(float(raw["x"]), 3), round(float(raw["y"]), 3))
+            except (KeyError, TypeError, ValueError):
+                continue
+            g = self._world_to_grid(planning_map, goal[0], goal[1])
+            if g is None:
+                continue
+            idx = self._grid_index(g[0], g[1], int(planning_map.info.width))
+            if idx < 0 or idx >= len(planning_map.data):
+                continue
+            if int(planning_map.data[idx]) < 0 or int(planning_map.data[idx]) >= self.occ_thresh:
+                continue
+            ann = dict(raw)
+            ann["role"] = "loop_close"
+            ann["early_scale"] = early_scale
+            annotations[goal] = ann
+            out.append(goal)
+        return out, annotations
+
+    def _role_candidate_utility(
+        self,
+        *,
+        ns: str,
+        goal: tuple[float, float],
+        map_msg: OccupancyGrid,
+        dist_map: dict[int, int],
+        annotation: dict[str, Any],
+        coverage_ratio: float,
+    ) -> float:
+        target_robot = str(annotation.get("target_robot", "")).strip("/")
+        if target_robot and target_robot != ns:
+            return -1e18
+        if self._goal_too_close(ns, goal):
+            return -1e18
+        dist_m = self._grid_path_cost_m(map_msg, dist_map, goal)
+        if dist_m is None or dist_m <= 0.0:
+            return -1e18
+        loop_gain = max(0.0, min(1.0, float(annotation.get("loop_gain", 0.0) or 0.0)))
+        mob_risk = self._candidate_mobility_risk(ns, annotation)
+        _, peer_risk = self._morphology_robot_risk(ns)
+        health_state = self._pose_health_state(ns)
+        loop_scale = 1.0
+        if coverage_ratio < self.role_loop_min_coverage_ratio and health_state not in self.role_loop_override_states:
+            loop_scale = self.role_early_loop_scale
+        drift_bonus = 1.00 if health_state in self.role_loop_override_states else 0.0
+        return (
+            (self.role_w_loop * self.role_loop_gain_scale * loop_scale * (loop_gain + drift_bonus))
+            - (self.cfpa2_w_c * dist_m)
+            - (self.role_w_mob * self.role_risk_scale * mob_risk)
+            - (self.role_w_peer * self.role_risk_scale * peer_risk)
+        )
+
     def _cfpa2_single_utility(
         self,
         *,
@@ -2371,6 +3098,7 @@ class CFPA2Coordinator(Node):
         goal: tuple[float, float],
         map_msg: OccupancyGrid,
         dist_map: dict[int, int],
+        frontier_annotation: Optional[dict[str, Any]] = None,
     ) -> float:
         dist_m = self._grid_path_cost_m(map_msg, dist_map, goal)
         if dist_m is None or dist_m <= 0.0:
@@ -2381,8 +3109,10 @@ class CFPA2Coordinator(Node):
             return -1e18
         switch_penalty = self._cfpa2_switch_penalty(ns, goal)
         momentum_bonus = self._cfpa2_momentum_bonus(ns, goal)
+        frontier_factor = self._frontier_trust_utility_factor(ns, frontier_annotation)
+        trusted_info_gain = info_gain * self._sensor_trust(ns) * frontier_factor
         return (
-            (self.cfpa2_w_ig * info_gain)
+            (self.cfpa2_w_ig * trusted_info_gain)
             - (self.cfpa2_w_c * dist_m)
             - (self.cfpa2_w_sw * switch_penalty)
             + (self.cfpa2_w_momentum * momentum_bonus)
@@ -3116,7 +3846,7 @@ class CFPA2Coordinator(Node):
                 self._set_policy_reason(ns, "switch/mui_tare_mdvrp")
                 goal = self._apply_switch_hysteresis(ns, candidate, 1.0)
 
-            self._set_active_goal(ns, goal, now_ns)
+            goal = self._set_active_goal(ns, goal, now_ns)
             publish_map = self.maps.get(ns, planning_map)
             self._publish_goal(ns, publish_map, goal)
             per_ns_assigned[ns] = goal
@@ -3218,7 +3948,28 @@ class CFPA2Coordinator(Node):
             merge_res = max(0.1, float(planning_map.info.resolution) * 2.0)
             targets = self._merge_targets([per_ns_targets[ns] for ns in self.namespaces], merge_res)
 
-        self._publish_frontier_markers(planning_map, targets)
+        frontier_targets = list(targets)
+        coverage_ratio = self._shared_coverage_ratio(planning_map)
+        loop_targets, role_annotations = self._loop_candidates_as_targets(
+            now_ns=now_ns,
+            planning_map=planning_map,
+            coverage_ratio=coverage_ratio,
+        )
+        self.role_candidate_annotations = role_annotations
+        if loop_targets:
+            existing_keys = {self._goal_key(g) for g in targets}
+            for goal in loop_targets:
+                if self._goal_key(goal) in existing_keys:
+                    continue
+                targets.append(goal)
+                existing_keys.add(self._goal_key(goal))
+
+        self.frontier_trust_annotations = self._build_frontier_trust_annotations(
+            targets=frontier_targets,
+            per_ns_targets=per_ns_targets,
+        )
+        self._publish_frontier_trust_annotations(self.frontier_trust_annotations, now_ns)
+        self._publish_frontier_markers(planning_map, targets, self.frontier_trust_annotations)
 
         if self.algorithm_mode == "mui_tare":
             self._tick_impl_mui_tare(
@@ -3245,14 +3996,18 @@ class CFPA2Coordinator(Node):
             for ns in self.namespaces:
                 if ns not in self.odoms:
                     continue
-                od = self.odoms[ns]
-                park_goal = (
-                    float(od.pose.pose.position.x),
-                    float(od.pose.pose.position.y),
-                )
-                self._set_policy_reason(ns, "hold/exploration_complete")
-                self._set_active_goal(ns, park_goal, now_ns)
                 publish_map = self.maps.get(ns, planning_map)
+                park_goal = self._current_pose_goal_if_sane(
+                    ns,
+                    publish_map,
+                    now_ns,
+                    context="park_no_frontiers",
+                )
+                if park_goal is None:
+                    self._set_policy_reason(ns, "hold/no_frontiers_invalid_odom")
+                    continue
+                self._set_policy_reason(ns, "hold/exploration_complete")
+                park_goal = self._set_active_goal(ns, park_goal, now_ns)
                 self._publish_goal(ns, publish_map, park_goal)
             return
 
@@ -3284,12 +4039,24 @@ class CFPA2Coordinator(Node):
                         continue
                     if self._is_blacklisted(ns_a, goal, now_ns):
                         continue
-                    score = self._cfpa2_single_utility(
-                        ns=ns_a,
-                        goal=goal,
-                        map_msg=map_a,
-                        dist_map=dist_maps.get(ns_a, {}),
-                    )
+                    role_ann = self.role_candidate_annotations.get(goal)
+                    if role_ann is not None:
+                        score = self._role_candidate_utility(
+                            ns=ns_a,
+                            goal=goal,
+                            map_msg=map_a,
+                            dist_map=dist_maps.get(ns_a, {}),
+                            annotation=role_ann,
+                            coverage_ratio=coverage_ratio,
+                        )
+                    else:
+                        score = self._cfpa2_single_utility(
+                            ns=ns_a,
+                            goal=goal,
+                            map_msg=map_a,
+                            dist_map=dist_maps.get(ns_a, {}),
+                            frontier_annotation=self.frontier_trust_annotations.get(goal),
+                        )
                     if score > -1e17:
                         utilities_a[goal] = score
 
@@ -3299,12 +4066,24 @@ class CFPA2Coordinator(Node):
                         continue
                     if self._is_blacklisted(ns_b, goal, now_ns):
                         continue
-                    score = self._cfpa2_single_utility(
-                        ns=ns_b,
-                        goal=goal,
-                        map_msg=map_b,
-                        dist_map=dist_maps.get(ns_b, {}),
-                    )
+                    role_ann = self.role_candidate_annotations.get(goal)
+                    if role_ann is not None:
+                        score = self._role_candidate_utility(
+                            ns=ns_b,
+                            goal=goal,
+                            map_msg=map_b,
+                            dist_map=dist_maps.get(ns_b, {}),
+                            annotation=role_ann,
+                            coverage_ratio=coverage_ratio,
+                        )
+                    else:
+                        score = self._cfpa2_single_utility(
+                            ns=ns_b,
+                            goal=goal,
+                            map_msg=map_b,
+                            dist_map=dist_maps.get(ns_b, {}),
+                            frontier_annotation=self.frontier_trust_annotations.get(goal),
+                        )
                     if score > -1e17:
                         utilities_b[goal] = score
 
@@ -3334,6 +4113,12 @@ class CFPA2Coordinator(Node):
                     # robot footprint — otherwise float noise / a single
                     # shared cell lets both robots pick the same point.
                     if self._goals_equivalent(goal_a, goal_b):
+                        continue
+                    if (
+                        self._role_for_goal(goal_a) == "loop_close"
+                        and self._role_for_goal(goal_b) == "loop_close"
+                        and math.hypot(goal_a[0] - goal_b[0], goal_a[1] - goal_b[1]) < 1.0
+                    ):
                         continue
                     overlap = self._cfpa2_overlap_penalty(goal_a, goal_b)
                     joint = score_a + score_b - (self.cfpa2_lambda_overlap * overlap)
@@ -3395,6 +4180,10 @@ class CFPA2Coordinator(Node):
                         )
 
             forced_switch_namespaces: set[str] = set(local_nav_forced_switch_namespaces)
+            for ns, candidate in candidate_goals.items():
+                if self._role_for_goal(candidate) == "loop_close":
+                    forced_switch_namespaces.add(ns)
+                    self._set_policy_reason(ns, "switch/role_loop_close")
             for ns in self.namespaces:
                 forced_goal = self._maybe_force_cfpa2_stuck_recovery(
                     ns=ns,
@@ -3483,8 +4272,17 @@ class CFPA2Coordinator(Node):
                             assignment_scores.get(ns, 0.0),
                         )
 
-                self._set_active_goal(ns, goal, now_ns)
                 publish_map = self.maps.get(ns, planning_map)
+                if not self._goal_sane_for_map(
+                    ns,
+                    publish_map,
+                    goal,
+                    now_ns=now_ns,
+                    context="cfpa2_assignment",
+                ):
+                    self._set_policy_reason(ns, "hold/cfpa2_invalid_goal")
+                    continue
+                goal = self._set_active_goal(ns, goal, now_ns)
                 publish_goal = goal
                 if (
                     ns not in forced_stop_namespaces
@@ -3498,7 +4296,14 @@ class CFPA2Coordinator(Node):
                         planned_goals=candidate_goals,
                     )
                     if st_waypoint is not None:
-                        publish_goal = st_waypoint
+                        if self._goal_sane_for_map(
+                            ns,
+                            publish_map,
+                            st_waypoint,
+                            now_ns=now_ns,
+                            context="cfpa2_space_time_waypoint",
+                        ):
+                            publish_goal = st_waypoint
                 self._publish_goal(ns, publish_map, publish_goal)
                 per_ns_assigned[ns] = goal
 
@@ -3534,12 +4339,18 @@ class CFPA2Coordinator(Node):
                     continue
                 if ns not in self.odoms:
                     continue
-                od = self.odoms[ns]
-                park_goal = (float(od.pose.pose.position.x),
-                             float(od.pose.pose.position.y))
-                self._set_policy_reason(ns, "hold/exploration_complete")
-                self._set_active_goal(ns, park_goal, now_ns)
                 publish_map = self.maps.get(ns, planning_map)
+                park_goal = self._current_pose_goal_if_sane(
+                    ns,
+                    publish_map,
+                    now_ns,
+                    context="park_no_reachable",
+                )
+                if park_goal is None:
+                    self._set_policy_reason(ns, "hold/no_reachable_invalid_odom")
+                    continue
+                self._set_policy_reason(ns, "hold/exploration_complete")
+                park_goal = self._set_active_goal(ns, park_goal, now_ns)
                 self._publish_goal(ns, publish_map, park_goal)
                 per_ns_assigned[ns] = park_goal
 
@@ -3621,7 +4432,7 @@ class CFPA2Coordinator(Node):
                         max(best_explore_utility, pursuit_utility),
                     )
 
-                self._set_active_goal(ns, selected_goal, now_ns)
+                selected_goal = self._set_active_goal(ns, selected_goal, now_ns)
                 publish_map = self.maps.get(ns, planning_map)
                 self._publish_goal(ns, publish_map, selected_goal)
                 per_ns_assigned[ns] = selected_goal
@@ -3749,7 +4560,7 @@ class CFPA2Coordinator(Node):
                         continue
                     self._set_policy_reason(ns, "hold/no_local_map")
                     goal = held
-                    self._set_active_goal(ns, goal, now_ns)
+                    goal = self._set_active_goal(ns, goal, now_ns)
                     publish_map = self.maps.get(ns, planning_map)
                     self._publish_goal(ns, publish_map, goal)
                     per_ns_assigned[ns] = goal
@@ -3764,7 +4575,7 @@ class CFPA2Coordinator(Node):
                     current_targets=per_ns_targets.get(ns, []),
                 )
 
-            self._set_active_goal(ns, goal, now_ns)
+            goal = self._set_active_goal(ns, goal, now_ns)
             publish_map = self.maps.get(ns, planning_map)
             self._publish_goal(ns, publish_map, goal)
             per_ns_assigned[ns] = goal
@@ -3830,7 +4641,7 @@ class CFPA2Coordinator(Node):
             park_goal = (float(od.pose.pose.position.x),
                          float(od.pose.pose.position.y))
             self._set_policy_reason(ns, "hold/exploration_complete")
-            self._set_active_goal(ns, park_goal, now_ns)
+            park_goal = self._set_active_goal(ns, park_goal, now_ns)
             publish_map = self.maps.get(ns, planning_map)
             self._publish_goal(ns, publish_map, park_goal)
             per_ns_assigned[ns] = park_goal

@@ -33,6 +33,30 @@
     cfpa2_w_c: 1.5
     cfpa2_w_sw: 0.2
     cfpa2_lambda_overlap: 1.0
+    # Static sensor-trust prior. The main 2026-04-29 research setup mounts
+    # Livox MID-360 on both Go2W and Go2, so the default is neutral. Lower
+    # robot_a values are kept only for old Unitree L1 sensing-asymmetry
+    # ablations. Trust scales only the info_gain term; path cost and
+    # momentum are unchanged.
+    sensor_trust_default: 1.0
+    sensor_trust_min: 0.05
+    sensor_trust_max: 1.0
+    sensor_trust_power: 1.0
+    sensor_trust_by_namespace: ["robot_a=1.00", "robot_b=1.00"]
+    frontier_trust_enabled: true
+    frontier_trust_topic: /cfpa2/frontier_trust
+    frontier_trust_source_radius_m: 0.75
+    frontier_trust_conflict_radius_m: 0.20
+    frontier_confidence_source_bonus: 0.08
+    frontier_conflict_penalty: 0.45
+    frontier_validation_confidence_threshold: 0.40
+    frontier_trust_publish_top_n: 40
+    frontier_trust_info_gain_penalty_weight: 0.20
+    frontier_validation_trusted_bonus: 0.25
+    frontier_validation_untrusted_penalty: 0.25
+    frontier_trust_min_utility_factor: 0.05
+    frontier_trust_max_utility_factor: 1.35
+    frontier_validation_robot_namespace: robot_b
     # Momentum bonus: cos(heading_to_goal) × (alpha + beta·speed).
     # Bumped 2026-04-25 after demo3_mixed showed 0.4 Hz goal flap (A
     # 72 NEW GOALS / 180 s). Old defaults (w=0.8, alpha=0.5, beta=1.0)
@@ -91,6 +115,8 @@
     cfpa2_stuck_blacklist_sec: 60.0
     local_nav_status_stale_sec: 3.0
     local_nav_stall_blacklist_sec: 45.0
+    goal_sanity_max_abs_m: 100.0
+    goal_sanity_map_margin_m: 2.0
     cfpa2_close_stop_radius_m: 0.35
     cfpa2_close_stop_speed_epsilon: 0.02
     cfpa2_space_time_enabled: true
@@ -134,3 +160,31 @@
     perf_min_samples: 20
     perf_tick_warn_p95_ms: 150.0
     perf_cpu_warn_pct: 15.0
+
+    # ── Loop+Risk role utility (2026-04-30 stage-1, second tuning) ──
+    # First tuning over-corrected: role_w_loop=1.2 + early_loop_scale=1.0
+    # made loop_close DOMINATE robot_a (7/11 ASSIGN) → coverage dropped
+    # 83 % → 44 %. Backed off so loop_close is "occasional priority"
+    # rather than "permanent role":
+    # Three-point bisection found 0.7 / 0.7 to be the sweet spot:
+    #   role_w_loop=1.2 (smoke 2): loop_close 7/11, coverage 44 % (over)
+    #   role_w_loop=0.4 (smoke 3): loop_close 0/11, coverage 74.5 % (under)
+    #   role_w_loop=0.7 (smoke 4): targeting 1-3 loop_close out of 11,
+    #     coverage 65-75 %, occasional revisit when frontier IG poor.
+    # Target balance: loop_close wins when frontier IG is poor AND
+    # pose_health=loop_needed AND a strong revisit candidate exists,
+    # NOT when frontier IG is high.
+    # 4-pt search: 1.2/1.0=dominant(7,cov44), 0.4/0.5=zero(0,cov74),
+    # 0.7/0.7=zero(0,cov63). Try 1.0/1.0 — full early scale + just-below
+    # IG weight, target loop_close 2-5 / 11 with coverage 55-65 %.
+    role_loop_min_coverage_ratio: 0.30
+    role_early_loop_scale: 1.0
+    role_w_loop: 1.0
+
+    # Pivot-lock auto-release: 15 s → 8 s. Smoke-1 captured robot_b
+    # being pivot-locked at SW corridor for ~12 s straight (20+ refused
+    # goal switches) while peer was approaching → inter-robot
+    # near-collision. 8 s gives enough time for pivot-out-of-corridor
+    # while still reacting to peer presence (peer_obstacle costmap
+    # update period ≤ 0.5 s).
+    pivot_lock_max_hold_sec: 8.0

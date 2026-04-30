@@ -32,6 +32,12 @@ COLCON_IGNORE
 *~
 
 # =============================================
+# Claude Code local state
+# =============================================
+/.claude/settings.local.json
+/.claude/*.lock
+
+# =============================================
 # Python
 # =============================================
 **/__pycache__/
@@ -77,6 +83,10 @@ core.*
 # SLAM output artifacts
 # =============================================
 *.ply
+# Exception: vendored CMU local_planner motion-primitive files. localPlanner
+# crashes on startup (SIGSEGV) without these; can be regenerated via
+# path_generator.m but checking them in saves a MATLAB dependency.
+!src/vendor/far_planner/base_autonomy/local_planner/paths/*.ply
 *.pbstream
 *.pgm
 carto_*.yaml
@@ -155,6 +165,8 @@ qrc_report_and_agenda.md
 /src/vendor/tare_planner/or-tools/
 /src/vendor/Livox-SDK2/build/
 /src/collaborative_exploration/go2_tare_planner_ros2/generated/tare_planner/or-tools/
+.local_deps/
+*.deb
 
 # =============================================
 # Stale / renamed-aside files and local scratch

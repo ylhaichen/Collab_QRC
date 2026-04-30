@@ -18,7 +18,10 @@ trigger a recovery sequence:
      behavior_server (already running per nav2_go2*_full_stack.yaml)
      handles this action — drives the robot backward at a safe speed,
      stops on collision via collision_checker, re-checks costmap.
-  2. After backup finishes (success or abort), republish the cached
+  2. Notify the allocator on /<namespace>/frontier_replan so CFPA2 can
+     blacklist the held goal and pick a different frontier if the same
+     target keeps wedging the robot.
+  3. After backup finishes (success or abort), republish the cached
      goal_pose so bt_navigator picks up a fresh NavigateToPose request.
      SmacPlannerHybrid then replans from the new (post-backup) pose;
      because the planner uses REEDS_SHEPP, the new path naturally
@@ -54,6 +57,7 @@ from rclpy.qos import (
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Odometry
 from nav2_msgs.action import BackUp
+from std_msgs.msg import Empty
 
 
 def _split_ros_argv(argv):
@@ -70,6 +74,7 @@ class StuckWatchdog(Node):
         self.declare_parameter("odom_topic", "odom/nav")
         self.declare_parameter("goal_topic", "goal_pose")
         self.declare_parameter("backup_action", "backup")
+        self.declare_parameter("frontier_replan_topic", "frontier_replan")
         # Stuck = moved < threshold over the rolling window with an
         # active goal. Tune threshold for IMU/odom noise floor: 0.20 m
         # is generous (robot would normally move 1+ m in 10 s under
@@ -97,6 +102,7 @@ class StuckWatchdog(Node):
         odom_topic = f"/{ns}/{self.get_parameter('odom_topic').value}"
         goal_topic = f"/{ns}/{self.get_parameter('goal_topic').value}"
         backup_action = f"/{ns}/{self.get_parameter('backup_action').value}"
+        frontier_replan_topic = f"/{ns}/{self.get_parameter('frontier_replan_topic').value}"
 
         self.window_sec = float(self.get_parameter("stuck_window_sec").value)
         self.threshold_m = float(self.get_parameter("stuck_threshold_m").value)
@@ -135,11 +141,13 @@ class StuckWatchdog(Node):
         # Republish goal on the same topic Nav2 listens on, with the
         # same RELIABLE QoS bt_navigator actually expects.
         self._goal_pub = self.create_publisher(PoseStamped, goal_topic, nav2_goal_qos)
+        self._frontier_replan_pub = self.create_publisher(Empty, frontier_replan_topic, 10)
         self._backup_client = ActionClient(self, BackUp, backup_action)
         self.create_timer(check_period, self._check_stuck)
 
         self._ns = ns
         self._backup_action_name = backup_action
+        self._frontier_replan_topic = frontier_replan_topic
         self.get_logger().info(
             f"stuck_watchdog up: ns={ns} window={self.window_sec}s "
             f"threshold={self.threshold_m}m backup={self.backup_dist}m@"
@@ -215,6 +223,11 @@ class StuckWatchdog(Node):
             f"STUCK detected (ns={self._ns}): moved {moved*100:.1f} cm "
             f"in {self.window_sec:.0f} s, goal at ({gx:+.2f},{gy:+.2f}) "
             f"d2g={d2g:.2f} m — triggering BackUp + replan"
+        )
+        self._frontier_replan_pub.publish(Empty())
+        self.get_logger().warn(
+            f"Published frontier_replan on {self._frontier_replan_topic} "
+            "so CFPA2 can rotate away from the wedged goal."
         )
         self._trigger_recovery()
 
