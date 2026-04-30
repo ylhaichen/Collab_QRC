@@ -1828,6 +1828,7 @@ def _launch_setup(context):
     loop_candidates_enabled = _as_bool(_get(context, "loop_candidates_enabled"))
     morphology_risk_enabled = _as_bool(_get(context, "morphology_risk_enabled"))
     peer_obstacle_enabled = _as_bool(_get(context, "peer_obstacle_enabled"))
+    reconstruction_quality_enabled = _as_bool(_get(context, "reconstruction_quality_enabled"))
     loop_risk_output_dir = _get(context, "loop_risk_output_dir").strip()
     # Back-compat aliases from the removed planners.
     # `hybrid` → our v0.1 Hybrid A* + Ceres-smoothed planner.
@@ -2106,7 +2107,7 @@ def _launch_setup(context):
 
     # ── Loop-closure proxy + mobility-risk awareness layer ──
     awareness_nodes = []
-    if explore and (role_awareness_enabled or loop_candidates_enabled):
+    if explore and (role_awareness_enabled or loop_candidates_enabled or reconstruction_quality_enabled):
         awareness_nodes.append(
             Node(
                 package="reconstruction_awareness",
@@ -2145,6 +2146,21 @@ def _launch_setup(context):
                     "namespaces": ["robot_a", "robot_b"],
                     "map_topic": "/merged_map",
                     "output_path": _loop_risk_artifact("morphology_risk.json"),
+                }],
+                output="screen",
+            )
+        )
+    if explore and reconstruction_quality_enabled:
+        awareness_nodes.append(
+            Node(
+                package="reconstruction_awareness",
+                executable="reconstruction_quality_node",
+                name="reconstruction_quality_node",
+                parameters=[{
+                    "use_sim_time": use_sim_time,
+                    "namespaces": ["robot_a", "robot_b"],
+                    "map_topic": "/merged_map",
+                    "output_path": _loop_risk_artifact("reconstruction_quality.json"),
                 }],
                 output="screen",
             )
@@ -2564,6 +2580,14 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "peer_obstacle_enabled", default_value="false",
             description="Publish synthetic peer LaserScan obstacles for Nav2 local costmaps.",
+        ),
+        DeclareLaunchArgument(
+            "reconstruction_quality_enabled", default_value="false",
+            description=(
+                "Run reconstruction_quality_node (geometry-first voxel "
+                "density + view diversity) and allow CFPA2 to assign "
+                "role=reconstruct goals to under-reconstructed regions."
+            ),
         ),
         DeclareLaunchArgument(
             "loop_risk_output_dir", default_value="",

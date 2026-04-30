@@ -217,17 +217,23 @@ class CFPA2Coordinator(Node):
         self.declare_parameter("role_awareness_enabled", False)
         self.declare_parameter("role_loop_enabled", True)
         self.declare_parameter("role_mobility_risk_enabled", True)
+        self.declare_parameter("role_reconstruct_enabled", True)
         self.declare_parameter("pose_graph_health_topic", "/cfpa2/pose_graph_health")
         self.declare_parameter("loop_candidates_topic", "/cfpa2/loop_candidates")
         self.declare_parameter("morphology_risk_topic", "/cfpa2/morphology_risk")
+        self.declare_parameter("reconstruction_candidates_topic", "/cfpa2/reconstruction_candidates")
         self.declare_parameter("role_candidate_stale_sec", 3.0)
         self.declare_parameter("role_w_loop", 0.8)
         self.declare_parameter("role_w_mob", 1.2)
         self.declare_parameter("role_w_peer", 1.5)
+        self.declare_parameter("role_w_recon", 0.6)
         self.declare_parameter("role_loop_gain_scale", 120.0)
+        self.declare_parameter("role_recon_gain_scale", 80.0)
         self.declare_parameter("role_risk_scale", 10.0)
         self.declare_parameter("role_loop_min_coverage_ratio", 0.70)
+        self.declare_parameter("role_recon_min_coverage_ratio", 0.50)
         self.declare_parameter("role_early_loop_scale", 0.40)
+        self.declare_parameter("role_early_recon_scale", 0.30)
         self.declare_parameter("role_loop_override_states", ["drift_risk", "loop_needed"])
         self.declare_parameter("scene_area_m2", 384.0)
         # Outer weight applied to the momentum_bonus term. Bumped 0.8 →
@@ -463,22 +469,34 @@ class CFPA2Coordinator(Node):
         self.role_awareness_enabled = bool(self.get_parameter("role_awareness_enabled").value)
         self.role_loop_enabled = bool(self.get_parameter("role_loop_enabled").value)
         self.role_mobility_risk_enabled = bool(self.get_parameter("role_mobility_risk_enabled").value)
+        self.role_reconstruct_enabled = bool(self.get_parameter("role_reconstruct_enabled").value)
         self.pose_graph_health_topic = str(self.get_parameter("pose_graph_health_topic").value).strip()
         self.loop_candidates_topic = str(self.get_parameter("loop_candidates_topic").value).strip()
         self.morphology_risk_topic = str(self.get_parameter("morphology_risk_topic").value).strip()
+        self.reconstruction_candidates_topic = str(
+            self.get_parameter("reconstruction_candidates_topic").value
+        ).strip()
         self.role_candidate_stale_sec = max(
             0.5, float(self.get_parameter("role_candidate_stale_sec").value)
         )
         self.role_w_loop = max(0.0, float(self.get_parameter("role_w_loop").value))
         self.role_w_mob = max(0.0, float(self.get_parameter("role_w_mob").value))
         self.role_w_peer = max(0.0, float(self.get_parameter("role_w_peer").value))
+        self.role_w_recon = max(0.0, float(self.get_parameter("role_w_recon").value))
         self.role_loop_gain_scale = max(1.0, float(self.get_parameter("role_loop_gain_scale").value))
+        self.role_recon_gain_scale = max(1.0, float(self.get_parameter("role_recon_gain_scale").value))
         self.role_risk_scale = max(1.0, float(self.get_parameter("role_risk_scale").value))
         self.role_loop_min_coverage_ratio = min(
             1.0, max(0.0, float(self.get_parameter("role_loop_min_coverage_ratio").value))
         )
+        self.role_recon_min_coverage_ratio = min(
+            1.0, max(0.0, float(self.get_parameter("role_recon_min_coverage_ratio").value))
+        )
         self.role_early_loop_scale = min(
             1.0, max(0.0, float(self.get_parameter("role_early_loop_scale").value))
+        )
+        self.role_early_recon_scale = min(
+            1.0, max(0.0, float(self.get_parameter("role_early_recon_scale").value))
         )
         self.role_loop_override_states = {
             str(x).strip() for x in self.get_parameter("role_loop_override_states").value
@@ -796,6 +814,8 @@ class CFPA2Coordinator(Node):
         self.loop_candidates_rx_ns = 0
         self.morphology_risk_payload: dict[str, Any] = {}
         self.morphology_risk_rx_ns = 0
+        self.reconstruction_candidates_payload: dict[str, Any] = {}
+        self.reconstruction_candidates_rx_ns = 0
         self.role_candidate_annotations: dict[tuple[float, float], dict[str, Any]] = {}
         self.last_goal_role: dict[str, str] = {ns: "explore" for ns in self.namespaces}
         self._mui_last_solve_ns = 0
@@ -842,6 +862,13 @@ class CFPA2Coordinator(Node):
                 self._morphology_risk_cb,
                 10,
             )
+            if self.role_reconstruct_enabled:
+                self.create_subscription(
+                    String,
+                    self.reconstruction_candidates_topic,
+                    self._reconstruction_candidates_cb,
+                    10,
+                )
         for ns in self.namespaces:
             self.create_subscription(OccupancyGrid, f"/{ns}/map", lambda m, n=ns: self._map_cb(m, n), 1)
             self.create_subscription(Odometry, f"/{ns}/odom/nav", lambda m, n=ns: self._odom_cb(m, n), 10)
@@ -959,6 +986,15 @@ class CFPA2Coordinator(Node):
         if isinstance(payload, dict):
             self.morphology_risk_payload = payload
             self.morphology_risk_rx_ns = self.get_clock().now().nanoseconds
+
+    def _reconstruction_candidates_cb(self, msg: String) -> None:
+        try:
+            payload = json.loads(msg.data)
+        except json.JSONDecodeError:
+            return
+        if isinstance(payload, dict):
+            self.reconstruction_candidates_payload = payload
+            self.reconstruction_candidates_rx_ns = self.get_clock().now().nanoseconds
 
     def _nav_status_cb(self, msg: String, ns: str) -> None:
         try:
@@ -3058,6 +3094,60 @@ class CFPA2Coordinator(Node):
             out.append(goal)
         return out, annotations
 
+    def _reconstruction_candidates_as_targets(
+        self,
+        *,
+        now_ns: int,
+        planning_map: OccupancyGrid,
+        coverage_ratio: float,
+    ) -> tuple[list[tuple[float, float]], dict[tuple[float, float], dict[str, Any]]]:
+        """Mirror of _loop_candidates_as_targets for the reconstruction
+        quality stream. Each candidate carries `recon_gain` and is
+        stamped role=reconstruct so the assignment loop knows to use
+        the reconstruction utility weights. Same target_robot routing
+        + planning-map-occupancy filter as loop_candidates.
+        """
+        if (
+            not self.role_awareness_enabled
+            or not self.role_reconstruct_enabled
+            or not self._payload_is_fresh(self.reconstruction_candidates_rx_ns, now_ns)
+        ):
+            return [], {}
+        candidates = self.reconstruction_candidates_payload.get("candidates", [])
+        if not isinstance(candidates, list):
+            return [], {}
+        out: list[tuple[float, float]] = []
+        annotations: dict[tuple[float, float], dict[str, Any]] = {}
+        early_scale = (
+            1.0
+            if coverage_ratio >= self.role_recon_min_coverage_ratio
+            else self.role_early_recon_scale
+        )
+        for raw in candidates:
+            if not isinstance(raw, dict):
+                continue
+            target_robot = str(raw.get("target_robot", "")).strip("/")
+            if target_robot and target_robot not in self.namespaces:
+                continue
+            try:
+                goal = (round(float(raw["x"]), 3), round(float(raw["y"]), 3))
+            except (KeyError, TypeError, ValueError):
+                continue
+            g = self._world_to_grid(planning_map, goal[0], goal[1])
+            if g is None:
+                continue
+            idx = self._grid_index(g[0], g[1], int(planning_map.info.width))
+            if idx < 0 or idx >= len(planning_map.data):
+                continue
+            if int(planning_map.data[idx]) < 0 or int(planning_map.data[idx]) >= self.occ_thresh:
+                continue
+            ann = dict(raw)
+            ann["role"] = "reconstruct"
+            ann["early_scale"] = early_scale
+            annotations[goal] = ann
+            out.append(goal)
+        return out, annotations
+
     def _role_candidate_utility(
         self,
         *,
@@ -3076,9 +3166,22 @@ class CFPA2Coordinator(Node):
         dist_m = self._grid_path_cost_m(map_msg, dist_map, goal)
         if dist_m is None or dist_m <= 0.0:
             return -1e18
-        loop_gain = max(0.0, min(1.0, float(annotation.get("loop_gain", 0.0) or 0.0)))
+        role = str(annotation.get("role", "loop_close"))
         mob_risk = self._candidate_mobility_risk(ns, annotation)
         _, peer_risk = self._morphology_robot_risk(ns)
+        if role == "reconstruct":
+            recon_gain = max(0.0, min(1.0, float(annotation.get("recon_gain", 0.0) or 0.0)))
+            recon_scale = 1.0
+            if coverage_ratio < self.role_recon_min_coverage_ratio:
+                recon_scale = self.role_early_recon_scale
+            return (
+                (self.role_w_recon * self.role_recon_gain_scale * recon_scale * recon_gain)
+                - (self.cfpa2_w_c * dist_m)
+                - (self.role_w_mob * self.role_risk_scale * mob_risk)
+                - (self.role_w_peer * self.role_risk_scale * peer_risk)
+            )
+        # Default: loop_close.
+        loop_gain = max(0.0, min(1.0, float(annotation.get("loop_gain", 0.0) or 0.0)))
         health_state = self._pose_health_state(ns)
         loop_scale = 1.0
         if coverage_ratio < self.role_loop_min_coverage_ratio and health_state not in self.role_loop_override_states:
@@ -3955,10 +4058,20 @@ class CFPA2Coordinator(Node):
             planning_map=planning_map,
             coverage_ratio=coverage_ratio,
         )
-        self.role_candidate_annotations = role_annotations
-        if loop_targets:
+        recon_targets, recon_annotations = self._reconstruction_candidates_as_targets(
+            now_ns=now_ns,
+            planning_map=planning_map,
+            coverage_ratio=coverage_ratio,
+        )
+        # Merge role annotations. loop_close wins on collision because
+        # SLAM correction is more time-critical than reconstruction
+        # quality, and recon candidates regenerate every tick anyway.
+        merged_annotations: dict[tuple[float, float], dict[str, Any]] = dict(recon_annotations)
+        merged_annotations.update(role_annotations)
+        self.role_candidate_annotations = merged_annotations
+        if loop_targets or recon_targets:
             existing_keys = {self._goal_key(g) for g in targets}
-            for goal in loop_targets:
+            for goal in list(loop_targets) + list(recon_targets):
                 if self._goal_key(goal) in existing_keys:
                     continue
                 targets.append(goal)
@@ -4181,9 +4294,13 @@ class CFPA2Coordinator(Node):
 
             forced_switch_namespaces: set[str] = set(local_nav_forced_switch_namespaces)
             for ns, candidate in candidate_goals.items():
-                if self._role_for_goal(candidate) == "loop_close":
+                role = self._role_for_goal(candidate)
+                if role == "loop_close":
                     forced_switch_namespaces.add(ns)
                     self._set_policy_reason(ns, "switch/role_loop_close")
+                elif role == "reconstruct":
+                    forced_switch_namespaces.add(ns)
+                    self._set_policy_reason(ns, "switch/role_reconstruct")
             for ns in self.namespaces:
                 forced_goal = self._maybe_force_cfpa2_stuck_recovery(
                     ns=ns,

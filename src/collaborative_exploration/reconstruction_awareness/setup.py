@@ -23,6 +23,7 @@ setup(
             "loop_closure_candidate_node = reconstruction_awareness.loop_closure_candidate_node:main",
             "morphology_risk_node = reconstruction_awareness.morphology_risk_node:main",
             "peer_obstacle_scan_node = reconstruction_awareness.peer_obstacle_scan_node:main",
+            "reconstruction_quality_node = reconstruction_awareness.reconstruction_quality_node:main",
         ],
     },
 )

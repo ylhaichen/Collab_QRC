@@ -2,9 +2,12 @@
 # Loop-Closure + Mobility-Risk allocator benchmark.
 #
 # Modes:
-#   coverage_only_mppi  — MPPI + CFPA2 frontier allocation only
-#   loop_only_mppi      — add pose_graph_health + loop candidates + CFPA2 loop role
-#   loop_risk_mppi      — add mobility risk + peer obstacle scan
+#   coverage_only_mppi      — MPPI + CFPA2 frontier allocation only
+#   loop_only_mppi          — add pose_graph_health + loop candidates + CFPA2 loop role
+#   loop_risk_mppi          — add mobility risk + peer obstacle scan
+#   loop_risk_recon_mppi    — full Loop+Risk + reconstruction_quality_node
+#                             (geometry-first voxel density + view diversity
+#                             → CFPA2 role=reconstruct candidates)
 set -u -o pipefail
 
 WS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -25,6 +28,7 @@ ROLE_AWARENESS=false
 LOOP_CANDIDATES=false
 MORPHOLOGY_RISK=false
 PEER_OBSTACLE=false
+RECON_QUALITY=false
 case "${MODE}" in
   coverage_only_mppi)
     ;;
@@ -38,8 +42,15 @@ case "${MODE}" in
     MORPHOLOGY_RISK=true
     PEER_OBSTACLE=true
     ;;
+  loop_risk_recon_mppi)
+    ROLE_AWARENESS=true
+    LOOP_CANDIDATES=true
+    MORPHOLOGY_RISK=true
+    PEER_OBSTACLE=true
+    RECON_QUALITY=true
+    ;;
   *)
-    echo "ERROR: unknown mode '${MODE}' (coverage_only_mppi | loop_only_mppi | loop_risk_mppi)" >&2
+    echo "ERROR: unknown mode '${MODE}' (coverage_only_mppi | loop_only_mppi | loop_risk_mppi | loop_risk_recon_mppi)" >&2
     exit 2
     ;;
 esac
@@ -56,6 +67,7 @@ echo "  duration/run   : ${DURATION_SEC} s"
 echo "  nav backends   : ${NAV_A} / ${NAV_B}"
 echo "  role/loop/risk : ${ROLE_AWARENESS} / ${LOOP_CANDIDATES} / ${MORPHOLOGY_RISK}"
 echo "  peer obstacle  : ${PEER_OBSTACLE}"
+echo "  recon quality  : ${RECON_QUALITY}"
 echo "  gui / rviz     : ${GUI} / ${RVIZ}"
 echo "  out dir        : ${OUT_DIR}"
 echo "================================================================"
@@ -115,11 +127,12 @@ run_trial() {
         loop_candidates_enabled:="${LOOP_CANDIDATES}" \
         morphology_risk_enabled:="${MORPHOLOGY_RISK}" \
         peer_obstacle_enabled:="${PEER_OBSTACLE}" \
+        reconstruction_quality_enabled:="${RECON_QUALITY}" \
         loop_risk_output_dir:="${trial_dir}"
   ) >"${launch_log}" 2>&1
   local rc=$?
   echo "  exit    : ${rc}"
-  for f in session/robot_a.json session/robot_b.json collision.json pose_graph_health.json loop_candidates.json morphology_risk.json; do
+  for f in session/robot_a.json session/robot_b.json collision.json pose_graph_health.json loop_candidates.json morphology_risk.json reconstruction_quality.json; do
     if [[ ! -f "${trial_dir}/${f}" ]]; then
       echo "  WARN    : missing ${f}"
     fi
