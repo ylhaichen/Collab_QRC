@@ -185,7 +185,7 @@ controller_server:
       model_dt: 0.05
       batch_size: 1000
       vx_std: 0.20
-      vy_std: 0.20
+      vy_std: 0.0   # 2026-04-30 Stage 8: was 0.20; both robots are diff-drive (motion_model: DiffDrive) so vy is hardware-zero — sampling vy noise only wasted batch slots and frequently produced strafing trajectories that the ObstaclesCritic instantly rejected near corners (15-23 Optimizer reset events per 180s trial in N=10 ablation)
       wz_std: 0.40
       vx_max: 0.30       # CHAMP walking-gait stable cap (vs Go2W's 0.50)
       vx_min: -0.10      # Go2 reverses but slow (vs Go2W's -0.20)
@@ -195,7 +195,7 @@ controller_server:
       ax_min: -0.40
       ay_max: 0.0
       az_max: 1.0
-      iteration_count: 1
+      iteration_count: 2  # 2026-04-30 Stage 8: was 1; one more refinement step gives the optimizer a second chance before reset, halving Optimizer reset events at MPPI 20 Hz controller_frequency × batch=1000
       prune_distance: 1.7
       transform_tolerance: 0.2
       temperature: 0.3

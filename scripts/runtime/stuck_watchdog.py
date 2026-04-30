@@ -54,7 +54,7 @@ from rclpy.qos import (
     QoSProfile, ReliabilityPolicy, DurabilityPolicy, HistoryPolicy,
 )
 
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, Twist
 from nav_msgs.msg import Odometry
 from nav2_msgs.action import BackUp
 from std_msgs.msg import Empty
@@ -95,6 +95,19 @@ class StuckWatchdog(Node):
         # Goal-change reset: when a fresh goal arrives, clear the pose
         # history so we measure stuck-ness against the new goal only.
         self.declare_parameter("goal_change_threshold_m", 0.50)
+        # Last-resort raw cmd_vel pulse — fires only when N consecutive
+        # BackUp action requests fail to be accepted (e.g. robot
+        # wedged with walls on both sides → behavior_server's collision-
+        # ahead check rejects every backup attempt). The pulse drives a
+        # raw Twist (vx<0 + small ω) for `pulse_duration_sec` directly
+        # on /<ns>/cmd_vel, bypassing Nav2 entirely. CLAUDE.md flagged
+        # this as the missing fallback after observing 0/30 BackUp
+        # successes across the N=10 ablation.
+        self.declare_parameter("pulse_after_backup_failures", 2)
+        self.declare_parameter("pulse_duration_sec", 1.5)
+        self.declare_parameter("pulse_vx_mps", -0.10)
+        self.declare_parameter("pulse_wz_radps", 0.6)
+        self.declare_parameter("pulse_cmd_vel_topic", "cmd_vel")
         # Heartbeat
         self.declare_parameter("check_rate_hz", 2.0)
 
@@ -115,6 +128,16 @@ class StuckWatchdog(Node):
         self.goal_change_thr = float(
             self.get_parameter("goal_change_threshold_m").value
         )
+        self.pulse_after_backup_failures = max(
+            1, int(self.get_parameter("pulse_after_backup_failures").value)
+        )
+        self.pulse_duration_sec = max(
+            0.1, float(self.get_parameter("pulse_duration_sec").value)
+        )
+        self.pulse_vx = float(self.get_parameter("pulse_vx_mps").value)
+        self.pulse_wz = float(self.get_parameter("pulse_wz_radps").value)
+        pulse_cmd_topic = f"/{ns}/{self.get_parameter('pulse_cmd_vel_topic').value}"
+        self._pulse_cmd_topic = pulse_cmd_topic
         check_period = 1.0 / max(0.1,
                                  float(self.get_parameter("check_rate_hz").value))
 
@@ -143,7 +166,10 @@ class StuckWatchdog(Node):
         self._goal_pub = self.create_publisher(PoseStamped, goal_topic, nav2_goal_qos)
         self._frontier_replan_pub = self.create_publisher(Empty, frontier_replan_topic, 10)
         self._backup_client = ActionClient(self, BackUp, backup_action)
+        self._cmd_vel_pub = self.create_publisher(Twist, pulse_cmd_topic, 10)
         self.create_timer(check_period, self._check_stuck)
+        self._consecutive_backup_failures = 0
+        self._pulse_state: dict | None = None  # {start_sec, deadline_sec}
 
         self._ns = ns
         self._backup_action_name = backup_action
@@ -232,12 +258,23 @@ class StuckWatchdog(Node):
         self._trigger_recovery()
 
     def _trigger_recovery(self) -> None:
+        # Last-resort raw cmd_vel pulse if BackUp consistently fails.
+        if self._consecutive_backup_failures >= self.pulse_after_backup_failures:
+            self.get_logger().warn(
+                f"BackUp failed {self._consecutive_backup_failures} times "
+                f"in a row; firing raw cmd_vel pulse on {self._pulse_cmd_topic} "
+                f"(vx={self.pulse_vx} m/s wz={self.pulse_wz} rad/s for "
+                f"{self.pulse_duration_sec:.1f} s)."
+            )
+            self._begin_cmd_vel_pulse()
+            return
         if not self._backup_client.wait_for_server(timeout_sec=2.0):
             self.get_logger().error(
                 f"BackUp action server '{self._backup_action_name}' not "
                 f"available — is behavior_server running? skipping recovery."
             )
             self._last_recovery_t = self._now_sec()  # arm cooldown anyway
+            self._consecutive_backup_failures += 1
             return
 
         self._recovery_in_flight = True
@@ -263,6 +300,7 @@ class StuckWatchdog(Node):
                 "BackUp goal not accepted; skipping replan, will re-check."
             )
             self._recovery_in_flight = False
+            self._consecutive_backup_failures += 1
             return
         self.get_logger().info("BackUp accepted, awaiting result.")
         gh.get_result_async().add_done_callback(self._on_backup_done)
@@ -274,6 +312,15 @@ class StuckWatchdog(Node):
         except Exception as exc:
             self.get_logger().warn(f"BackUp result error: {exc}")
             status = None
+
+        # Track per-recovery success/failure for the cmd_vel-pulse
+        # fallback: status==4 (SUCCEEDED) resets the failure streak;
+        # any other terminal status (ABORTED=6, CANCELED=5) increments.
+        SUCCEEDED = 4
+        if status == SUCCEEDED:
+            self._consecutive_backup_failures = 0
+        else:
+            self._consecutive_backup_failures += 1
 
         # Whether backup succeeded or aborted (collision check rejected
         # halfway), we still want to nudge Nav2 to replan from the new
@@ -294,6 +341,59 @@ class StuckWatchdog(Node):
         # Clear pose history so the next stuck-window starts fresh.
         self._pose_hist.clear()
         self._recovery_in_flight = False
+
+    # ── cmd_vel pulse fallback ───────────────────────────────────────
+
+    def _begin_cmd_vel_pulse(self) -> None:
+        """Schedule a raw Twist pulse on /<ns>/cmd_vel for
+        pulse_duration_sec. The pulse runs as a fixed-rate timer that
+        publishes Twist at 20 Hz, then publishes a stop and tears
+        itself down. Nav2 will see the resulting motion as
+        unsolicited and may step out of pivot-lock as the robot
+        moves into open space, where its next plan succeeds."""
+        if self._pulse_state is not None:
+            return  # already pulsing
+        deadline = self._now_sec() + self.pulse_duration_sec
+        self._pulse_state = {"deadline": deadline, "stop_sent": False}
+        self._pulse_timer = self.create_timer(0.05, self._tick_cmd_vel_pulse)
+        self._last_recovery_t = self._now_sec()  # arm cooldown so we don't loop
+        self._consecutive_backup_failures = 0     # consume the failure budget
+        self._pose_hist.clear()
+        # Republish frontier_replan so CFPA2 also blacklists the wedged
+        # goal and supplies a fresh one once the robot moves.
+        self._frontier_replan_pub.publish(Empty())
+
+    def _tick_cmd_vel_pulse(self) -> None:
+        st = self._pulse_state
+        if st is None:
+            return
+        now = self._now_sec()
+        if now >= st["deadline"]:
+            if not st["stop_sent"]:
+                stop = Twist()
+                self._cmd_vel_pub.publish(stop)
+                st["stop_sent"] = True
+                self.get_logger().info("cmd_vel pulse done; published stop.")
+            # Cancel the timer.
+            try:
+                self._pulse_timer.cancel()
+                self.destroy_timer(self._pulse_timer)
+            except Exception:  # pragma: no cover
+                pass
+            self._pulse_state = None
+            self._recovery_in_flight = False
+            # Republish cached goal so Nav2 plans from the new pose.
+            if self._latest_goal is not None:
+                republish = PoseStamped()
+                republish.header.stamp = self.get_clock().now().to_msg()
+                republish.header.frame_id = self._latest_goal.header.frame_id
+                republish.pose = self._latest_goal.pose
+                self._goal_pub.publish(republish)
+            return
+        msg = Twist()
+        msg.linear.x = float(self.pulse_vx)
+        msg.angular.z = float(self.pulse_wz)
+        self._cmd_vel_pub.publish(msg)
 
 
 def main(argv=None) -> None:
