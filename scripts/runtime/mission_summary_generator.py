@@ -427,6 +427,180 @@ def _claims_failures(
     return out
 
 
+def _claims_reconstruction_3d(
+    rqs: dict[str, Any] | None,
+    rv: dict[str, Any] | None,
+    acs: dict[str, Any] | None,
+    sg: dict[str, Any] | None,
+    ev: EvidenceIndex,
+) -> list[dict[str, Any]]:
+    """Real 3D reconstruction claims pulled from the new artefacts:
+        reconstruction_quality_summary.json   (rqs)
+        reconstruction_voxels.json            (rv)
+        accumulated_cloud_summary.json        (acs)
+        scene_graph.json                      (sg, for bbox_3d count)
+    Each claim must cite at least one evidence_id; if all four sources
+    are missing this section is silent.
+    """
+    out: list[dict[str, Any]] = []
+    if not (rqs or rv or acs):
+        return out
+
+    if rqs is not None:
+        occ = int(_coalesce(rqs.get("occupied_3d_voxels"), 0))
+        low = int(_coalesce(rqs.get("low_quality_3d_voxels"), 0))
+        zr = rqs.get("z_range_observed_m") or [0.0, 0.0]
+        per_robot = rqs.get("per_robot_point_count") or {}
+        eids = [
+            ev.add("reconstruction_quality_summary.json", "occupied_3d_voxels", occ, "metric"),
+            ev.add("reconstruction_quality_summary.json", "low_quality_3d_voxels", low, "metric"),
+            ev.add("reconstruction_quality_summary.json", "z_range_observed_m", list(zr), "range"),
+            ev.add(
+                "reconstruction_quality_summary.json",
+                "per_robot_point_count",
+                dict(per_robot),
+                "dict",
+            ),
+        ]
+        z_lo = float(zr[0]) if isinstance(zr, list) and zr else 0.0
+        z_hi = float(zr[1]) if isinstance(zr, list) and len(zr) > 1 else 0.0
+        contrib = "; ".join(
+            f"{ns}={int(per_robot[ns])} pts" for ns in sorted(per_robot.keys())
+        ) or "no per-robot attribution available"
+        out.append({
+            "claim": (
+                f"3D reconstruction quality grid covers {occ} occupied voxels at "
+                f"{rqs.get('xy_resolution_m', 0.30)} m × {rqs.get('z_resolution_m', 0.20)} m "
+                f"(xy × z); {low} are flagged low_quality "
+                f"(score < {rqs.get('low_quality_score_threshold', 0.5)}). "
+                f"Observed z range: [{z_lo:.2f}, {z_hi:.2f}] m. "
+                f"Per-robot point contribution: {contrib}."
+            ),
+            "type": "reconstruction_3d_quality",
+            "confidence": 0.92,
+            "evidence": eids,
+            "uncertainty_reason": (
+                "score = sqrt(density × view) where view averages yaw and "
+                "elevation diversity; not a true surface-completeness metric."
+            ),
+            "recommended_action": (
+                "Run accumulated_pointcloud_node + reconstruction_quality_node "
+                "with z_resolution_m=0.10 if vertical detail matters for the "
+                "deliverable."
+                if occ > 0 else
+                "No 3D voxels accumulated yet; ensure registered_scan_map is "
+                "publishing in map frame."
+            ),
+        })
+
+    if rv is not None:
+        n_serialised = int(_coalesce(rv.get("voxels_serialised"), 0))
+        n_low = int(_coalesce(rv.get("low_quality_voxels"), 0))
+        eid = ev.add(
+            "reconstruction_voxels.json",
+            "voxels_serialised + low_quality_voxels",
+            {"voxels_serialised": n_serialised, "low_quality_voxels": n_low},
+            "metric",
+        )
+        out.append({
+            "claim": (
+                f"reconstruction_voxels.json serialised {n_serialised} voxel "
+                f"records ({n_low} low_quality)."
+            ),
+            "type": "reconstruction_3d_inventory",
+            "confidence": 0.95,
+            "evidence": [eid],
+            "uncertainty_reason": (
+                "Serialised list may be capped by max_voxels_serialised "
+                "(default 8000); occupied_3d_voxels is the true count."
+            ),
+            "recommended_action": (
+                "Use reconstruction_voxels.json for offline analysis (per-"
+                "voxel score, view bins, source robot ids)."
+            ),
+        })
+
+    if acs is not None:
+        occ_voxels = int(_coalesce(acs.get("occupied_voxels"), 0))
+        raw = int(_coalesce(acs.get("raw_points_seen"), 0))
+        per_robot = acs.get("per_robot_point_count") or {}
+        pcd_path = acs.get("pcd_path")
+        ply_path = acs.get("ply_path")
+        wrong_frame = int(_coalesce(acs.get("dropped_wrong_frame"), 0))
+        eids = [
+            ev.add("accumulated_cloud_summary.json", "occupied_voxels", occ_voxels, "metric"),
+            ev.add("accumulated_cloud_summary.json", "raw_points_seen", raw, "metric"),
+            ev.add(
+                "accumulated_cloud_summary.json",
+                "per_robot_point_count",
+                dict(per_robot),
+                "dict",
+            ),
+        ]
+        if pcd_path:
+            eids.append(ev.add("accumulated_cloud_summary.json", "pcd_path", pcd_path, "file"))
+        if ply_path:
+            eids.append(ev.add("accumulated_cloud_summary.json", "ply_path", ply_path, "file"))
+        contrib = "; ".join(
+            f"{ns}={int(per_robot[ns])} pts" for ns in sorted(per_robot.keys())
+        ) or "no per-robot attribution available"
+        out.append({
+            "claim": (
+                f"Accumulated point cloud: {occ_voxels} unique voxels at "
+                f"{acs.get('voxel_size_m', 0.10)} m, downsampled from {raw} "
+                f"raw points. Per-robot contribution: {contrib}. "
+                + (f"Saved to {pcd_path}" if pcd_path else "Not saved to disk (output_dir empty)")
+                + (f" + {ply_path}" if ply_path else "")
+                + "."
+            ),
+            "type": "accumulated_cloud",
+            "confidence": 0.95,
+            "evidence": eids,
+            "uncertainty_reason": (
+                f"{wrong_frame} clouds dropped due to wrong frame_id (expected "
+                f"map). High count may indicate fast_lio_tf_adapter mis-config."
+                if wrong_frame > 0 else
+                "Voxel-downsampled centroids; mean of points within each "
+                "{voxel_size_m}³ cell, not the raw scan density."
+            ),
+            "recommended_action": (
+                "Inspect accumulated_cloud.pcd in CloudCompare or pcl_viewer "
+                "to confirm geometry; rerun with smaller voxel_size_m if "
+                "needed."
+                if pcd_path else "Set output_dir on accumulated_pointcloud_node to persist the cloud."
+            ),
+        })
+
+    if sg is not None:
+        nodes = sg.get("nodes", []) or []
+        bbox_count = sum(1 for n in nodes if "bbox_3d" in n)
+        if bbox_count > 0:
+            eid = ev.add(
+                "scene_graph.json",
+                "nodes[*].bbox_3d count",
+                bbox_count,
+                "metric",
+            )
+            out.append({
+                "claim": (
+                    f"{bbox_count} scene-graph nodes carry a 3D bounding box "
+                    f"(z extents pulled from the accumulated voxel cloud)."
+                ),
+                "type": "scene_graph_3d",
+                "confidence": 0.85,
+                "evidence": [eid],
+                "uncertainty_reason": (
+                    "bbox_3d z extents are min/max of voxel centroids inside "
+                    "the 2D footprint; coarser than mesh extents."
+                ),
+                "recommended_action": (
+                    "Future VLM enrichment node can use bbox_3d for room/"
+                    "obstacle 3D-anchored language descriptions."
+                ),
+            })
+    return out
+
+
 def _claims_topology(
     sg: dict[str, Any] | None,
     ev: EvidenceIndex,
@@ -590,7 +764,19 @@ _SECTION_ORDER: list[tuple[str, set[str]]] = [
     ("Executive Summary", {"coverage_summary", "safety_summary"}),
     ("Explored Topology", {"topology_summary", "spatial_grounded_fact"}),
     ("Localization Quality", {"localization_quality", "pose_graph_health_state", "loop_candidate_inventory"}),
-    ("Reconstruction Quality", {"reconstruction_summary", "reconstruction_low_quality_region"}),
+    (
+        "Reconstruction Quality (2D proxy)",
+        {"reconstruction_summary", "reconstruction_low_quality_region"},
+    ),
+    (
+        "Reconstruction Quality (3D)",
+        {
+            "reconstruction_3d_quality",
+            "reconstruction_3d_inventory",
+            "accumulated_cloud",
+            "scene_graph_3d",
+        },
+    ),
     ("Hazards and Robot Failure Events", {"robot_failure_event", "near_failure_pattern"}),
     ("Unexplored or Uncertain Regions", {"unexplored_region"}),
     ("Allocation Distribution", {"role_assignment_distribution"}),
@@ -653,6 +839,9 @@ def generate(trial_dir: Path) -> dict[str, Any]:
     pgh = _load_json(trial_dir / "pose_graph_health.json")
     loop_cands = _load_json(trial_dir / "loop_candidates.json")
     rq = _load_json(trial_dir / "reconstruction_quality.json")
+    rqs = _load_json(trial_dir / "reconstruction_quality_summary.json")
+    rv = _load_json(trial_dir / "reconstruction_voxels.json")
+    acs = _load_json(trial_dir / "accumulated_cloud_summary.json")
     sg = _load_json(trial_dir / "scene_graph.json")
 
     ev = EvidenceIndex(trial_dir)
@@ -661,6 +850,7 @@ def generate(trial_dir: Path) -> dict[str, Any]:
     claims.extend(_claims_topology(sg, ev))
     claims.extend(_claims_localization(sess_a, sess_b, pgh, loop_cands, ev))
     claims.extend(_claims_reconstruction(rq, ev))
+    claims.extend(_claims_reconstruction_3d(rqs, rv, acs, sg, ev))
     claims.extend(_claims_failures(sess_a, sess_b, coll, ev))
     claims.extend(_claims_unexplored(sess_a, rq, ev))
     claims.extend(_scrape_assignment_log(trial_dir / "launch.log", ev))
@@ -676,6 +866,11 @@ def generate(trial_dir: Path) -> dict[str, Any]:
             trial_dir / "loop_candidates.json",
             trial_dir / "morphology_risk.json",
             trial_dir / "reconstruction_quality.json",
+            trial_dir / "reconstruction_quality_summary.json",
+            trial_dir / "reconstruction_voxels.json",
+            trial_dir / "accumulated_cloud_summary.json",
+            trial_dir / "accumulated_cloud.pcd",
+            trial_dir / "accumulated_cloud.ply",
             trial_dir / "scene_graph.json",
             trial_dir / "launch.log",
         ] if p.exists()

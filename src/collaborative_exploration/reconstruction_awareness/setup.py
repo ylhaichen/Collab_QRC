@@ -25,6 +25,7 @@ setup(
             "peer_obstacle_scan_node = reconstruction_awareness.peer_obstacle_scan_node:main",
             "reconstruction_quality_node = reconstruction_awareness.reconstruction_quality_node:main",
             "scene_graph_builder_node = reconstruction_awareness.scene_graph_builder_node:main",
+            "accumulated_pointcloud_node = reconstruction_awareness.accumulated_pointcloud_node:main",
         ],
     },
 )

@@ -148,7 +148,7 @@ run_trial() {
   ) >"${launch_log}" 2>&1
   local rc=$?
   echo "  exit    : ${rc}"
-  for f in session/robot_a.json session/robot_b.json collision.json pose_graph_health.json loop_candidates.json morphology_risk.json reconstruction_quality.json scene_graph.json; do
+  for f in session/robot_a.json session/robot_b.json collision.json pose_graph_health.json loop_candidates.json morphology_risk.json reconstruction_quality.json reconstruction_quality_summary.json reconstruction_voxels.json accumulated_cloud_summary.json scene_graph.json; do
     if [[ ! -f "${trial_dir}/${f}" ]]; then
       echo "  WARN    : missing ${f}"
     fi

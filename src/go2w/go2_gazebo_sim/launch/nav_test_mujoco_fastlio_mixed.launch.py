@@ -2166,7 +2166,27 @@ def _launch_setup(context):
                     "use_sim_time": use_sim_time,
                     "namespaces": ["robot_a", "robot_b"],
                     "map_topic": "/merged_map",
+                    # Stage-7 3D upgrade: legacy file kept; two new
+                    # canonical outputs per proposal §10.1 deliverables.
                     "output_path": _loop_risk_artifact("reconstruction_quality.json"),
+                    "summary_output_path": _loop_risk_artifact("reconstruction_quality_summary.json"),
+                    "voxels_output_path": _loop_risk_artifact("reconstruction_voxels.json"),
+                }],
+                output="screen",
+            )
+        )
+        awareness_nodes.append(
+            Node(
+                package="reconstruction_awareness",
+                executable="accumulated_pointcloud_node",
+                name="accumulated_pointcloud_node",
+                parameters=[{
+                    "use_sim_time": use_sim_time,
+                    "namespaces": ["robot_a", "robot_b"],
+                    "voxel_size_m": 0.10,
+                    "expected_frame": "map",
+                    "output_dir": loop_risk_output_dir,
+                    "output_basename": "accumulated_cloud",
                 }],
                 output="screen",
             )

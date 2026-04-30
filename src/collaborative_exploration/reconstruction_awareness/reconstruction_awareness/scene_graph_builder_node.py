@@ -130,6 +130,14 @@ class SceneGraphBuilderNode(Node):
         self._loop_payload: dict[str, Any] = {}
         self._recon_payload: dict[str, Any] = {}
         self._first_seen: dict[str, float] = {}
+        # 3D voxel cloud cache for bbox_3d computation. Populated from
+        # /cfpa2/reconstruction_voxels (accumulated_pointcloud_node).
+        # Stored as (Nx3) numpy float32 array.
+        self._voxel_xyz: np.ndarray | None = None
+        self._voxel_evidence: dict[str, str] = {
+            "topic": "/cfpa2/reconstruction_voxels",
+            "source_node": "accumulated_pointcloud_node",
+        }
 
         map_qos = QoSProfile(
             history=QoSHistoryPolicy.KEEP_LAST,
@@ -140,6 +148,14 @@ class SceneGraphBuilderNode(Node):
         self.create_subscription(OccupancyGrid, self.map_topic, self._on_map, map_qos)
         self.create_subscription(String, self.loop_topic, self._on_loop, 10)
         self.create_subscription(String, self.recon_topic, self._on_recon, 10)
+        # Optional subscription to the accumulated voxel cloud. If
+        # accumulated_pointcloud_node is not running, bbox_3d is left
+        # absent and the consumer (mission_summary) treats it as
+        # unverified for that field.
+        from sensor_msgs.msg import PointCloud2 as _PC2  # local import keeps startup light
+        self.create_subscription(
+            _PC2, "/cfpa2/reconstruction_voxels", self._on_voxel_cloud, 5
+        )
 
         self._pub = self.create_publisher(String, "/cfpa2/scene_graph", 10)
         self._marker_pub = self.create_publisher(
@@ -174,6 +190,65 @@ class SceneGraphBuilderNode(Node):
             return
         if isinstance(payload, dict):
             self._recon_payload = payload
+
+    def _on_voxel_cloud(self, msg) -> None:
+        # PointCloud2 with float32 xyz at offsets 0/4/8 (the layout
+        # accumulated_pointcloud_node emits). Parse to a contiguous
+        # numpy array for fast bbox queries.
+        import struct as _struct  # local import; avoids module-level dep
+        n = int(msg.width) * int(msg.height)
+        if n == 0 or msg.point_step < 12:
+            self._voxel_xyz = None
+            return
+        try:
+            buf = bytes(msg.data)
+            # Vectorised slice: each point starts at i*point_step.
+            arr = np.frombuffer(buf, dtype=np.uint8)
+            if msg.point_step == 12 and len(buf) >= n * 12:
+                xyz = np.frombuffer(buf, dtype=np.float32, count=n * 3).reshape(n, 3)
+            else:
+                xyz = np.empty((n, 3), dtype=np.float32)
+                for i in range(n):
+                    base = i * msg.point_step
+                    x, y, z = _struct.unpack_from("<fff", buf, base)
+                    xyz[i] = (x, y, z)
+            self._voxel_xyz = np.ascontiguousarray(xyz, dtype=np.float32)
+        except (ValueError, _struct.error):
+            self._voxel_xyz = None
+
+    # ── bbox_3d helper ───────────────────────────────────────────────
+
+    def _bbox_3d_from_voxels(
+        self,
+        x_min: float,
+        y_min: float,
+        x_max: float,
+        y_max: float,
+    ) -> dict[str, float] | None:
+        """Return the z extent of accumulated voxels falling inside
+        the given XY bbox, or None if no cloud has been received yet
+        or no voxels lie inside the box."""
+        if self._voxel_xyz is None or self._voxel_xyz.size == 0:
+            return None
+        xy = self._voxel_xyz
+        mask = (
+            (xy[:, 0] >= x_min)
+            & (xy[:, 0] <= x_max)
+            & (xy[:, 1] >= y_min)
+            & (xy[:, 1] <= y_max)
+        )
+        if not np.any(mask):
+            return None
+        zs = xy[mask, 2]
+        return {
+            "x_min": round(float(x_min), 3),
+            "y_min": round(float(y_min), 3),
+            "x_max": round(float(x_max), 3),
+            "y_max": round(float(y_max), 3),
+            "z_min": round(float(zs.min()), 3),
+            "z_max": round(float(zs.max()), 3),
+            "voxel_count_in_bbox": int(mask.sum()),
+        }
 
     # ── geometry analysis ────────────────────────────────────────────
 
@@ -402,6 +477,7 @@ class SceneGraphBuilderNode(Node):
             next_id += 1
             obs_id = f"obstacle_{next_id}"
             self._first_seen.setdefault(obs_id, now_t)
+            bbox_3d = self._bbox_3d_from_voxels(wx_min, wy_min, wx_max, wy_max)
             node = {
                 "node_id": obs_id,
                 "type": "obstacle",
@@ -417,6 +493,11 @@ class SceneGraphBuilderNode(Node):
                 "first_seen_time": self._first_seen[obs_id],
                 "last_seen_time": now_t,
             }
+            if bbox_3d is not None:
+                node["bbox_3d"] = bbox_3d
+                # Update centroid with z = mid of bbox_3d.
+                node["centroid"]["z"] = round((bbox_3d["z_min"] + bbox_3d["z_max"]) / 2.0, 3)
+                node["evidence_source"] = self._voxel_evidence
             nodes.append(node)
             if inside_room_id is not None:
                 edges.append({
@@ -489,10 +570,13 @@ class SceneGraphBuilderNode(Node):
                 continue
             x = float(c.get("x", 0.0))
             y = float(c.get("y", 0.0))
+            z_voxel = float(c.get("z", 0.0) or 0.0)
+            xy_vox = float(c.get("voxel_size_m", 0.30) or 0.30)
+            z_vox = float(c.get("z_resolution_m", 0.20) or 0.20)
             nid = f"low_quality_reconstruction_region_{i+1}"
             self._first_seen.setdefault(nid, now_t)
             host = _world_to_room_id(x, y)
-            nodes.append({
+            node: dict[str, Any] = {
                 "node_id": nid,
                 "type": "low_quality_reconstruction_region",
                 "label": nid,
@@ -505,7 +589,23 @@ class SceneGraphBuilderNode(Node):
                 "confidence": 0.7,
                 "first_seen_time": self._first_seen[nid],
                 "last_seen_time": now_t,
-            })
+            }
+            if z_voxel > 0.0:
+                node["centroid"]["z"] = round(z_voxel, 3)
+                node["bbox_3d"] = {
+                    "x_min": round(x - xy_vox / 2.0, 3),
+                    "y_min": round(y - xy_vox / 2.0, 3),
+                    "x_max": round(x + xy_vox / 2.0, 3),
+                    "y_max": round(y + xy_vox / 2.0, 3),
+                    "z_min": round(z_voxel - z_vox / 2.0, 3),
+                    "z_max": round(z_voxel + z_vox / 2.0, 3),
+                    "voxel_count_in_bbox": int(c.get("voxel_count", 0) or 0),
+                }
+                node["evidence_source"] = {
+                    "topic": "/cfpa2/reconstruction_candidates",
+                    "source_node": "reconstruction_quality_node",
+                }
+            nodes.append(node)
             if host is not None:
                 edges.append({
                     "source": nid,
