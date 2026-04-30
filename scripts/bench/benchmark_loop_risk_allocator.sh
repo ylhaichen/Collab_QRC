@@ -137,6 +137,12 @@ run_trial() {
       echo "  WARN    : missing ${f}"
     fi
   done
+  # Stage 5: offline mission_summary.{md,json} + evidence_index.json
+  # generated from existing artefacts. Pure metric → narrative; no VLM.
+  if [[ -f "${trial_dir}/session/robot_a.json" ]]; then
+    python3 "${WS_DIR}/scripts/runtime/mission_summary_generator.py" \
+      "${trial_dir}" 2>&1 | sed 's/^/  /'
+  fi
 }
 
 for i in $(seq 1 "${NUM_TRIALS}"); do
