@@ -8,6 +8,11 @@
 #   loop_risk_recon_mppi    — full Loop+Risk + reconstruction_quality_node
 #                             (geometry-first voxel density + view diversity
 #                             → CFPA2 role=reconstruct candidates)
+#   loop_risk_recon_graph_mppi
+#                           — adds geometry-only scene_graph_builder_node
+#                             (rooms / corridors / doorways / obstacles +
+#                             loop / reconstruct candidate nodes wired
+#                             into mission_summary topology section).
 set -u -o pipefail
 
 WS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -29,6 +34,7 @@ LOOP_CANDIDATES=false
 MORPHOLOGY_RISK=false
 PEER_OBSTACLE=false
 RECON_QUALITY=false
+SCENE_GRAPH=false
 case "${MODE}" in
   coverage_only_mppi)
     ;;
@@ -49,8 +55,16 @@ case "${MODE}" in
     PEER_OBSTACLE=true
     RECON_QUALITY=true
     ;;
+  loop_risk_recon_graph_mppi)
+    ROLE_AWARENESS=true
+    LOOP_CANDIDATES=true
+    MORPHOLOGY_RISK=true
+    PEER_OBSTACLE=true
+    RECON_QUALITY=true
+    SCENE_GRAPH=true
+    ;;
   *)
-    echo "ERROR: unknown mode '${MODE}' (coverage_only_mppi | loop_only_mppi | loop_risk_mppi | loop_risk_recon_mppi)" >&2
+    echo "ERROR: unknown mode '${MODE}' (coverage_only_mppi | loop_only_mppi | loop_risk_mppi | loop_risk_recon_mppi | loop_risk_recon_graph_mppi)" >&2
     exit 2
     ;;
 esac
@@ -68,6 +82,7 @@ echo "  nav backends   : ${NAV_A} / ${NAV_B}"
 echo "  role/loop/risk : ${ROLE_AWARENESS} / ${LOOP_CANDIDATES} / ${MORPHOLOGY_RISK}"
 echo "  peer obstacle  : ${PEER_OBSTACLE}"
 echo "  recon quality  : ${RECON_QUALITY}"
+echo "  scene graph    : ${SCENE_GRAPH}"
 echo "  gui / rviz     : ${GUI} / ${RVIZ}"
 echo "  out dir        : ${OUT_DIR}"
 echo "================================================================"
@@ -128,11 +143,12 @@ run_trial() {
         morphology_risk_enabled:="${MORPHOLOGY_RISK}" \
         peer_obstacle_enabled:="${PEER_OBSTACLE}" \
         reconstruction_quality_enabled:="${RECON_QUALITY}" \
+        scene_graph_enabled:="${SCENE_GRAPH}" \
         loop_risk_output_dir:="${trial_dir}"
   ) >"${launch_log}" 2>&1
   local rc=$?
   echo "  exit    : ${rc}"
-  for f in session/robot_a.json session/robot_b.json collision.json pose_graph_health.json loop_candidates.json morphology_risk.json reconstruction_quality.json; do
+  for f in session/robot_a.json session/robot_b.json collision.json pose_graph_health.json loop_candidates.json morphology_risk.json reconstruction_quality.json scene_graph.json; do
     if [[ ! -f "${trial_dir}/${f}" ]]; then
       echo "  WARN    : missing ${f}"
     fi

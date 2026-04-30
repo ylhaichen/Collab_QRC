@@ -1829,6 +1829,7 @@ def _launch_setup(context):
     morphology_risk_enabled = _as_bool(_get(context, "morphology_risk_enabled"))
     peer_obstacle_enabled = _as_bool(_get(context, "peer_obstacle_enabled"))
     reconstruction_quality_enabled = _as_bool(_get(context, "reconstruction_quality_enabled"))
+    scene_graph_enabled = _as_bool(_get(context, "scene_graph_enabled"))
     loop_risk_output_dir = _get(context, "loop_risk_output_dir").strip()
     # Back-compat aliases from the removed planners.
     # `hybrid` → our v0.1 Hybrid A* + Ceres-smoothed planner.
@@ -2107,7 +2108,12 @@ def _launch_setup(context):
 
     # ── Loop-closure proxy + mobility-risk awareness layer ──
     awareness_nodes = []
-    if explore and (role_awareness_enabled or loop_candidates_enabled or reconstruction_quality_enabled):
+    if explore and (
+        role_awareness_enabled
+        or loop_candidates_enabled
+        or reconstruction_quality_enabled
+        or scene_graph_enabled
+    ):
         awareness_nodes.append(
             Node(
                 package="reconstruction_awareness",
@@ -2161,6 +2167,20 @@ def _launch_setup(context):
                     "namespaces": ["robot_a", "robot_b"],
                     "map_topic": "/merged_map",
                     "output_path": _loop_risk_artifact("reconstruction_quality.json"),
+                }],
+                output="screen",
+            )
+        )
+    if explore and scene_graph_enabled:
+        awareness_nodes.append(
+            Node(
+                package="reconstruction_awareness",
+                executable="scene_graph_builder_node",
+                name="scene_graph_builder_node",
+                parameters=[{
+                    "use_sim_time": use_sim_time,
+                    "map_topic": "/merged_map",
+                    "output_path": _loop_risk_artifact("scene_graph.json"),
                 }],
                 output="screen",
             )
@@ -2587,6 +2607,15 @@ def generate_launch_description():
                 "Run reconstruction_quality_node (geometry-first voxel "
                 "density + view diversity) and allow CFPA2 to assign "
                 "role=reconstruct goals to under-reconstructed regions."
+            ),
+        ),
+        DeclareLaunchArgument(
+            "scene_graph_enabled", default_value="false",
+            description=(
+                "Run scene_graph_builder_node — geometry-only 3D scene "
+                "graph (rooms, corridors, doorways, obstacles, loop / "
+                "reconstruction candidate nodes; connected_to / inside / "
+                "near / needs_revisit edges). No VLM, no GPU."
             ),
         ),
         DeclareLaunchArgument(

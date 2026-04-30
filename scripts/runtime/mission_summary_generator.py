@@ -427,6 +427,94 @@ def _claims_failures(
     return out
 
 
+def _claims_topology(
+    sg: dict[str, Any] | None,
+    ev: EvidenceIndex,
+) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    if sg is None:
+        return out
+    counts = sg.get("node_type_counts", {}) or {}
+    n_room = int(counts.get("room", 0))
+    n_corr = int(counts.get("corridor", 0))
+    n_door = int(counts.get("doorway", 0))
+    n_obs = int(counts.get("obstacle", 0))
+    edges = sg.get("edge_relation_counts", {}) or {}
+    n_conn = int(edges.get("connected_to", 0))
+    eids = [
+        ev.add("scene_graph.json", "node_type_counts.room", n_room, "metric"),
+        ev.add("scene_graph.json", "node_type_counts.corridor", n_corr, "metric"),
+        ev.add("scene_graph.json", "node_type_counts.doorway", n_door, "metric"),
+        ev.add("scene_graph.json", "node_type_counts.obstacle", n_obs, "metric"),
+        ev.add("scene_graph.json", "edge_relation_counts.connected_to", n_conn, "metric"),
+    ]
+    out.append({
+        "claim": (
+            f"Geometry-only scene graph identifies {n_room} room(s), "
+            f"{n_corr} corridor(s), {n_door} doorway(s), {n_obs} obstacle(s); "
+            f"{n_conn} connected_to edges link rooms via doorways."
+        ),
+        "type": "topology_summary",
+        "confidence": 0.75,
+        "evidence": eids,
+        "uncertainty_reason": (
+            "Rooms/corridors derived from /merged_map free-cell connected "
+            "components; small unmapped fragments can split a true room "
+            "into two, and over-aggressive corridor classification can "
+            "mis-label a long room. Doorway widths are bounding-box-derived, "
+            "not the true narrow-passage chord."
+        ),
+        "recommended_action": (
+            "Run scene graph at finer map resolution if room split is suspect."
+            if n_room <= 1 else
+            "Topology stable — feed `node_type_counts` to the future VLM "
+            "enrichment node to add semantic room labels."
+        ),
+    })
+    # Surface the largest room and any obstacles inside it as a
+    # spatially-grounded fact.
+    nodes = sg.get("nodes", []) or []
+    rooms_only = [n for n in nodes if n.get("type") == "room"]
+    if rooms_only:
+        biggest = max(rooms_only, key=lambda n: float(n.get("area_m2", 0.0)))
+        eid_room = ev.add(
+            "scene_graph.json",
+            f"nodes[node_id={biggest['node_id']}]",
+            {k: biggest.get(k) for k in ("node_id", "centroid", "area_m2", "inscribed_radius_m")},
+            "node",
+        )
+        ed_inside = [
+            e for e in (sg.get("edges", []) or [])
+            if e.get("relation") == "inside" and e.get("target") == biggest["node_id"]
+        ]
+        n_inside = len(ed_inside)
+        eid_edges = ev.add(
+            "scene_graph.json",
+            f"edges[relation=inside,target={biggest['node_id']}]",
+            n_inside,
+            "metric",
+        )
+        out.append({
+            "claim": (
+                f"Largest room {biggest['node_id']} ({float(biggest.get('area_m2', 0.0)):.1f} m², "
+                f"centred at ({biggest['centroid']['x']:.2f}, {biggest['centroid']['y']:.2f})) "
+                f"contains {n_inside} obstacle/anomaly nodes (inside edges)."
+            ),
+            "type": "spatial_grounded_fact",
+            "confidence": 0.80,
+            "evidence": [eid_room, eid_edges],
+            "uncertainty_reason": (
+                "Inside-edge count includes loop and reconstruction "
+                "candidate nodes, not just physical obstacles."
+            ),
+            "recommended_action": (
+                "If inside count is high, the room is a candidate "
+                "report-refine target (extra reconstruction views)."
+            ),
+        })
+    return out
+
+
 def _claims_unexplored(
     sess_a: dict[str, Any] | None,
     rq: dict[str, Any] | None,
@@ -500,6 +588,7 @@ def _verify_claims(claims: list[dict[str, Any]], evidence: dict[str, Any]) -> li
 
 _SECTION_ORDER: list[tuple[str, set[str]]] = [
     ("Executive Summary", {"coverage_summary", "safety_summary"}),
+    ("Explored Topology", {"topology_summary", "spatial_grounded_fact"}),
     ("Localization Quality", {"localization_quality", "pose_graph_health_state", "loop_candidate_inventory"}),
     ("Reconstruction Quality", {"reconstruction_summary", "reconstruction_low_quality_region"}),
     ("Hazards and Robot Failure Events", {"robot_failure_event", "near_failure_pattern"}),
@@ -564,10 +653,12 @@ def generate(trial_dir: Path) -> dict[str, Any]:
     pgh = _load_json(trial_dir / "pose_graph_health.json")
     loop_cands = _load_json(trial_dir / "loop_candidates.json")
     rq = _load_json(trial_dir / "reconstruction_quality.json")
+    sg = _load_json(trial_dir / "scene_graph.json")
 
     ev = EvidenceIndex(trial_dir)
     claims: list[dict[str, Any]] = []
     claims.extend(_claims_executive(sess_a, sess_b, coll, ev))
+    claims.extend(_claims_topology(sg, ev))
     claims.extend(_claims_localization(sess_a, sess_b, pgh, loop_cands, ev))
     claims.extend(_claims_reconstruction(rq, ev))
     claims.extend(_claims_failures(sess_a, sess_b, coll, ev))
@@ -585,6 +676,7 @@ def generate(trial_dir: Path) -> dict[str, Any]:
             trial_dir / "loop_candidates.json",
             trial_dir / "morphology_risk.json",
             trial_dir / "reconstruction_quality.json",
+            trial_dir / "scene_graph.json",
             trial_dir / "launch.log",
         ] if p.exists()
     ]
