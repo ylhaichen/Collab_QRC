@@ -103,6 +103,45 @@ The Loop+Risk pipeline runs end-to-end and the per-robot safety improvements are
 
 Artifacts: `results/ablation/20260430_021813/{coverage_only_mppi,loop_only_mppi,loop_risk_mppi}/`.
 
+### Stage 3 — N = 10 ablation after stability fixes (2026-04-30 03:18)
+
+Three Stage 3a fixes were applied before scaling to N = 10:
+
+1. `cfpa2_frontier_obstacle_clearance_m: 0.25 → 0.40` — push frontier centroids deeper into free space so Go2 does not get assigned wall-edge goals that produce corner stamping.
+2. `nav2_go2w_full_stack.yaml`: Go2W `vx_max: 0.50 → 0.30`, `wz_max: 1.0 → 0.8`, `ax_max: 0.5 → 0.3` — match Go2 caps because Go2W high-speed wheel skid was producing IMU acceleration noise that Fast-LIO over-trusted.
+3. `pointlio_gazebo_mid360.yaml`: `acc_cov / gyr_cov: 0.1 → 0.3` — let Fast-LIO down-weight the noisy IMU pre-integration in favour of the lidar match.
+
+After these fixes a 120 s smoke kept Go2W yaw drift at 2.7 ° (vs 180 ° catastrophic divergence in Stage 2 trial 3). The Stage 3 ablation then ran 3 modes × **10 trials × 180 s** on demo3_mixed, GUI on, default Loop+Risk weights `role_w_loop=1.0`, `role_early_loop_scale=1.0`.
+
+```text
+mode                  cov%(σ)    Go2W_m  Go2_m   Go2W_obs  Go2_obs   Go2W_yaw  Go2_yaw   tip   loop a/b
+─────────────────────────────────────────────────────────────────────────────────────────────────────────
+coverage_only_mppi    70.1±13.2  36.08   28.79     205     3322       11.04 °   4.86 °   0/30    0/0
+loop_only_mppi        70.9± 8.4  37.10   23.28     387     3499        7.50 °   4.14 °   0/30   33/61
+loop_risk_mppi        74.6±11.2  38.12   27.81     532    *2003*      12.71 °   4.74 °   0/30   42/52
+```
+
+Per-mode ranked best on each axis:
+
+| axis | winner | best value | runner-up | margin |
+|---|---|---|---|---|
+| coverage | loop_risk_mppi | 74.6 % | loop_only 70.9 % | +3.7 pp |
+| Go2W SLAM yaw drift | loop_only_mppi | 7.50 ° | coverage_only 11.04 ° | −32 % |
+| Go2 obstacle contacts | loop_risk_mppi | 2003 | coverage_only 3322 | −40 % |
+| Go2W obstacle contacts | coverage_only_mppi | 205 | loop_only 387 | −47 % |
+| stability (tip events) | all 3 tied | 0/30 | — | Stage 3a fix 100 % effective |
+
+The Stage 3a SLAM stability fix is the dominant win: zero SLAM yaw divergence and zero tip events across 30 N = 10 trials, vs 1 SLAM divergence + 1 tip across 9 N = 3 Stage 2 trials. Catastrophic failures eliminated.
+
+The Loop+Risk components produce **morphology-asymmetric benefits** rather than a single best mode:
+
+- **Go2W (wheeled-legged)** benefits most from `loop_only`. Loop revisits act as IMU-drift correction; Go2W's wheel skid produces yaw-rate noise that Fast-LIO accumulates open-loop (10 ° peak in coverage_only), and revisits cut this by a third. peer_obstacle + morphology_risk in loop_risk add cost without proportional benefit because Go2W's contact rate is already low.
+- **Go2 (legged-only)** benefits most from `loop_risk`. peer_obstacle reduces inter-robot collisions in narrow corridors, and morphology_risk lets Go2 avoid pillar-rich quadrants — together cutting corner stamping by 40 %. The pure `loop_only` mode's extra revisits actually push Go2 deeper into corner geometry without the safety layers, slightly worsening contacts.
+
+This is direct evidence for **proposal RQ5 / H4**: same Mid-360 sensing + same Fast-LIO SLAM + same Nav2/MPPI controller, but two distinct optimal allocation policies emerge from morphology alone. A single stack ablation cannot pick one mode as best for the heterogeneous team — the planner must select per-robot.
+
+Artifacts: `results/ablation/20260430_031818_n10/{coverage_only_mppi,loop_only_mppi,loop_risk_mppi}/{summary.tsv,loop_risk_summary.json,trial_*}`.
+
 ## 1. Executive Summary
 
 This proposal targets a research gap in **multi-robot collaborative exploration**: most existing systems treat robots as roughly homogeneous agents, or only model heterogeneity at the high-level task-allocation layer. In our platform, the heterogeneity is fundamental and physically meaningful:

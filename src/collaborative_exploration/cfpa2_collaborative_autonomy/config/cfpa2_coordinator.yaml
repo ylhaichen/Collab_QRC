@@ -93,7 +93,7 @@
     # whole corridor was a frontier-extraction dead zone. With the new
     # rectangular footprint (half-width 0.20 m), 0.25 m clearance has
     # a 5 cm safety pad on top of the body half-width.
-    cfpa2_frontier_obstacle_clearance_m: 0.25
+    cfpa2_frontier_obstacle_clearance_m: 0.40  # 2026-04-30 Stage 3a: was 0.25 (Go2 half-width 0.15+0.10 buffer); raised to 0.40 to push frontier centroids 4 cells deeper into free space, eliminating wall-edge frontier seeds that cause Go2 corner-stamping (387-894 contacts in stage-2 ablation Go2 column)
     # Min "live" unknowns (= unknown cells whose 8-neighbours do NOT
     # include any occupied cell) within check_radius_m. Reduced
     # 20 → 5 after first run had A_NEW=0 because the filter dropped

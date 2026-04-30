@@ -30,8 +30,15 @@
             blind: 0.4
 
         mapping:
-            acc_cov: 0.1
-            gyr_cov: 0.1
+            # 2026-04-30 Stage 3a: was acc 0.1 / gyr 0.1; raised to 0.3
+            # because Go2W wheel skid produces high-frequency IMU
+            # accel/gyro noise that Fast-LIO over-trusted with the lower
+            # cov, causing yaw catastrophic divergence on robot_a in
+            # ~33 % of 180 s trials. Higher cov = the EKF down-weights
+            # IMU pre-integration in favour of the lidar match — slower
+            # convergence on rotation but no divergence.
+            acc_cov: 0.3
+            gyr_cov: 0.3
             b_acc_cov: 0.0001
             b_gyr_cov: 0.0001
             fov_degree: 360.0
