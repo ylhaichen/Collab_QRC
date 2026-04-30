@@ -55,16 +55,18 @@ from .common import now_sec_from_node, yaw_from_quat
 def _decode_image(msg: Image) -> bytes | None:
     """Return PNG bytes for the image, or None on failure.
 
-    Avoids the optional cv_bridge dep by handling the two layouts we
-    actually publish: rgb8 (3 channels) and bgr8 (3 channels). Anything
-    else is logged once and skipped.
+    Avoids the optional cv_bridge dep by handling the 3-channel 8-bit
+    layouts we actually see on this stack:
+      rgb8 / bgr8     — standard ROS encodings
+      8UC3            — generic OpenCV encoding emitted by the MuJoCo
+                        RGBD plugin; treated as BGR by convention
+                        (cv::Mat default order)
+    Anything else is logged and skipped.
     """
     enc = msg.encoding.lower()
-    if enc not in ("rgb8", "bgr8"):
+    if enc not in ("rgb8", "bgr8", "8uc3"):
         return None
     try:
-        # Lazy-import PIL so the node import works on machines without
-        # Pillow; actual saving needs Pillow but the node still spins.
         from PIL import Image as PILImage
     except ImportError:
         return None
@@ -73,7 +75,7 @@ def _decode_image(msg: Image) -> bytes | None:
     if len(raw) < n * 3:
         return None
     pil = PILImage.frombytes("RGB", (msg.width, msg.height), raw[: n * 3])
-    if enc == "bgr8":
+    if enc in ("bgr8", "8uc3"):
         b, g, r = pil.split()
         pil = PILImage.merge("RGB", (r, g, b))
     import io
@@ -87,6 +89,12 @@ class KeyframeLoggerNode(Node):
         super().__init__("keyframe_logger_node")
         self.declare_parameter("namespaces", ["robot_a", "robot_b"])
         self.declare_parameter("camera_match", "front_camera")
+        # Explicit topic overrides for non-namespaced cameras (e.g.
+        # MuJoCo RGBD plugin which publishes to /<camera_name>/color/
+        # image_raw with no robot ns prefix). Format:
+        #   ["robot_a=/front_camera/color/image_raw",
+        #    "robot_b=/b_front_camera/color/image_raw"]
+        self.declare_parameter("camera_topic_overrides", [""])
         self.declare_parameter("camera_wait_sec", 8.0)
         self.declare_parameter("output_dir", "")
         self.declare_parameter("min_translation_m", 0.50)
@@ -98,6 +106,14 @@ class KeyframeLoggerNode(Node):
         nss = self.get_parameter("namespaces").value or []
         self.namespaces = [str(n).strip("/") for n in nss if str(n).strip("/")]
         self.match = str(self.get_parameter("camera_match").value).strip()
+        # Parse per-ns camera topic overrides ("ns=topic" pairs).
+        self._topic_override: dict[str, str] = {}
+        for raw in self.get_parameter("camera_topic_overrides").value or []:
+            s = str(raw).strip()
+            if not s or "=" not in s:
+                continue
+            k, v = s.split("=", 1)
+            self._topic_override[k.strip("/").strip()] = v.strip()
         self.camera_wait_sec = float(self.get_parameter("camera_wait_sec").value)
         self.output_dir = str(self.get_parameter("output_dir").value).strip()
         self.min_t = max(0.0, float(self.get_parameter("min_translation_m").value))
@@ -138,28 +154,57 @@ class KeyframeLoggerNode(Node):
         if self._bind_attempts >= self._max_bind_attempts and len(self._bound) == len(self.namespaces):
             return
         self._bind_attempts += 1
+        try:
+            topics = self.get_topic_names_and_types()
+        except Exception:  # pragma: no cover
+            topics = []
+        topic_dict = dict(topics)
         for ns in self.namespaces:
             if ns in self._bound:
                 continue
-            # Look for a topic of type sensor_msgs/Image whose name
-            # contains both the ns and the camera_match substring.
-            try:
-                topics = self.get_topic_names_and_types()
-            except Exception:  # pragma: no cover
-                topics = []
-            for name, types in topics:
-                if "sensor_msgs/msg/Image" not in types:
-                    continue
-                if f"/{ns}/" not in name and not name.startswith(f"/{ns}/"):
-                    continue
-                if self.match and self.match not in name:
-                    continue
-                self._bind_image(ns, name)
-                # Also try to bind a CameraInfo on the same path.
-                info_name = name.replace("image_raw", "camera_info")
-                self._bind_info(ns, info_name)
-                self._bound.add(ns)
-                break
+            target_topic: str | None = None
+            # 1) Explicit override has top priority.
+            if ns in self._topic_override:
+                target_topic = self._topic_override[ns]
+                if target_topic not in topic_dict:
+                    # Bind anyway — topic may appear shortly after; the
+                    # subscription queues until publisher arrives.
+                    pass
+            # 2) Otherwise scan for ns-prefixed Image topics matching `match`.
+            if target_topic is None:
+                for name, types in topics:
+                    if "sensor_msgs/msg/Image" not in types:
+                        continue
+                    if f"/{ns}/" not in name and not name.startswith(f"/{ns}/"):
+                        continue
+                    if self.match and self.match not in name:
+                        continue
+                    target_topic = name
+                    break
+            # 3) Final fallback — non-namespaced MuJoCo RGBD layout
+            #    (/front_camera/color/image_raw or /b_front_camera/...).
+            #    Heuristic: if ns starts with "robot_b", prefer a "b_"-
+            #    prefixed camera; otherwise a non-"b_"-prefixed one.
+            if target_topic is None:
+                want_b = ns.endswith("_b") or ns.endswith("b")
+                for name, types in topics:
+                    if "sensor_msgs/msg/Image" not in types:
+                        continue
+                    if self.match and self.match not in name:
+                        continue
+                    has_b_prefix = "/b_" in name or name.startswith("b_")
+                    if want_b and has_b_prefix:
+                        target_topic = name
+                        break
+                    if (not want_b) and (not has_b_prefix):
+                        target_topic = name
+                        break
+            if target_topic is None:
+                continue
+            self._bind_image(ns, target_topic)
+            info_topic = target_topic.replace("image_raw", "camera_info")
+            self._bind_info(ns, info_topic)
+            self._bound.add(ns)
         if self._bind_attempts >= self._max_bind_attempts:
             for ns in self.namespaces:
                 if ns not in self._bound:

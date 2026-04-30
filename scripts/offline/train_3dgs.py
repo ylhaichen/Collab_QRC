@@ -209,42 +209,200 @@ def _maybe_train_gsplat(
     keyframes_dir: Path,
     cameras_json: Path,
     out_path: Path,
-) -> bool:
-    """Attempt full 3DGS optimisation. Returns True if training ran.
+    iters: int = 3000,
+    lr: float = 1e-2,
+) -> dict[str, Any]:
+    """Run a minimal gsplat optimisation loop on the keyframe set.
 
-    Requires:
-      - `gsplat` Python package importable
-      - CUDA GPU available
-      - keyframes/ contains ≥ 8 PNG + .pose.json pairs
-      - cameras.json parseable
+    Returns a metadata dict (succeeded/skipped/why, iters, final loss
+    if training ran). Stays graceful when gsplat / CUDA / keyframes
+    are absent.
     """
+    info: dict[str, Any] = {"succeeded": False}
     try:
         import gsplat  # noqa: F401
     except ImportError:
-        print("[train_3dgs] gsplat not installed; skipping full training.")
-        print("            Install: pip install gsplat (requires CUDA)")
-        return False
+        info["skipped_reason"] = "gsplat not installed (pip install gsplat)"
+        print(f"[train_3dgs] {info['skipped_reason']}")
+        return info
     try:
         import torch
     except ImportError:
-        print("[train_3dgs] pytorch not importable; skipping full training.")
-        return False
+        info["skipped_reason"] = "torch not importable"
+        print(f"[train_3dgs] {info['skipped_reason']}")
+        return info
     if not torch.cuda.is_available():
-        print("[train_3dgs] no CUDA device; skipping full training.")
-        return False
-    kf_pngs = sorted(keyframes_dir.glob("*.png")) if keyframes_dir.exists() else []
+        info["skipped_reason"] = "no CUDA device"
+        print(f"[train_3dgs] {info['skipped_reason']}")
+        return info
+    if not keyframes_dir.exists():
+        info["skipped_reason"] = f"no keyframes/ dir at {keyframes_dir}"
+        print(f"[train_3dgs] {info['skipped_reason']}")
+        return info
+    kf_pngs = sorted(keyframes_dir.glob("*.png"))
     if len(kf_pngs) < 8:
-        print(f"[train_3dgs] only {len(kf_pngs)} keyframes; need ≥ 8.")
-        return False
-    # The actual gsplat optimisation loop is intentionally out of
-    # scope here — see PORTING_3DGS.md. For now, log the readiness
-    # and exit; the init_ply is already a viewable scaffold.
+        info["skipped_reason"] = f"only {len(kf_pngs)} keyframes (need ≥ 8)"
+        print(f"[train_3dgs] {info['skipped_reason']}")
+        return info
+    info["keyframe_count"] = len(kf_pngs)
+    info["device"] = torch.cuda.get_device_name(0)
     print(
-        f"[train_3dgs] all prerequisites met ({len(kf_pngs)} keyframes, "
-        f"GPU {torch.cuda.get_device_name(0)}). Implement the gsplat "
-        "training loop here per PORTING_3DGS.md when ready."
+        f"[train_3dgs] training on {len(kf_pngs)} keyframes, "
+        f"GPU {info['device']}, init={init_ply}"
     )
-    return False  # stays False until the loop is wired
+
+    # Load init Gaussians from the scaffold PLY.
+    raw = _read_ply_xyz(init_ply)
+    n = len(raw)
+    if n == 0:
+        info["skipped_reason"] = "init PLY empty"
+        return info
+    means = torch.from_numpy(raw).float().cuda()
+    # Random near-isotropic init for the trainable attributes; init PLY's
+    # σ values are loaded as scales below. Quaternions: identity (w=1).
+    log_scales = torch.full((n, 3), math.log(0.05), device="cuda")
+    quats = torch.zeros((n, 4), device="cuda"); quats[:, 0] = 1.0  # (w, x, y, z)
+    opacities = torch.full((n,), 0.0, device="cuda")  # logit(0.5) ≈ 0
+    sh0 = torch.zeros((n, 3), device="cuda")  # grey
+    for t in (means, log_scales, quats, opacities, sh0):
+        t.requires_grad_(True)
+
+    # Loader: one keyframe per step. Pose JSON has yaw + xyz; we build
+    # a 4×4 world-to-camera matrix from that.
+    from PIL import Image as PILImage
+    cams_meta: list[dict[str, Any]] = []
+    for png in kf_pngs:
+        meta_path = png.with_suffix(".pose.json")
+        if not meta_path.exists():
+            continue
+        meta = json.loads(meta_path.read_text())
+        cams_meta.append({"png": png, "meta": meta})
+    if len(cams_meta) < 8:
+        info["skipped_reason"] = f"only {len(cams_meta)} keyframes have pose JSON"
+        return info
+
+    def _pose_to_view(meta: dict) -> torch.Tensor:
+        # World-from-camera = translation(robot pose) ∘ Rz(yaw).
+        p = meta["pose_world"]
+        x, y, z, yaw = float(p["x"]), float(p["y"]), float(p["z"]), float(p["yaw_rad"])
+        c, s = math.cos(yaw), math.sin(yaw)
+        # Camera looks along +X (front_camera), Z up.
+        Rwc = torch.tensor([
+            [c, -s, 0.0, x],
+            [s,  c, 0.0, y],
+            [0.0, 0.0, 1.0, z + 0.05],
+            [0.0, 0.0, 0.0, 1.0],
+        ], dtype=torch.float32, device="cuda")
+        # gsplat wants world-to-camera (viewmat).
+        return torch.linalg.inv(Rwc)
+
+    # Build all view matrices + load images once.
+    images: list[torch.Tensor] = []
+    viewmats: list[torch.Tensor] = []
+    Ks: list[torch.Tensor] = []
+    H = W = None
+    for c in cams_meta:
+        img = PILImage.open(c["png"]).convert("RGB")
+        if H is None:
+            W, H = img.size
+        arr = np.asarray(img, dtype=np.float32) / 255.0
+        images.append(torch.from_numpy(arr).cuda())
+        intr = c["meta"]["intrinsics"]
+        K = torch.tensor([
+            [float(intr["fx"]), 0.0, float(intr["cx"])],
+            [0.0, float(intr["fy"]), float(intr["cy"])],
+            [0.0, 0.0, 1.0],
+        ], dtype=torch.float32, device="cuda")
+        Ks.append(K)
+        viewmats.append(_pose_to_view(c["meta"]))
+
+    optimiser = torch.optim.Adam([means, log_scales, quats, opacities, sh0], lr=lr)
+    final_loss = float("nan")
+    for step in range(iters):
+        idx = step % len(images)
+        viewmat = viewmats[idx].unsqueeze(0)
+        K = Ks[idx].unsqueeze(0)
+        target = images[idx]
+        # gsplat rasterisation.
+        try:
+            from gsplat import rasterization
+        except ImportError:
+            info["skipped_reason"] = "gsplat.rasterization not importable"
+            return info
+        scales = torch.exp(log_scales)
+        op = torch.sigmoid(opacities)
+        # gsplat 1.5+ expects direct-RGB colors with shape (C, N, 3)
+        # when sh_degree=None — C = number of cameras in this call (1).
+        colors = torch.sigmoid(sh0).unsqueeze(0)
+        try:
+            render, _, _ = rasterization(
+                means=means,
+                quats=quats,
+                scales=scales,
+                opacities=op,
+                colors=colors,
+                viewmats=viewmat,
+                Ks=K,
+                width=W, height=H,
+                sh_degree=None,
+                packed=False,
+                render_mode="RGB",
+            )
+        except Exception as exc:
+            import traceback as _tb
+            _tb.print_exc()
+            info["skipped_reason"] = f"rasterization failed: {type(exc).__name__}: {exc}"
+            print(f"[train_3dgs] {info['skipped_reason']}")
+            return info
+        rendered = render[0].clamp(0.0, 1.0)
+        loss = (rendered - target).abs().mean()
+        optimiser.zero_grad(set_to_none=True)
+        loss.backward()
+        optimiser.step()
+        final_loss = float(loss.item())
+        if step % 200 == 0:
+            print(f"[train_3dgs] step {step:4d}/{iters} loss={final_loss:.4f}")
+
+    # Save optimised PLY.
+    print(f"[train_3dgs] training done; final L1 loss = {final_loss:.4f}")
+    means_np = means.detach().cpu().numpy()
+    log_scales_np = log_scales.detach().cpu().numpy()
+    quats_np = quats.detach().cpu().numpy()
+    op_np = opacities.detach().cpu().numpy()
+    sh0_np = sh0.detach().cpu().numpy()
+    # Convert SH0 logits to RGB DC coefficients (Inria convention).
+    rgb_dc_np = ((torch.sigmoid(sh0).cpu().numpy() - 0.5) / 0.28209479177387814)
+    with out_path.open("w", encoding="utf-8") as fh:
+        fh.write(
+            "ply\nformat ascii 1.0\n"
+            f"element vertex {n}\n"
+            "property float x\nproperty float y\nproperty float z\n"
+            "property float nx\nproperty float ny\nproperty float nz\n"
+            "property float f_dc_0\nproperty float f_dc_1\nproperty float f_dc_2\n"
+            "property float opacity\n"
+            "property float scale_0\nproperty float scale_1\nproperty float scale_2\n"
+            "property float rot_0\nproperty float rot_1\nproperty float rot_2\nproperty float rot_3\n"
+            "end_header\n"
+        )
+        for i in range(n):
+            x, y, z = means_np[i]
+            d0, d1, d2 = rgb_dc_np[i]
+            sc0, sc1, sc2 = log_scales_np[i]
+            r0, r1, r2, r3 = quats_np[i]
+            fh.write(
+                f"{x:.4f} {y:.4f} {z:.4f} 0 0 0 "
+                f"{d0:.4f} {d1:.4f} {d2:.4f} "
+                f"{op_np[i]:.4f} "
+                f"{sc0:.4f} {sc1:.4f} {sc2:.4f} "
+                f"{r0:.4f} {r1:.4f} {r2:.4f} {r3:.4f}\n"
+            )
+    info.update({
+        "succeeded": True,
+        "iters": int(iters),
+        "final_loss_l1": round(final_loss, 6),
+        "out_path": str(out_path),
+    })
+    return info
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -270,6 +428,8 @@ def main() -> int:
     ap.add_argument("--color", type=str, choices=("elevation", "grey"), default="elevation")
     ap.add_argument("--train", action="store_true",
                     help="run gsplat optimisation if prerequisites met")
+    ap.add_argument("--train-iters", type=int, default=3000,
+                    help="gsplat optimisation iteration count")
     args = ap.parse_args()
 
     trial = args.trial_dir.resolve()
@@ -310,9 +470,12 @@ def main() -> int:
         "elapsed_sec": round(elapsed, 3),
     }
     if args.train:
-        trained = _maybe_train_gsplat(out_path, keyframes, cameras, trial / "3dgs_optimized.ply")
+        train_info = _maybe_train_gsplat(
+            out_path, keyframes, cameras, trial / "3dgs_optimized.ply",
+            iters=int(args.train_iters),
+        )
         summary["train_attempted"] = True
-        summary["train_succeeded"] = bool(trained)
+        summary["train_info"] = train_info
     summary_path = trial / "3dgs_summary.json"
     summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
     print(

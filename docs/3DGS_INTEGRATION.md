@@ -55,19 +55,49 @@ metrics (PSNR / SSIM / LPIPS in §14.3).
 
 ### Upgrading to full training
 
-1. Install gsplat: `pip install gsplat` (requires PyTorch + CUDA).
-2. Capture keyframes during a trial by enabling
-   `keyframe_logger_enabled:=true` in the launch (TODO: launch arg
-   not yet wired; spawn the node manually for now).
-3. Confirm `keyframes/` has ≥ 8 well-separated frames.
-4. Implement the gsplat optimisation loop inside
-   `_maybe_train_gsplat()` in `train_3dgs.py`:
-   - Load init PLY → `Splat3D` model
-   - Render each keyframe pose → image, compare to ground truth
-   - Standard 3DGS loss (L1 + D-SSIM) + densification schedule
-   - Save trained model to `3dgs_optimized.ply`
-5. Add `gsplat_metrics` field to `mission_summary.json` claims so the
-   report cites PSNR / SSIM against held-out keyframes.
+1. Install gsplat: `pip install --user gsplat` (1.5.3 ships
+   wheels — no CUDA toolkit needed for `pip install`).
+2. **MuJoCo RGBD camera is already on** as of Stage 10. The plugin
+   auto-instantiates from `<camera>` tags in `demo3_mixed.xml` and
+   publishes `/front_camera/color/image_raw` (robot_a) and
+   `/b_front_camera/color/image_raw` (robot_b) at 25 Hz, encoding
+   `8UC3`. `keyframe_logger_node` spawns automatically when
+   `reconstruction_quality_enabled=true` and saves to
+   `<trial>/keyframes/<ns>_NNNN.png` plus `cameras.json`.
+3. Stage-10b verified: a 90 s `loop_risk_recon_graph_mppi` run
+   captured **115 keyframes (56 + 59)** with full per-frame pose +
+   intrinsics — well above the ≥ 8 threshold.
+4. The optimisation loop body is wired in
+   `_maybe_train_gsplat()` in `scripts/offline/train_3dgs.py`:
+   - Loads init PLY → `means / log_scales / quats / opacities /
+     sh0` (all `requires_grad=True`)
+   - Per step: pick keyframe, build `viewmat = inv(world-from-cam)`,
+     call `gsplat.rasterization(...)` with `(C=1, N, 3)` colors,
+     compute L1 loss, Adam step
+   - Saves `3dgs_optimized.ply` in Inria layout
+5. **Runtime blocker on this dev machine**: gsplat's CUDA backend
+   needs JIT compilation at first call (no prebuilt `.so` ships
+   with the wheel). Compilation fails because:
+     * apt-shipped CUDA toolkit on Ubuntu 22.04 is 11.5
+       (`/usr/bin/nvcc`), too old for `sm_89` (RTX 4070 Ada).
+     * pip-shipped `nvidia-cuda-nvcc-cu12` 12.9.86 only contains
+       `ptxas`, not `nvcc`.
+     * pip-shipped `nvidia-cuda-runtime-cu13` provides the headers
+       (`cuda_runtime.h`) and `libcudart.so.13` but no compiler.
+   To unblock training on this machine, install a CUDA toolkit
+   ≥ 12.0 with sudo:
+   ```bash
+   wget https://developer.download.nvidia.com/compute/cuda/12.4.1/local_installers/cuda_12.4.1_550.54.15_linux.run
+   sudo sh cuda_12.4.1_550.54.15_linux.run --toolkit --silent
+   export CUDA_HOME=/usr/local/cuda-12.4
+   export PATH=$CUDA_HOME/bin:$PATH
+   ```
+   On the compute cluster (the 4×A100 / 2×4070 noted in the
+   proposal) this is already the default install.
+6. After the first successful run, `3dgs_optimized.ply` lands next
+   to `3dgs_init.ply` and a follow-up commit can add a
+   `reconstruction_3dgs` claim type to `mission_summary_generator.py`
+   citing PSNR / SSIM against held-out keyframes.
 
 ### Outputs
 

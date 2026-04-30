@@ -2205,6 +2205,34 @@ def _launch_setup(context):
                 output="screen",
             )
         )
+    if explore and reconstruction_quality_enabled and loop_risk_output_dir:
+        # Keyframe logger for §10.2 offline 3DGS (Stage 9). The MuJoCo
+        # RGBD plugin publishes to /<camera_name>/color/image_raw with
+        # no ns prefix (front_camera for robot_a, b_front_camera for
+        # robot_b — derived from MJCF camera names in demo3_mixed.xml).
+        # Pass explicit overrides so the logger binds without needing
+        # the auto-detect heuristic at runtime.
+        awareness_nodes.append(
+            Node(
+                package="reconstruction_awareness",
+                executable="keyframe_logger_node",
+                name="keyframe_logger_node",
+                parameters=[{
+                    "use_sim_time": use_sim_time,
+                    "namespaces": ["robot_a", "robot_b"],
+                    "camera_match": "front_camera",
+                    "camera_topic_overrides": [
+                        "robot_a=/front_camera/color/image_raw",
+                        "robot_b=/b_front_camera/color/image_raw",
+                    ],
+                    "output_dir": loop_risk_output_dir,
+                    "min_translation_m": 0.50,
+                    "min_rotation_deg": 25.0,
+                    "period_sec": 4.0,
+                }],
+                output="screen",
+            )
+        )
     if awareness_nodes:
         actions.append(TimerAction(period=nav_delay + 1.0, actions=awareness_nodes))
 
