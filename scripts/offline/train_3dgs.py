@@ -158,13 +158,28 @@ def _logit_opacity(o: float) -> float:
 # ──────────────────────────────────────────────────────────────────────
 
 
+def _ros_to_yup(xyz: np.ndarray) -> np.ndarray:
+    """ROS Z-up (x_fwd, y_left, z_up) → 3DGS Y-up (x_right, y_up, z_back).
+    Equivalent to a -90° rotation around X. Most 3DGS viewers
+    (SuperSplat, gsplat samples) assume Y-up; ROS PLYs come out Z-up
+    and otherwise render as a vertical column."""
+    out = np.empty_like(xyz)
+    out[:, 0] = xyz[:, 0]
+    out[:, 1] = xyz[:, 2]
+    out[:, 2] = -xyz[:, 1]
+    return out
+
+
 def write_3dgs_ply(
     out_path: Path,
     xyz: np.ndarray,
     rgb: np.ndarray,
     sigma: np.ndarray,
     opacity: float = 0.5,
+    y_up: bool = True,
 ) -> None:
+    if y_up:
+        xyz = _ros_to_yup(xyz)
     n = len(xyz)
     f_dc = _sh0_from_rgb(rgb)
     log_sigma = np.log(np.maximum(1e-3, sigma)).astype(np.float32)
@@ -372,6 +387,17 @@ def _maybe_train_gsplat(
     sh0_np = sh0.detach().cpu().numpy()
     # Convert SH0 logits to RGB DC coefficients (Inria convention).
     rgb_dc_np = ((torch.sigmoid(sh0).detach().cpu().numpy() - 0.5) / 0.28209479177387814)
+    # ROS Z-up → 3DGS Y-up convention so SuperSplat / gsplat viewers
+    # render the floor flat instead of a 16 m tall vertical column.
+    means_np = _ros_to_yup(means_np)
+    # Pre-multiply quaternions by R_x(-90°) = (cos(-45°), sin(-45°), 0, 0).
+    rw, rx, ry, rz = 0.7071068, -0.7071068, 0.0, 0.0
+    qw, qx, qy, qz = quats_np[:, 0], quats_np[:, 1], quats_np[:, 2], quats_np[:, 3]
+    new_w = rw * qw - rx * qx - ry * qy - rz * qz
+    new_x = rw * qx + rx * qw + ry * qz - rz * qy
+    new_y = rw * qy - rx * qz + ry * qw + rz * qx
+    new_z = rw * qz + rx * qy - ry * qx + rz * qw
+    quats_np = np.stack([new_w, new_x, new_y, new_z], axis=1)
     with out_path.open("w", encoding="utf-8") as fh:
         fh.write(
             "ply\nformat ascii 1.0\n"
