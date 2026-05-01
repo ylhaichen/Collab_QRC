@@ -59,6 +59,18 @@ fi
 unset _COLLAB_QRC_NAV2_HUMBLE_PREFIX
 unset _COLLAB_QRC_NAV2_HUMBLE
 
+# Local CUDA 12.4 toolkit installed via runfile in $HOME/cuda-12.4
+# (no-sudo, see docs/3DGS_INTEGRATION.md). Required by gsplat for
+# JIT-compiling its sm_89 kernels on RTX 4070 Ada. Activate only if
+# the directory exists so machines without it stay unaffected.
+if [ -d "${HOME}/cuda-12.4/bin" ]; then
+  export CUDA_HOME="${HOME}/cuda-12.4"
+  _collab_qrc_prepend_unique PATH "${CUDA_HOME}/bin"
+  _collab_qrc_prepend_unique LD_LIBRARY_PATH "${CUDA_HOME}/lib64"
+  # Default arch list to RTX 4070 Ada. Override by setting before sourcing.
+  export TORCH_CUDA_ARCH_LIST="${TORCH_CUDA_ARCH_LIST:-8.9}"
+fi
+
 _COLLAB_QRC_CONDA_SITE=""
 if [ -n "${CONDA_PREFIX:-}" ]; then
   _COLLAB_QRC_CONDA_SITE="${CONDA_PREFIX}/lib/python3.10/site-packages"

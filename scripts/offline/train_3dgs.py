@@ -371,7 +371,7 @@ def _maybe_train_gsplat(
     op_np = opacities.detach().cpu().numpy()
     sh0_np = sh0.detach().cpu().numpy()
     # Convert SH0 logits to RGB DC coefficients (Inria convention).
-    rgb_dc_np = ((torch.sigmoid(sh0).cpu().numpy() - 0.5) / 0.28209479177387814)
+    rgb_dc_np = ((torch.sigmoid(sh0).detach().cpu().numpy() - 0.5) / 0.28209479177387814)
     with out_path.open("w", encoding="utf-8") as fh:
         fh.write(
             "ply\nformat ascii 1.0\n"

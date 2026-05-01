@@ -14,15 +14,28 @@ pipeline.
 
 ### Status
 
-**Scaffold complete.** `scripts/offline/train_3dgs.py` consumes a
-finished trial directory and produces a viewable `3dgs_init.ply`
-without GPU training. Each accumulated voxel is mapped to one
-Gaussian with isotropic σ derived from local k-NN density (k=8) and
-RGB DC coefficient driven by either elevation (default) or grey
-(`--color grey`). The output PLY follows the Inria
-gaussian-splatting field layout (vertex props `x y z nx ny nz f_dc_0
-f_dc_1 f_dc_2 opacity scale_0 scale_1 scale_2 rot_0 rot_1 rot_2
-rot_3`) so SuperSplat / WebGL renderers / `gsplat` load it directly.
+**End-to-end working** as of Stage 10b on this dev laptop (RTX 4070,
+local CUDA 12.4 toolkit in `$HOME/cuda-12.4`). A 90 s
+`loop_risk_recon_graph_mppi` trial captures 115 keyframes and
+`scripts/offline/train_3dgs.py --train` runs gsplat optimisation
+end-to-end:
+
+```
+[train_3dgs] training on 115 keyframes, GPU NVIDIA GeForce RTX 4070 Laptop GPU
+gsplat: CUDA extension has been set up successfully in 45.72 seconds.
+[train_3dgs] step    0/1000  loss=0.3168
+[train_3dgs] step  200/1000  loss=0.2904
+[train_3dgs] step  600/1000  loss=0.1326
+[train_3dgs] step  800/1000  loss=0.1104
+[train_3dgs] training done; final L1 loss = 0.1433
+```
+
+Outputs per trial: `3dgs_init.ply` (CPU init scaffold, ~0.13 s) +
+`3dgs_optimized.ply` (gsplat-trained, ~30 s for 1k iterations after
+first JIT compile). Both follow Inria layout (vertex props `x y z nx
+ny nz f_dc_0 f_dc_1 f_dc_2 opacity scale_0 scale_1 scale_2 rot_0
+rot_1 rot_2 rot_3`) and load directly in SuperSplat / WebGL viewers
+/ gsplat consumers.
 
 ### Inputs (already produced by the live stack)
 
@@ -53,51 +66,67 @@ view-fidelity refinement, no learned colours. Suitable for paper
 figures of the geometric coverage; not yet for novel-view-synthesis
 metrics (PSNR / SSIM / LPIPS in §14.3).
 
-### Upgrading to full training
+### How to run on a fresh machine
 
-1. Install gsplat: `pip install --user gsplat` (1.5.3 ships
+1. **Install gsplat**: `pip install --user gsplat` (1.5.3 ships
    wheels — no CUDA toolkit needed for `pip install`).
-2. **MuJoCo RGBD camera is already on** as of Stage 10. The plugin
-   auto-instantiates from `<camera>` tags in `demo3_mixed.xml` and
-   publishes `/front_camera/color/image_raw` (robot_a) and
+2. **Install a CUDA 12.x toolkit** with `sm_89` support
+   (the apt-shipped 11.5 on Ubuntu 22.04 is too old for Ada GPUs).
+   No-sudo runfile:
+   ```bash
+   cd /tmp
+   wget https://developer.download.nvidia.com/compute/cuda/12.4.1/local_installers/cuda_12.4.1_550.54.15_linux.run
+   sh cuda_12.4.1_550.54.15_linux.run --silent --toolkit \
+      --installpath=$HOME/cuda-12.4 --override --no-opengl-libs
+   ```
+   `env.sh` then automatically activates `$HOME/cuda-12.4` on every
+   `source env.sh` (sets `CUDA_HOME`, prepends `$CUDA_HOME/bin` to
+   PATH, prepends `$CUDA_HOME/lib64` to LD_LIBRARY_PATH, and exports
+   `TORCH_CUDA_ARCH_LIST=8.9` for RTX 4070 Ada).
+3. **MuJoCo RGBD camera** is already on. The plugin auto-instantiates
+   from `<camera>` tags in `demo3_mixed.xml` and publishes
+   `/front_camera/color/image_raw` (robot_a) +
    `/b_front_camera/color/image_raw` (robot_b) at 25 Hz, encoding
    `8UC3`. `keyframe_logger_node` spawns automatically when
    `reconstruction_quality_enabled=true` and saves to
-   `<trial>/keyframes/<ns>_NNNN.png` plus `cameras.json`.
-3. Stage-10b verified: a 90 s `loop_risk_recon_graph_mppi` run
-   captured **115 keyframes (56 + 59)** with full per-frame pose +
-   intrinsics — well above the ≥ 8 threshold.
-4. The optimisation loop body is wired in
-   `_maybe_train_gsplat()` in `scripts/offline/train_3dgs.py`:
-   - Loads init PLY → `means / log_scales / quats / opacities /
-     sh0` (all `requires_grad=True`)
-   - Per step: pick keyframe, build `viewmat = inv(world-from-cam)`,
-     call `gsplat.rasterization(...)` with `(C=1, N, 3)` colors,
-     compute L1 loss, Adam step
-   - Saves `3dgs_optimized.ply` in Inria layout
-5. **Runtime blocker on this dev machine**: gsplat's CUDA backend
-   needs JIT compilation at first call (no prebuilt `.so` ships
-   with the wheel). Compilation fails because:
-     * apt-shipped CUDA toolkit on Ubuntu 22.04 is 11.5
-       (`/usr/bin/nvcc`), too old for `sm_89` (RTX 4070 Ada).
-     * pip-shipped `nvidia-cuda-nvcc-cu12` 12.9.86 only contains
-       `ptxas`, not `nvcc`.
-     * pip-shipped `nvidia-cuda-runtime-cu13` provides the headers
-       (`cuda_runtime.h`) and `libcudart.so.13` but no compiler.
-   To unblock training on this machine, install a CUDA toolkit
-   ≥ 12.0 with sudo:
+   `<trial>/keyframes/<ns>_NNNN.png` plus `cameras.json`. A 90 s
+   `loop_risk_recon_graph_mppi` trial captures ~110 keyframes.
+4. **Run the trial** (Stage 1-10 launch path, unchanged):
    ```bash
-   wget https://developer.download.nvidia.com/compute/cuda/12.4.1/local_installers/cuda_12.4.1_550.54.15_linux.run
-   sudo sh cuda_12.4.1_550.54.15_linux.run --toolkit --silent
-   export CUDA_HOME=/usr/local/cuda-12.4
-   export PATH=$CUDA_HOME/bin:$PATH
+   NUM_TRIALS=1 DURATION_SEC=180 \
+     OUT_DIR=results/3dgs_run/$(date +%Y%m%d_%H%M%S) \
+     GUI=true RVIZ=true NAV_A=nav2_mppi NAV_B=nav2_mppi \
+     ./scripts/bench/benchmark_loop_risk_allocator.sh loop_risk_recon_graph_mppi
    ```
-   On the compute cluster (the 4×A100 / 2×4070 noted in the
-   proposal) this is already the default install.
-6. After the first successful run, `3dgs_optimized.ply` lands next
-   to `3dgs_init.ply` and a follow-up commit can add a
-   `reconstruction_3dgs` claim type to `mission_summary_generator.py`
-   citing PSNR / SSIM against held-out keyframes.
+5. **Train**:
+   ```bash
+   source env.sh   # activates CUDA_HOME if $HOME/cuda-12.4 exists
+   TRIAL=$(ls -td results/3dgs_run/*/trial_1/ | head -1)
+   python3 scripts/offline/train_3dgs.py "$TRIAL" --train --train-iters 3000
+   ```
+   First run takes ~45 s extra for gsplat JIT compile; subsequent
+   runs reuse the cached `.so` and start in milliseconds.
+6. **Optimisation loop body** (in `_maybe_train_gsplat()`):
+   - Loads init PLY → trainable tensors (means / log_scales /
+     quats=identity / opacities=logit(0.5) / sh0=zeros).
+   - Per step: pick keyframe, build `viewmat = inv(world-from-cam)`
+     from pose JSON, call `gsplat.rasterization(...)` with the
+     gsplat-1.5+ shape conventions: colors `(C, N, 3)`, viewmats
+     `(C, 4, 4)`, Ks `(C, 3, 3)`, sh_degree=None.
+   - Loss = L1(rendered, target).
+   - Optimiser = Adam(lr=1e-2).
+   - Final `3dgs_optimized.ply` written in Inria layout.
+
+### Stage-10b end-to-end run (this laptop, recorded)
+
+```
+keyframes captured  : 115           (robot_a 56 + robot_b 59)
+init scaffold       : 16 662 Gaussians, 0.14 s
+gsplat compile      : 45.7 s        (first call only, cached after)
+training 1000 iter  : ~30 s
+final L1 loss       : 0.1433        (down from 0.3168 at step 0)
+3dgs_optimized.ply  : 1.8 MB        (Inria layout, viewable)
+```
 
 ### Outputs
 
