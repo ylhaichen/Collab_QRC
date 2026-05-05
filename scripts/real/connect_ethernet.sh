@@ -64,18 +64,46 @@ setup_cyclonedds_ethernet() {
   export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
   export ROS_DOMAIN_ID=0
   export CONN_TYPE="cyclonedds"
-  export CYCLONEDDS_URI="<CycloneDDS><Domain>
+
+  # Build peer list. Always peer the Go2 main controller. When onboard SLAM
+  # is in use (real_autonomy.sh's onboard=true flag → exports ONBOARD_SLAM=1),
+  # also peer the Jetson at 192.168.123.18 so DDS discovers /Odometry +
+  # /cloud_registered_body published from there.
+  local _peers="<Peer address=\"${ROBOT_IP}\"/>"
+  if [[ "${ONBOARD_SLAM:-0}" == "1" ]]; then
+    local _jetson_ip="${GO2W_JETSON_IP:-192.168.123.18}"
+    _peers+="<Peer address=\"${_jetson_ip}\"/>"
+    echo "  CycloneDDS peer added: ${_jetson_ip} (onboard SLAM)"
+  fi
+
+  # 2026-05-01: switched from inline multi-line XML to file:// URI.
+  # ros2 launch was truncating the multi-line CYCLONEDDS_URI env var when
+  # spawning child node processes — the parent had the full XML, but every
+  # child saw only `<CycloneDDS><Domain></Domain></CycloneDDS>`. Result:
+  # children defaulted to multicast-only discovery on a network where the
+  # USB-Ethernet dongle's multicast doesn't reach the Go2 — Sport API
+  # subscription invisible, /api/sport/request had 0 subscribers, robot
+  # didn't move despite cmd_vel flowing through the laptop side. file://
+  # URI sidesteps the issue entirely (single-line env value, all children
+  # inherit cleanly).
+  local _xml="/tmp/cyclonedds_${USER}_eth.xml"
+  cat > "${_xml}" <<EOF
+<CycloneDDS>
+  <Domain>
     <General>
       <Interfaces>
-        <NetworkInterface name=\"${ETH_IFACE}\" priority=\"default\" multicast=\"true\" />
+        <NetworkInterface name="${ETH_IFACE}" priority="default" multicast="true" />
       </Interfaces>
     </General>
     <Discovery>
-      <Peers><Peer address=\"${ROBOT_IP}\"/></Peers>
+      <Peers>${_peers}</Peers>
       <ParticipantIndex>auto</ParticipantIndex>
       <MaxAutoParticipantIndex>200</MaxAutoParticipantIndex>
     </Discovery>
-  </Domain></CycloneDDS>"
+  </Domain>
+</CycloneDDS>
+EOF
+  export CYCLONEDDS_URI="file://${_xml}"
 
   (ros2 daemon stop &>/dev/null &); sleep 1
   pkill -9 -f _ros2_daemon 2>/dev/null || true
