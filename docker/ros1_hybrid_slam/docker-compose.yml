@@ -43,7 +43,9 @@ services:
       - ROS_IP=${ROS_IP:-127.0.0.1}
       - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
       - RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}
+      - FASTRTPS_DEFAULT_PROFILES_FILE=${ROS1_HYBRID_FASTRTPS_PROFILE:-/config/fastdds_no_shm.xml}
     volumes:
+      - ../../config:/config:ro
       - ./bridge.yaml:/bridge.yaml:ro
       - ./ros1_bridge_entrypoint.sh:/ros1_bridge_entrypoint.sh:ro
     command: bash /ros1_bridge_entrypoint.sh

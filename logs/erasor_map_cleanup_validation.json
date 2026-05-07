@@ -1,28 +1,18 @@
 {
-  "accumulated_map_export_valid": false,
-  "blocker": "ERASOR Docker/catkin wrapper builds, but no completed benchmark/manual cleanup pass generated cleaned_static_map or removed_dynamic_points and republished cleaned map to ROS2. Fallback remains active.",
+  "blocker": "missing_ros1_topics:/robot_a/swarm_lio2_raw/Odometry,/robot_b/swarm_lio2_raw/Odometry,/robot_a/swarm_lio2_raw/cloud_static,/robot_b/swarm_lio2_raw/cloud_static,/robot_a/swarm_lio2_raw/cloud_map,/robot_b/swarm_lio2_raw/cloud_map;/robot_a/swarm_lio2/Odometry:rate<0.1;/robot_b/swarm_lio2/Odometry:rate<0.1;/robot_a/swarm_lio2/cloud_static:rate<0.1;/robot_b/swarm_lio2/cloud_static:rate<0.1;/robot_a/swarm_lio2/cloud_map:rate<0.1;/robot_b/swarm_lio2/cloud_map:rate<0.1;/robot_a/swarm_lio2/Odometry:header.frame_id_empty;/robot_a/swarm_lio2/Odometry:child_frame_id_empty;/robot_b/swarm_lio2/Odometry:header.frame_id_empty;/robot_b/swarm_lio2/Odometry:child_frame_id_empty",
   "cleaned_map_published": false,
-  "cleaned_static_map_generated": false,
+  "cleaned_map_removes_dynamic_trace": false,
   "control_loop_blocked": false,
   "deployment_mode": "sim_hybrid_ros1_slam_ros2_nav",
-  "dynamic_traces_reduced": false,
+  "erasor_buildable": true,
   "erasor_docker_catkin_build_passed": true,
-  "erasor_docker_container_run_ready": true,
   "erasor_runtime_ready": false,
   "erasor_source_available": true,
   "fallback_used": true,
   "gt_used_runtime": false,
-  "manual_logs": {
-    "catkin_build": "logs/manual/erasor_catkin_build_20260507T185444Z.log",
-    "docker_build": "logs/manual/ros1_hybrid_docker_build_20260507T185443Z.log",
-    "postcheck": "logs/manual/erasor_docker_postcheck_20260507T185452Z.log",
-    "precheck": "logs/manual/erasor_docker_precheck_20260507T185442Z.log"
-  },
-  "removed_dynamic_points_generated": false,
-  "requested_backend": "erasor_wrapper",
-  "schema": "erasor_map_cleanup_validation/v3",
+  "naive_map_contains_dynamic_trace": false,
+  "pass": false,
+  "schema": "erasor_map_cleanup_validation/v4",
   "static_map_cleanup_backend": "temporal_voxel_fallback",
-  "static_walls_preserved": false,
-  "synthetic_contract_passed": true,
-  "updated_utc": "2026-05-07T19:10:19Z"
+  "static_walls_preserved": false
 }

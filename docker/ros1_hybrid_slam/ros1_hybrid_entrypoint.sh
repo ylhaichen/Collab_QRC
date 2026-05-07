@@ -65,6 +65,30 @@ install_livox_sdk_if_needed() {
   ldconfig || true
 }
 
+write_swarm_lio2_collab_wrapper_launch() {
+  local wrapper="/tmp/collab_swarm_lio2_wrapper.launch"
+  cat > "${wrapper}" <<'EOF'
+<launch>
+  <include file="$(find swarm_lio)/launch/simulation.launch" />
+
+  <!-- ROS2 simulation sensor topics, bridged into ROS1, adapted to Swarm-LIO2 simulation names. -->
+  <node pkg="topic_tools" type="relay" name="robot_a_lidar_to_swarm_lio2" args="/robot_a/velodyne_points /quad1_pcl_render_node/sensor_cloud" output="log" />
+  <node pkg="topic_tools" type="relay" name="robot_a_imu_to_swarm_lio2" args="/robot_a/imu /quad_1/imu" output="log" />
+  <node pkg="topic_tools" type="relay" name="robot_b_lidar_to_swarm_lio2" args="/robot_b/velodyne_points /quad2_pcl_render_node/sensor_cloud" output="log" />
+  <node pkg="topic_tools" type="relay" name="robot_b_imu_to_swarm_lio2" args="/robot_b/imu /quad_2/imu" output="log" />
+
+  <!-- Swarm-LIO2 native outputs normalized to the ROS2 adapter raw contract. -->
+  <node pkg="topic_tools" type="relay" name="swarm_lio2_robot_a_odom_raw" args="/quad1/lidar_slam/odom /robot_a/swarm_lio2_raw/Odometry" output="log" />
+  <node pkg="topic_tools" type="relay" name="swarm_lio2_robot_a_static_raw" args="/quad1/cloud_registered_body /robot_a/swarm_lio2_raw/cloud_static" output="log" />
+  <node pkg="topic_tools" type="relay" name="swarm_lio2_robot_a_map_raw" args="/quad1/cloud_registered /robot_a/swarm_lio2_raw/cloud_map" output="log" />
+  <node pkg="topic_tools" type="relay" name="swarm_lio2_robot_b_odom_raw" args="/quad2/lidar_slam/odom /robot_b/swarm_lio2_raw/Odometry" output="log" />
+  <node pkg="topic_tools" type="relay" name="swarm_lio2_robot_b_static_raw" args="/quad2/cloud_registered_body /robot_b/swarm_lio2_raw/cloud_static" output="log" />
+  <node pkg="topic_tools" type="relay" name="swarm_lio2_robot_b_map_raw" args="/quad2/cloud_registered /robot_b/swarm_lio2_raw/cloud_map" output="log" />
+</launch>
+EOF
+  printf '%s\n' "${wrapper}"
+}
+
 stage_backend "${SRC_ROOT}/Swarm-LIO2/swarm_msgs" "${WS}/src/swarm_msgs"
 stage_backend "${SRC_ROOT}/Swarm-LIO2/udp_bridge" "${WS}/src/udp_bridge"
 stage_backend "${SRC_ROOT}/Swarm-LIO2/livox_ros_driver_mars" "${WS}/src/livox_ros_driver_mars"
@@ -108,7 +132,8 @@ echo "  static_map_cleanup_backend=${STATIC_MAP_CLEANUP_BACKEND}"
 case "${SLAM_BACKEND}" in
   swarm_lio2_shadow|swarm_lio2_primary)
     if roslaunch --files swarm_lio simulation.launch >/dev/null 2>&1; then
-      exec roslaunch swarm_lio simulation.launch
+      wrapper_launch="$(write_swarm_lio2_collab_wrapper_launch)"
+      exec roslaunch "${wrapper_launch}"
     fi
     echo "ERROR: swarm_lio simulation.launch not available after catkin build." >&2
     exit 3

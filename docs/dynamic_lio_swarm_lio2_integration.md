@@ -24,7 +24,8 @@ Current recovery result:
 - Dynamic-LIO source is present.
 - The shared ROS1 hybrid Docker image builds.
 - The ROS1 catkin workspace builds the Dynamic-LIO wrapper source.
-- Runtime static/dynamic cloud separation is not validated yet.
+- Runtime static/dynamic cloud separation is not validated yet. In the bounded sim hybrid runtime check, the bridge contract did not produce nonzero Swarm-LIO2 cloud/odom rates, so Dynamic-LIO wrapper output topics could not be proven as live ROS2 inputs.
+- The validated fallback remains `temporal_voxel_fallback`; the latest synthetic metric path kept 6 static points, filtered 1 dynamic point, and reported `dynamic_filter_ratio=0.14286`.
 
 Manual commands:
 
@@ -46,5 +47,6 @@ CONFIRM_REAL_ROBOT=1 bash scripts/manual/run_real_robot_shadow_validation.sh
 
 - Current valid status is `Status D -- External Blocker`.
 - Docker/catkin wrapper build passed, but no completed runtime pass proved `/<ns>/cloud_static`, `/<ns>/cloud_dynamic`, moving-object separation, or Nav2 TTL clearing.
+- Do not publish Dynamic-LIO as primary `/<ns>/Odometry`; it remains a filtering provider only.
 - Real onboard ROS1 Noetic/catkin/rospack and live LiDAR/IMU topics are unavailable here.
 - Until Dynamic-LIO runtime output is validated, only `temporal_voxel_fallback` can be used as validated fallback.

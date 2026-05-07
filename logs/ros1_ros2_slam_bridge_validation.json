@@ -1,0 +1,148 @@
+{
+  "blocker": "missing_ros1_topics:/robot_a/swarm_lio2_raw/Odometry,/robot_b/swarm_lio2_raw/Odometry,/robot_a/swarm_lio2_raw/cloud_static,/robot_b/swarm_lio2_raw/cloud_static,/robot_a/swarm_lio2_raw/cloud_map,/robot_b/swarm_lio2_raw/cloud_map;/robot_a/swarm_lio2/Odometry:rate<0.1;/robot_b/swarm_lio2/Odometry:rate<0.1;/robot_a/swarm_lio2/cloud_static:rate<0.1;/robot_b/swarm_lio2/cloud_static:rate<0.1;/robot_a/swarm_lio2/cloud_map:rate<0.1;/robot_b/swarm_lio2/cloud_map:rate<0.1;/robot_a/swarm_lio2/Odometry:header.frame_id_empty;/robot_a/swarm_lio2/Odometry:child_frame_id_empty;/robot_b/swarm_lio2/Odometry:header.frame_id_empty;/robot_b/swarm_lio2/Odometry:child_frame_id_empty",
+  "deployment_mode": "sim_hybrid_ros1_slam_ros2_nav",
+  "frames_valid": false,
+  "gt_used_runtime": false,
+  "message_rates_nonzero": false,
+  "mode": "shadow",
+  "pass": false,
+  "recommended_next_action": "Start ROS1 hybrid SLAM container, ros1_bridge, ROS2 adapter, and sim sensor publishers; rerun this script.",
+  "ros1_expected_topics": [
+    "/robot_a/velodyne_points",
+    "/robot_b/velodyne_points",
+    "/robot_a/imu",
+    "/robot_b/imu",
+    "/quad1_pcl_render_node/sensor_cloud",
+    "/quad2_pcl_render_node/sensor_cloud",
+    "/quad_1/imu",
+    "/quad_2/imu",
+    "/quad1/lidar_slam/odom",
+    "/quad2/lidar_slam/odom",
+    "/quad1/cloud_registered_body",
+    "/quad2/cloud_registered_body",
+    "/quad1/cloud_registered",
+    "/quad2/cloud_registered",
+    "/robot_a/swarm_lio2_raw/Odometry",
+    "/robot_b/swarm_lio2_raw/Odometry",
+    "/robot_a/swarm_lio2_raw/cloud_static",
+    "/robot_b/swarm_lio2_raw/cloud_static",
+    "/robot_a/swarm_lio2_raw/cloud_map",
+    "/robot_b/swarm_lio2_raw/cloud_map"
+  ],
+  "ros1_missing_topics": [
+    "/robot_a/swarm_lio2_raw/Odometry",
+    "/robot_b/swarm_lio2_raw/Odometry",
+    "/robot_a/swarm_lio2_raw/cloud_static",
+    "/robot_b/swarm_lio2_raw/cloud_static",
+    "/robot_a/swarm_lio2_raw/cloud_map",
+    "/robot_b/swarm_lio2_raw/cloud_map"
+  ],
+  "ros1_present_topics": [
+    "/robot_a/velodyne_points",
+    "/robot_b/velodyne_points",
+    "/robot_a/imu",
+    "/robot_b/imu",
+    "/quad1_pcl_render_node/sensor_cloud",
+    "/quad2_pcl_render_node/sensor_cloud",
+    "/quad_1/imu",
+    "/quad_2/imu",
+    "/quad1/lidar_slam/odom",
+    "/quad2/lidar_slam/odom",
+    "/quad1/cloud_registered_body",
+    "/quad2/cloud_registered_body",
+    "/quad1/cloud_registered",
+    "/quad2/cloud_registered"
+  ],
+  "ros1_topic_list_available": true,
+  "ros2_expected_topics": [
+    "/robot_a/swarm_lio2/Odometry",
+    "/robot_b/swarm_lio2/Odometry",
+    "/robot_a/swarm_lio2/cloud_static",
+    "/robot_b/swarm_lio2/cloud_static",
+    "/robot_a/swarm_lio2/cloud_map",
+    "/robot_b/swarm_lio2/cloud_map",
+    "/team_slam/swarm_lio2_metrics"
+  ],
+  "ros2_frame_checks": [
+    {
+      "field": "header.frame_id",
+      "ok": false,
+      "raw": "!rclpy.ok()",
+      "topic": "/robot_a/swarm_lio2/Odometry",
+      "value": ""
+    },
+    {
+      "field": "child_frame_id",
+      "ok": false,
+      "raw": "",
+      "topic": "/robot_a/swarm_lio2/Odometry",
+      "value": ""
+    },
+    {
+      "field": "header.frame_id",
+      "ok": false,
+      "raw": "",
+      "topic": "/robot_b/swarm_lio2/Odometry",
+      "value": ""
+    },
+    {
+      "field": "child_frame_id",
+      "ok": false,
+      "raw": "",
+      "topic": "/robot_b/swarm_lio2/Odometry",
+      "value": ""
+    }
+  ],
+  "ros2_missing_topics": [],
+  "ros2_present_topics": [
+    "/robot_a/swarm_lio2/Odometry",
+    "/robot_b/swarm_lio2/Odometry",
+    "/robot_a/swarm_lio2/cloud_static",
+    "/robot_b/swarm_lio2/cloud_static",
+    "/robot_a/swarm_lio2/cloud_map",
+    "/robot_b/swarm_lio2/cloud_map",
+    "/team_slam/swarm_lio2_metrics"
+  ],
+  "ros2_rate_checks": [
+    {
+      "ok": false,
+      "rate_hz": 0.0,
+      "raw": "WARNING: topic [/robot_a/swarm_lio2/Odometry] does not appear to be published yet",
+      "topic": "/robot_a/swarm_lio2/Odometry"
+    },
+    {
+      "ok": false,
+      "rate_hz": 0.0,
+      "raw": "",
+      "topic": "/robot_b/swarm_lio2/Odometry"
+    },
+    {
+      "ok": false,
+      "rate_hz": 0.0,
+      "raw": "WARNING: topic [/robot_a/swarm_lio2/cloud_static] does not appear to be published yet",
+      "topic": "/robot_a/swarm_lio2/cloud_static"
+    },
+    {
+      "ok": false,
+      "rate_hz": 0.0,
+      "raw": "",
+      "topic": "/robot_b/swarm_lio2/cloud_static"
+    },
+    {
+      "ok": false,
+      "rate_hz": 0.0,
+      "raw": "",
+      "topic": "/robot_a/swarm_lio2/cloud_map"
+    },
+    {
+      "ok": false,
+      "rate_hz": 0.0,
+      "raw": "",
+      "topic": "/robot_b/swarm_lio2/cloud_map"
+    }
+  ],
+  "ros2_topic_list_available": true,
+  "schema": "ros1_ros2_slam_bridge_validation/v1",
+  "slam_backend": "swarm_lio2_shadow",
+  "updated_utc": "2026-05-07T19:55:13Z"
+}

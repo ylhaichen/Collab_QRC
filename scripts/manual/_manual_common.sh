@@ -25,6 +25,13 @@ manual_log_name() {
 manual_run_logged() {
   local stem="$1"
   shift
+  manual_run_logged_allow_codes "${stem}" "0" "$@"
+}
+
+manual_run_logged_allow_codes() {
+  local stem="$1"
+  local allowed_codes="$2"
+  shift 2
   local log_file
   log_file="$(manual_log_name "${stem}")"
   {
@@ -36,7 +43,7 @@ manual_run_logged() {
   local status=${PIPESTATUS[0]}
   set -e
   echo "exit_code=${status}" | tee -a "${log_file}"
-  if [[ "${status}" -ne 0 ]]; then
+  if [[ ",${allowed_codes}," != *",${status},"* ]]; then
     echo "ERROR: command failed; see ${log_file}" >&2
     exit "${status}"
   fi

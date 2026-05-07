@@ -16,7 +16,7 @@
 
 ## Docker Runtime Validation
 
-Docker is only for simulation hybrid backend checks. It does not prove real robot readiness.
+Docker is only for simulation hybrid backend checks. It does not prove real robot readiness. The latest Docker/catkin run did build the shared ROS1 hybrid backend image and kept the Swarm-LIO2 wrapper launch alive for a 45 s smoke window, but that does not validate robot LiDAR/IMU timing, Jetson load, DDS peer communication, or Nav2 motion safety.
 
 ```bash
 bash scripts/manual/run_sim_hybrid_full_validation.sh
@@ -50,5 +50,7 @@ ros2 launch go2_gazebo_sim real_hybrid_ros1_slam_ros2_nav.launch.py
 - Current valid status is `Status D -- External Blocker`.
 - This host lacks native ROS1 Noetic/catkin/rospack for real backend build checks.
 - Live `/livox/lidar`, `/livox/imu`, `/sportmodestate`, DDS/bridge observation, and peer robot network are unavailable here.
+- Real preflight result on this host: ROS2 Humble is available, but ROS1 Noetic, `catkin_make` / `catkin build`, `rospack`, LiDAR topic, IMU topic, Unitree topic, peer robot IP/reachability, and DDS/bridge observation are missing.
 - Docker/catkin simulation recovery does not satisfy real robot validation; real shadow and primary scripts must run on the robot/Jetson or validated field computer.
 - Real deployment cannot be marked passed without robot/Jetson/Go2 validation logs.
+- Fast-LIO remains production for real deployment until real shadow and real primary Swarm-LIO2 validations pass.

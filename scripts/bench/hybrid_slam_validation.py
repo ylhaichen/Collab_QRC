@@ -81,103 +81,195 @@ def baseline_rerun_status() -> dict:
     return read_json(LOGS / "baseline_regression_rerun_status.json", {})
 
 
+def bridge_contract() -> dict:
+    return read_json(LOGS / "ros1_ros2_slam_bridge_validation.json", {})
+
+
+def topic_present(payload: dict, topic: str) -> bool:
+    return topic in set(payload.get("ros2_present_topics", []))
+
+
+def docker_launch_smoke_passed() -> bool:
+    status = docker_backend_status()
+    return bool(status.get("ros1_launch_smoke_passed", False) or status.get("runtime_ready", False))
+
+
+def join_blockers(*items: object) -> str:
+    blockers: list[str] = []
+    for item in items:
+        text = str(item or "").strip()
+        if text and text not in blockers:
+            blockers.append(text)
+    return ";".join(blockers)
+
+
 def shadow(deployment_mode: str) -> dict:
     swarm, _, _ = backend_checks(deployment_mode)
-    runtime_ready = bool(swarm.get("runtime_ready", False))
+    bridge = bridge_contract()
+    buildable = bool(swarm.get("buildable", False)) or bool(
+        docker_backend_status().get("catkin_workspace_build_success", False)
+    )
+    runtime_ready = bool(swarm.get("runtime_ready", False)) or docker_launch_smoke_passed()
+    ros2_shadow_odom = (
+        topic_present(bridge, "/robot_a/swarm_lio2/Odometry")
+        and topic_present(bridge, "/robot_b/swarm_lio2/Odometry")
+        and not bridge.get("blocker", "")
+    )
+    blocker = join_blockers(
+        "" if runtime_ready else swarm.get("blocker", "swarm_lio2_runtime_not_ready"),
+        "" if ros2_shadow_odom else bridge.get("blocker", "ros2_shadow_odometry_not_validated"),
+    )
     payload = {
-        "schema": "swarm_lio2_shadow_validation/v2",
+        "schema": "swarm_lio2_shadow_validation/v4",
         "deployment_mode": deployment_mode,
         "slam_backend": "swarm_lio2_shadow",
         "swarm_lio2_source_available": bool(swarm.get("available", False)),
-        "swarm_lio2_buildable": bool(swarm.get("buildable", False)),
+        "swarm_lio2_buildable": buildable,
         "swarm_lio2_runtime_ready": runtime_ready,
-        "swarm_lio2_started": False,
-        "swarm_lio2_odometry_valid": False,
+        "swarm_lio2_started": runtime_ready,
+        "ros1_launch_smoke_passed": docker_launch_smoke_passed(),
+        "swarm_lio2_odometry_valid": ros2_shadow_odom,
         "swarm_lio2_relative_state_valid": False,
-        "ros2_receives_shadow_odometry": False,
+        "ros2_receives_shadow_odometry": ros2_shadow_odom,
         "fast_lio_baseline_still_runs": baseline()["overlap_pass"] and baseline()["no_overlap_pass"],
         "production_downstream_depends_on_swarm": False,
-        "metrics_recorded": True,
+        "metrics_recorded": topic_present(bridge, "/team_slam/swarm_lio2_metrics"),
         "gt_used_runtime": False,
-        "blocker": "" if runtime_ready else str(swarm.get("blocker", "swarm_lio2_runtime_not_ready")),
+        "pass": bool(runtime_ready and ros2_shadow_odom),
+        "blocker": blocker,
     }
     write_json(LOGS / "swarm_lio2_shadow_validation.json", payload)
+    write_md(LOGS / "swarm_lio2_shadow_validation.md", "Swarm-LIO2 Shadow Validation", payload)
     return payload
 
 
 def primary(deployment_mode: str) -> dict:
     swarm, _, _ = backend_checks(deployment_mode)
-    runtime_ready = bool(swarm.get("runtime_ready", False))
+    bridge = bridge_contract()
+    buildable = bool(swarm.get("buildable", False)) or bool(
+        docker_backend_status().get("catkin_workspace_build_success", False)
+    )
+    runtime_ready = bool(swarm.get("runtime_ready", False)) or docker_launch_smoke_passed()
+    odom_valid = topic_present(bridge, "/robot_a/Odometry") and topic_present(bridge, "/robot_b/Odometry")
+    corrected_valid = topic_present(bridge, "/robot_a/corrected_odom") and topic_present(bridge, "/robot_b/corrected_odom")
+    nav_valid = topic_present(bridge, "/robot_a/odom/nav") and topic_present(bridge, "/robot_b/odom/nav")
+    cloud_valid = (
+        topic_present(bridge, "/robot_a/cloud_static")
+        and topic_present(bridge, "/robot_b/cloud_static")
+        and topic_present(bridge, "/robot_a/cloud_registered_body")
+        and topic_present(bridge, "/robot_b/cloud_registered_body")
+    )
+    base = baseline()
+    blocker = join_blockers(
+        "" if runtime_ready else swarm.get("blocker", "swarm_lio2_runtime_not_ready"),
+        "" if (odom_valid and corrected_valid and nav_valid and cloud_valid) else bridge.get("blocker", "primary_ros2_topic_contract_not_validated"),
+        "" if (base["overlap_pass"] and base["no_overlap_pass"] and not base["gt_used_runtime"]) else "fresh_overlap_no_overlap_baseline_not_validated",
+    )
     payload = {
-        "schema": "swarm_lio2_primary_validation/v2",
+        "schema": "swarm_lio2_primary_validation/v4",
         "deployment_mode": deployment_mode,
         "slam_backend": "swarm_lio2_primary",
         "swarm_lio2_source_available": bool(swarm.get("available", False)),
-        "swarm_lio2_buildable": bool(swarm.get("buildable", False)),
+        "swarm_lio2_buildable": buildable,
         "swarm_lio2_runtime_ready": runtime_ready,
         "adapter_contract_configured": True,
         "real_nav2_odom_contract_configured": True,
-        "odometry_valid": False,
-        "corrected_odom_valid": False,
-        "cloud_static_or_registered_valid": False,
-        "nav2_runtime_valid": False,
+        "odometry_valid": odom_valid,
+        "corrected_odom_valid": corrected_valid,
+        "cloud_static_or_registered_valid": cloud_valid,
+        "nav2_runtime_valid": nav_valid,
         "team_loop_closure_keyframes_valid": False,
-        "overlap_pass": False,
-        "no_overlap_pass": False,
+        "overlap_pass": bool(base["overlap_pass"]),
+        "no_overlap_pass": bool(base["no_overlap_pass"]),
         "dynamic_object_pass": False,
         "erasor_cleanup_pass": False,
         "loop_closure_agreement_gate_pass": False,
         "gt_used_runtime": False,
         "merged_map_agreement_gated": True,
-        "blocker": "" if runtime_ready else str(swarm.get("blocker", "swarm_lio2_runtime_not_ready")),
+        "pass": False,
+        "blocker": blocker,
     }
     write_json(LOGS / "swarm_lio2_primary_validation.json", payload)
+    write_md(LOGS / "swarm_lio2_primary_validation.md", "Swarm-LIO2 Primary Validation", payload)
     return payload
 
 
 def dynamic(deployment_mode: str) -> dict:
     _, dyn, _ = backend_checks(deployment_mode)
     dyn_prev = read_json(LOGS / "dynamic_filter_validation.json", {})
-    runtime_ready = bool(dyn.get("runtime_ready", False))
+    bridge = bridge_contract()
+    docker_build_ready = bool(dyn.get("runtime_ready", False)) or bool(
+        docker_backend_status().get("catkin_workspace_build_success", False)
+    )
+    runtime_output_ready = (
+        topic_present(bridge, "/robot_a/cloud_static")
+        and topic_present(bridge, "/robot_a/cloud_dynamic")
+        and topic_present(bridge, "/robot_b/cloud_static")
+        and topic_present(bridge, "/robot_b/cloud_dynamic")
+        and topic_present(bridge, "/team_slam/dynamic_filter_metrics")
+        and not bridge.get("blocker", "")
+    )
     payload = {
-        "schema": "dynamic_lio_filter_integration/v2",
+        "schema": "dynamic_lio_filter_integration/v4",
         "deployment_mode": deployment_mode,
         "dynamic_lio_source_available": bool(dyn.get("available", False)),
-        "dynamic_lio_buildable": bool(dyn.get("buildable", False)),
-        "dynamic_lio_runtime_ready": runtime_ready,
-        "dynamic_filter_backend": "dynamic_lio_wrapper" if runtime_ready else "temporal_voxel_fallback",
+        "dynamic_lio_buildable": bool(dyn.get("buildable", False)) or docker_build_ready,
+        "dynamic_lio_docker_catkin_build_passed": docker_build_ready,
+        "dynamic_lio_runtime_ready": runtime_output_ready,
+        "dynamic_filter_backend": "dynamic_lio_wrapper" if runtime_output_ready else "temporal_voxel_fallback",
         "dynamic_points_filtered": int(dyn_prev.get("dynamic_points_filtered", 0) or 0),
         "static_points_kept": int(dyn_prev.get("static_points_kept", 0) or 0),
         "dynamic_filter_ratio": float(dyn_prev.get("dynamic_filter_ratio", 0.0) or 0.0),
         "stale_obstacle_decay_time_sec": dyn_prev.get("stale_obstacle_decay_time_sec"),
-        "fallback_used": not runtime_ready,
+        "temporal_voxel_fallback_passed": bool(dyn_prev.get("runtime_valid", False)),
+        "fallback_used": not runtime_output_ready,
         "gt_used_runtime": False,
-        "blocker": "" if runtime_ready else str(dyn.get("blocker", "dynamic_lio_runtime_not_ready")),
+        "pass": runtime_output_ready,
+        "blocker": "" if runtime_output_ready else join_blockers(
+            bridge.get("blocker", "dynamic_lio_ros2_output_not_validated"),
+            "" if docker_build_ready else dyn.get("blocker", "dynamic_lio_docker_catkin_not_ready"),
+        ),
     }
     write_json(LOGS / "dynamic_lio_filter_integration.json", payload)
+    write_md(LOGS / "dynamic_lio_filter_integration.md", "Dynamic-LIO Filter Integration", payload)
     return payload
 
 
 def erasor(deployment_mode: str) -> dict:
     _, _, er = backend_checks(deployment_mode)
-    runtime_ready = bool(er.get("runtime_ready", False))
+    bridge = bridge_contract()
+    docker_build_ready = bool(er.get("runtime_ready", False)) or bool(
+        docker_backend_status().get("catkin_workspace_build_success", False)
+    )
+    runtime_output_ready = (
+        topic_present(bridge, "/team_slam/cleaned_static_map")
+        and topic_present(bridge, "/team_slam/erasor_removed_dynamic_cloud")
+        and topic_present(bridge, "/team_slam/erasor_metrics")
+        and not bridge.get("blocker", "")
+    )
     payload = {
-        "schema": "erasor_map_cleanup_validation/v2",
+        "schema": "erasor_map_cleanup_validation/v4",
         "deployment_mode": deployment_mode,
-        "static_map_cleanup_backend": "erasor_wrapper" if runtime_ready else "temporal_voxel_fallback",
+        "static_map_cleanup_backend": "erasor_wrapper" if runtime_output_ready else "temporal_voxel_fallback",
         "erasor_source_available": bool(er.get("available", False)),
-        "erasor_buildable": bool(er.get("buildable", False)),
-        "erasor_runtime_ready": runtime_ready,
+        "erasor_buildable": bool(er.get("buildable", False)) or docker_build_ready,
+        "erasor_docker_catkin_build_passed": docker_build_ready,
+        "erasor_runtime_ready": runtime_output_ready,
         "naive_map_contains_dynamic_trace": False,
         "cleaned_map_removes_dynamic_trace": False,
         "static_walls_preserved": False,
-        "cleaned_map_published": False,
+        "cleaned_map_published": topic_present(bridge, "/team_slam/cleaned_static_map"),
         "control_loop_blocked": False,
-        "fallback_used": not runtime_ready,
+        "fallback_used": not runtime_output_ready,
         "gt_used_runtime": False,
-        "blocker": "" if runtime_ready else str(er.get("blocker", "erasor_runtime_not_ready")),
+        "pass": runtime_output_ready,
+        "blocker": "" if runtime_output_ready else join_blockers(
+            bridge.get("blocker", "erasor_ros2_cleanup_output_not_validated"),
+            "" if docker_build_ready else er.get("blocker", "erasor_docker_catkin_not_ready"),
+        ),
     }
     write_json(LOGS / "erasor_map_cleanup_validation.json", payload)
+    write_md(LOGS / "erasor_map_cleanup_validation.md", "ERASOR Map Cleanup Validation", payload)
     return payload
 
 

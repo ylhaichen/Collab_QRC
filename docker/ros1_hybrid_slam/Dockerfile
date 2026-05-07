@@ -32,6 +32,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-noetic-std-msgs \
     ros-noetic-tf \
     ros-noetic-tf2-ros \
+    ros-noetic-topic-tools \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /catkin_ws

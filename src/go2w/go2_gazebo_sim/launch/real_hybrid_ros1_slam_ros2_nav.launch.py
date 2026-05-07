@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 from pathlib import Path
 
 from ament_index_python.packages import get_package_share_directory
@@ -37,13 +38,18 @@ def _swarm_adapter(ns: str, base_frame: str, slam_backend, dynamic_filter_backen
 
 
 def generate_launch_description():
+    root = _workspace_root()
+    fastdds_profile = root / "config" / "fastdds_no_shm.xml"
+    if not os.environ.get("FASTRTPS_DEFAULT_PROFILES_FILE") and fastdds_profile.is_file():
+        os.environ["FASTRTPS_DEFAULT_PROFILES_FILE"] = str(fastdds_profile)
+
     slam_backend = LaunchConfiguration("slam_backend")
     dynamic_filter_backend = LaunchConfiguration("dynamic_filter_backend")
     static_map_cleanup_backend = LaunchConfiguration("static_map_cleanup_backend")
     start_ros1_slam_bridge = LaunchConfiguration("start_ros1_slam_bridge")
     start_nav2_stack = LaunchConfiguration("start_nav2_stack")
     use_sim_time = LaunchConfiguration("use_sim_time")
-    bridge_script = _workspace_root() / "scripts" / "launch" / "ros1_hybrid_slam_bridge.sh"
+    bridge_script = root / "scripts" / "launch" / "ros1_hybrid_slam_bridge.sh"
     real_single_launch = (
         Path(get_package_share_directory("go2w_real_bringup"))
         / "launch"

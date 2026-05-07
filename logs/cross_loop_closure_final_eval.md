@@ -1,15 +1,17 @@
 # Cross-Loop Runtime Validation
 
-- status: `Status D — External Blocker`
-- command: `START_BRIDGE=true bash scripts/bench/run_cross_loop_runtime_validation.sh`
-- completed_run_backend: `g2o_export_only`
-- completed_run_overlap_pass: `False`
-- completed_run_no_overlap_pass: `True`
-- completed_run_gt_used_runtime_overlap: `False`
-- completed_run_gt_used_runtime_no_overlap: `False`
-- script_default_now: `TEAM_POSE_GRAPH_BACKEND=auto`
-- export_only_gate_default_now: `false`
-- corrected_fresh_rerun_passed: `False`
-- blocker: `Required fresh baseline rerun with START_BRIDGE=true was not completed after the script default was corrected to TEAM_POSE_GRAPH_BACKEND=auto and TEAM_ALIGNMENT_ALLOW_EXPORT_ONLY_GATE=false. The escalated Docker/bridge rerun was rejected by the approval reviewer due usage limit; retry was deferred by the environment until 8:06 PM or explicit approval. The last completed rerun used g2o_export_only, so optimized overlap_pass is false and the required Fast-LIO baseline regression cannot be claimed fresh-passing in this pass.`
+- overlap_pass: `True`
+- no_overlap_pass: `True`
+- overlap_alignment_status: `aligned`
+- overlap_inliers: `9`
+- overlap_pose_graph_inter_robot_factors: `9`
+- overlap_pose_graph_backend: `gtsam_cpp`
+- overlap_pose_graph_optimization_success: `True`
+- overlap_pose_graph_error_before: `424.974258`
+- overlap_pose_graph_error_after: `69.859186`
+- no_overlap_alignment_status: `rejected`
+- no_overlap_false_alignment: `False`
+- gt_used_runtime_overlap: `False`
+- gt_used_runtime_no_overlap: `False`
 
-Claim: Fast-LIO baseline regression is not freshly validated in this pass; keep Fast-LIO production backend but do not claim a new baseline pass.
+Claim: optimized centralized multi-robot pose graph correction with robust accepted inter-robot factors is validated for this run.

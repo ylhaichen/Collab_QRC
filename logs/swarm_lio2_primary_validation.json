@@ -1,6 +1,6 @@
 {
   "adapter_contract_configured": true,
-  "blocker": "Primary mode was not promoted: ROS2 /<ns>/Odometry, /<ns>/corrected_odom, Nav2 tf/odom, keyframes, robust overlap/no-overlap, Dynamic-LIO output, and ERASOR cleanup were not validated in runtime.",
+  "blocker": "missing_ros1_topics:/robot_a/swarm_lio2_raw/Odometry,/robot_b/swarm_lio2_raw/Odometry,/robot_a/swarm_lio2_raw/cloud_static,/robot_b/swarm_lio2_raw/cloud_static,/robot_a/swarm_lio2_raw/cloud_map,/robot_b/swarm_lio2_raw/cloud_map;/robot_a/swarm_lio2/Odometry:rate<0.1;/robot_b/swarm_lio2/Odometry:rate<0.1;/robot_a/swarm_lio2/cloud_static:rate<0.1;/robot_b/swarm_lio2/cloud_static:rate<0.1;/robot_a/swarm_lio2/cloud_map:rate<0.1;/robot_b/swarm_lio2/cloud_map:rate<0.1;/robot_a/swarm_lio2/Odometry:header.frame_id_empty;/robot_a/swarm_lio2/Odometry:child_frame_id_empty;/robot_b/swarm_lio2/Odometry:header.frame_id_empty;/robot_b/swarm_lio2/Odometry:child_frame_id_empty",
   "cloud_static_or_registered_valid": false,
   "corrected_odom_valid": false,
   "deployment_mode": "sim_hybrid_ros1_slam_ros2_nav",
@@ -10,16 +10,15 @@
   "loop_closure_agreement_gate_pass": false,
   "merged_map_agreement_gated": true,
   "nav2_runtime_valid": false,
-  "no_overlap_pass": false,
+  "no_overlap_pass": true,
   "odometry_valid": false,
-  "overlap_pass": false,
+  "overlap_pass": true,
   "pass": false,
   "real_nav2_odom_contract_configured": true,
-  "schema": "swarm_lio2_primary_validation/v3",
+  "schema": "swarm_lio2_primary_validation/v4",
   "slam_backend": "swarm_lio2_primary",
   "swarm_lio2_buildable": true,
   "swarm_lio2_runtime_ready": true,
   "swarm_lio2_source_available": true,
-  "team_loop_closure_keyframes_valid": false,
-  "updated_utc": "2026-05-07T19:10:19Z"
+  "team_loop_closure_keyframes_valid": false
 }

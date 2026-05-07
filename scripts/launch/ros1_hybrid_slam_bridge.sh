@@ -40,5 +40,9 @@ fi
 
 export DEPLOYMENT_MODE="${DEPLOYMENT_MODE:-$([[ "${MODE}" == "sim" ]] && echo sim_hybrid_ros1_slam_ros2_nav || echo real_hybrid_ros1_slam_ros2_nav)}"
 export SLAM_BACKEND DYNAMIC_FILTER_BACKEND STATIC_MAP_CLEANUP_BACKEND
+if [[ -z "${FASTRTPS_DEFAULT_PROFILES_FILE:-}" && -f "${WS_DIR}/config/fastdds_no_shm.xml" ]]; then
+  export FASTRTPS_DEFAULT_PROFILES_FILE="${WS_DIR}/config/fastdds_no_shm.xml"
+fi
+export ROS1_HYBRID_FASTRTPS_PROFILE="${ROS1_HYBRID_FASTRTPS_PROFILE:-/config/fastdds_no_shm.xml}"
 
 exec "${COMPOSE[@]}" up --build

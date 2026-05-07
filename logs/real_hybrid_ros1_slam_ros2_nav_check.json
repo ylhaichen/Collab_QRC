@@ -30,7 +30,7 @@
   "dds_or_bridge_ok": false,
   "cpu_count": 32,
   "ram_gb": 15,
-  "disk_free_gb": 308,
+  "disk_free_gb": 306,
   "swarm_lio2": {
   "backend": "swarm_lio2",
   "backend_label": "Swarm-LIO2",

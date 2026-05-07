@@ -1,13 +1,24 @@
-# Sim Hybrid ROS1 SLAM / ROS2 Nav Validation
+# Swarm-LIO2 Primary Validation
 
-- schema: `sim_hybrid_ros1_slam_ros2_nav_validation/v1`
+- schema: `swarm_lio2_primary_validation/v4`
 - deployment_mode: `sim_hybrid_ros1_slam_ros2_nav`
+- slam_backend: `swarm_lio2_primary`
+- swarm_lio2_source_available: `True`
+- swarm_lio2_buildable: `True`
+- swarm_lio2_runtime_ready: `True`
+- adapter_contract_configured: `True`
+- real_nav2_odom_contract_configured: `True`
+- odometry_valid: `False`
+- corrected_odom_valid: `False`
+- cloud_static_or_registered_valid: `False`
+- nav2_runtime_valid: `False`
+- team_loop_closure_keyframes_valid: `False`
+- overlap_pass: `True`
+- no_overlap_pass: `True`
+- dynamic_object_pass: `False`
+- erasor_cleanup_pass: `False`
+- loop_closure_agreement_gate_pass: `False`
+- gt_used_runtime: `False`
+- merged_map_agreement_gated: `True`
 - pass: `False`
-- final_status: `Status D — External Blocker`
 - blocker: `missing_ros1_topics:/robot_a/swarm_lio2_raw/Odometry,/robot_b/swarm_lio2_raw/Odometry,/robot_a/swarm_lio2_raw/cloud_static,/robot_b/swarm_lio2_raw/cloud_static,/robot_a/swarm_lio2_raw/cloud_map,/robot_b/swarm_lio2_raw/cloud_map;/robot_a/swarm_lio2/Odometry:rate<0.1;/robot_b/swarm_lio2/Odometry:rate<0.1;/robot_a/swarm_lio2/cloud_static:rate<0.1;/robot_b/swarm_lio2/cloud_static:rate<0.1;/robot_a/swarm_lio2/cloud_map:rate<0.1;/robot_b/swarm_lio2/cloud_map:rate<0.1;/robot_a/swarm_lio2/Odometry:header.frame_id_empty;/robot_a/swarm_lio2/Odometry:child_frame_id_empty;/robot_b/swarm_lio2/Odometry:header.frame_id_empty;/robot_b/swarm_lio2/Odometry:child_frame_id_empty`
-- docker_backend_build_blocker: ``
-- claim: `Fast-LIO remains production backend; sim hybrid Swarm-LIO2 primary is not validated.`
-- implemented_scaffolding: `True`
-- docker_image_build_passed: `True`
-- docker_run_blocked: `False`
-- real_robot_available: `False`

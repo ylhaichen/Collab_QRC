@@ -41,8 +41,11 @@ Current Docker/catkin recovery state:
 - `ros1_hybrid_slam` Docker image builds with the required ROS1 dependencies.
 - ROS1 catkin workspace builds from writable staged backend copies.
 - Livox-SDK is built/installed into the container from `external/Livox-SDK` when needed.
-- Swarm-LIO2 ROS1 launch smoke starts and stays alive for the smoke window.
+- Swarm-LIO2 ROS1 wrapper launch starts and stays alive for the 45 s smoke window.
+- The wrapper launch relays `robot_a` / `robot_b` ROS2-sim-compatible LiDAR/IMU topics into the Swarm-LIO2 `quad1` / `quad2` input contract and relays raw Swarm-LIO2 odom/cloud topics back under `/<ns>/swarm_lio2_raw/*`.
+- The ROS1 bridge entrypoint now tolerates ROS setup files under `set -u`, and the hybrid launch exports the local FastDDS no-SHM profile when present.
 - Dynamic-LIO and ERASOR source targets build in the ROS1 catkin workspace.
+- Fresh Fast-LIO / SC-PGO baseline regression still passes with `gtsam_cpp`, overlap accepted, no-overlap rejected, and no runtime GT.
 
 Manual rerun command:
 
@@ -66,9 +69,8 @@ CONFIRM_REAL_ROBOT=1 bash scripts/manual/run_real_robot_primary_validation.sh
 
 - Current valid status is `Status D -- External Blocker`.
 - Backend Docker/catkin recovery is complete, but full hybrid runtime validation is not complete.
-- Swarm-LIO2 shadow mode has not passed ROS2 odometry reception.
+- Swarm-LIO2 shadow mode has not passed ROS2 odometry reception: ROS2 shadow topics are visible, but message rates remain below `0.1 Hz`, odometry frames are empty, and ROS1 `/<ns>/swarm_lio2_raw/*` relay output topics were missing in the bounded runtime check.
 - Swarm-LIO2 primary mode has not passed ROS2 odometry/corrected odom/cloud/Nav2/tf/keyframe runtime validation.
-- Fresh Fast-LIO baseline regression rerun with corrected GTSAM-capable defaults was blocked by environment approval/usage limit.
 - Dynamic-LIO and ERASOR are buildable wrappers, but their runtime outputs are not validated.
 - Real robot LiDAR/IMU/Unitree topics and peer network are unavailable here.
 - Fast-LIO remains production backend.

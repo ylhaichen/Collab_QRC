@@ -1,27 +1,18 @@
 {
-  "blocker": "Dynamic-LIO Docker/catkin wrapper builds, but no completed runtime pass proved /<ns>/cloud_static, /<ns>/cloud_dynamic, moving-object separation, or Nav2 TTL clearing. temporal_voxel_fallback remains validated fallback.",
-  "cloud_static_usable_by_team_loop_closure": false,
+  "blocker": "missing_ros1_topics:/robot_a/swarm_lio2_raw/Odometry,/robot_b/swarm_lio2_raw/Odometry,/robot_a/swarm_lio2_raw/cloud_static,/robot_b/swarm_lio2_raw/cloud_static,/robot_a/swarm_lio2_raw/cloud_map,/robot_b/swarm_lio2_raw/cloud_map;/robot_a/swarm_lio2/Odometry:rate<0.1;/robot_b/swarm_lio2/Odometry:rate<0.1;/robot_a/swarm_lio2/cloud_static:rate<0.1;/robot_b/swarm_lio2/cloud_static:rate<0.1;/robot_a/swarm_lio2/cloud_map:rate<0.1;/robot_b/swarm_lio2/cloud_map:rate<0.1;/robot_a/swarm_lio2/Odometry:header.frame_id_empty;/robot_a/swarm_lio2/Odometry:child_frame_id_empty;/robot_b/swarm_lio2/Odometry:header.frame_id_empty;/robot_b/swarm_lio2/Odometry:child_frame_id_empty",
   "deployment_mode": "sim_hybrid_ros1_slam_ros2_nav",
   "dynamic_filter_backend": "temporal_voxel_fallback",
+  "dynamic_filter_ratio": 0.14286,
+  "dynamic_lio_buildable": true,
   "dynamic_lio_docker_catkin_build_passed": true,
-  "dynamic_lio_docker_container_run_ready": true,
   "dynamic_lio_runtime_ready": false,
   "dynamic_lio_source_available": true,
+  "dynamic_points_filtered": 1,
   "fallback_used": true,
   "gt_used_runtime": false,
-  "manual_logs": {
-    "catkin_build": "logs/manual/dynamic_lio_catkin_build_20260507T185426Z.log",
-    "docker_build": "logs/manual/ros1_hybrid_docker_build_20260507T185425Z.log",
-    "postcheck": "logs/manual/dynamic_lio_docker_postcheck_20260507T185434Z.log",
-    "precheck": "logs/manual/dynamic_lio_docker_precheck_20260507T185424Z.log"
-  },
-  "moving_object_in_dynamic_output": false,
-  "nav2_dynamic_obstacle_ttl_clear_valid": false,
-  "requested_backend": "dynamic_lio_wrapper",
-  "ros2_dynamic_cloud_output_valid": false,
-  "ros2_static_cloud_output_valid": false,
-  "schema": "dynamic_lio_filter_integration/v3",
-  "static_structures_in_static_output": false,
-  "synthetic_contract_passed": true,
-  "updated_utc": "2026-05-07T19:10:19Z"
+  "pass": false,
+  "schema": "dynamic_lio_filter_integration/v4",
+  "stale_obstacle_decay_time_sec": 1.5,
+  "static_points_kept": 6,
+  "temporal_voxel_fallback_passed": true
 }

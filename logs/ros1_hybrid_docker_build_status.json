@@ -9,19 +9,19 @@
   "docker_image_build_command": "docker compose -f docker/ros1_hybrid_slam/docker-compose.yml build ros1_hybrid_slam",
   "docker_image_build_success": true,
   "manual_logs": {
-    "catkin_build": "logs/manual/swarm_lio2_catkin_build_20260507T185323Z.log",
-    "docker_build": "logs/manual/ros1_hybrid_docker_build_20260507T185313Z.log",
-    "launch_smoke": "timeout 30s docker compose -f docker/ros1_hybrid_slam/docker-compose.yml run --rm ros1_hybrid_slam run",
-    "postcheck": "logs/manual/swarm_lio2_docker_postcheck_20260507T185332Z.log",
-    "precheck": "logs/manual/swarm_lio2_docker_precheck_20260507T185313Z.log"
+    "catkin_build": "logs/manual/swarm_lio2_catkin_build_20260507T193924Z.log",
+    "docker_build": "logs/manual/ros1_hybrid_docker_build_20260507T193924Z.log",
+    "launch_smoke": "logs/manual/swarm_lio2_launch_smoke_20260507T193931Z.log",
+    "postcheck": "logs/manual/swarm_lio2_docker_postcheck_20260507T194016Z.log",
+    "precheck": "logs/manual/swarm_lio2_docker_precheck_20260507T193923Z.log"
   },
-  "remaining_validation_blocker": "Swarm-LIO2 Docker image, ROS1 catkin workspace, and ROS1 launch smoke passed. Full sim_hybrid_ros1_slam_ros2_nav is still blocked: ROS1/ROS2 bridge odometry reception, Swarm-LIO2 primary Nav2/tf ownership, team_loop_closure keyframes, optimized overlap/no-overlap baseline rerun, Dynamic-LIO static/dynamic cloud runtime output, and ERASOR cleanup output were not validated in one completed runtime pass.",
+  "remaining_validation_blocker": "Swarm-LIO2 Docker image, ROS1 catkin workspace, and ROS1 launch smoke passed. Full sim_hybrid_ros1_slam_ros2_nav is still blocked: ROS1/ROS2 bridge topic contract has no nonzero Swarm-LIO2 odometry/cloud rates, primary Nav2/tf ownership and team_loop_closure keyframes are not validated, Dynamic-LIO static/dynamic cloud runtime output is not validated, and ERASOR cleanup output is not validated.",
   "ros1_launch_smoke_attempted": true,
-  "ros1_launch_smoke_command": "timeout 30s docker compose -f docker/ros1_hybrid_slam/docker-compose.yml run --rm ros1_hybrid_slam run",
+  "ros1_launch_smoke_command": "timeout 45s docker compose -f docker/ros1_hybrid_slam/docker-compose.yml run --rm ros1_hybrid_slam run",
   "ros1_launch_smoke_passed": true,
-  "ros1_launch_smoke_result": "timeout_30s_with_swarm_lio_roslaunch_alive; no read-only PCD directory abort after writable workspace staging",
+  "ros1_launch_smoke_result": "timeout_45s_with_swarm_lio_roslaunch_alive; wrapper launch included topic_tools relays for robot_a/robot_b ROS2-sim-compatible raw inputs and Swarm-LIO2 raw outputs; no early roslaunch crash",
   "runtime_ready": true,
   "runtime_scope": "Docker image, ROS1 catkin workspace, and Swarm-LIO2 ROS1 launch smoke only. This does not validate ROS1/ROS2 bridge odometry, primary Nav2/tf, Dynamic-LIO cloud output, or ERASOR cleanup output.",
   "schema": "ros1_hybrid_docker_build_status/v2",
-  "updated_utc": "2026-05-07T19:10:19Z"
+  "updated_utc": "2026-05-07T20:05:00Z"
 }

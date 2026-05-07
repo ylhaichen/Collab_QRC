@@ -1,5 +1,5 @@
 {
-  "alignment_confidence": 0.6349,
+  "alignment_confidence": 0.84904,
   "factors": [
     {
       "factor_type": "prior",
@@ -29,9 +29,9 @@
       ],
       "match_id": "",
       "measurement": [
-        0.03580852734351138,
-        0.007559720199121015,
-        -0.17931999999999998
+        0.1341761419782965,
+        -0.029508692343443964,
+        -0.35355
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -48,9 +48,9 @@
       ],
       "match_id": "",
       "measurement": [
-        -0.4659588370433673,
-        0.05010052076767911,
-        0.257235
+        0.179131081130948,
+        -0.13257841367604953,
+        -0.4714440000000001
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -67,9 +67,9 @@
       ],
       "match_id": "",
       "measurement": [
-        -0.08392733558059151,
-        0.034634842894732204,
-        0.83737
+        -0.1993477372189677,
+        0.0749164846057088,
+        0.508635
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -86,9 +86,9 @@
       ],
       "match_id": "",
       "measurement": [
-        -0.14420413442925753,
-        -0.024291101529337944,
-        1.5481690000000004
+        -0.2565161950285342,
+        -0.08973751549983432,
+        -1.455465
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -105,9 +105,9 @@
       ],
       "match_id": "",
       "measurement": [
-        -0.10959309333981687,
-        -0.059345378018934025,
-        -0.23473399999999997
+        -0.0470913334486791,
+        0.042993212418070345,
+        -1.4269723071795866
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -124,9 +124,9 @@
       ],
       "match_id": "",
       "measurement": [
-        0.23558570173061344,
-        0.035841695552727704,
-        0.22389999999999996
+        0.01676239637690139,
+        -0.19756928422126666,
+        -1.0880449999999997
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -143,9 +143,9 @@
       ],
       "match_id": "",
       "measurement": [
-        0.002000385052481457,
-        0.11191871362574635,
-        -0.240701
+        -0.27849997203628063,
+        0.008540232771470313,
+        -0.8043120000000001
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -162,9 +162,9 @@
       ],
       "match_id": "",
       "measurement": [
-        -0.11202085891458996,
-        0.06443963972616185,
-        0.7307510000000002
+        -0.07242281038591193,
+        -0.15334857852554828,
+        -0.992883
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -181,9 +181,9 @@
       ],
       "match_id": "",
       "measurement": [
-        -0.17851440193490858,
-        0.023579828282282916,
-        1.6198633071795863
+        0.27085971935613773,
+        -0.060098106711562294,
+        -0.286936
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -200,9 +200,9 @@
       ],
       "match_id": "",
       "measurement": [
-        -0.13090737461425442,
-        -0.011727713826797381,
-        -1.0540100000000001
+        0.43749494496976793,
+        -0.02810219076690701,
+        -0.213819
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -219,9 +219,9 @@
       ],
       "match_id": "",
       "measurement": [
-        -0.16783261360413038,
-        0.021421106666245027,
-        0.3722080000000001
+        0.31213118060872524,
+        -0.1610527121528953,
+        -0.5155799999999999
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -238,9 +238,9 @@
       ],
       "match_id": "",
       "measurement": [
-        -0.0663802157188014,
-        0.21126134753221046,
-        1.361232
+        0.11910597818137725,
+        0.04656206569147514,
+        0.35597
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -257,9 +257,180 @@
       ],
       "match_id": "",
       "measurement": [
-        -0.6150078991453733,
-        0.05667322109069002,
-        0.5550660000000001
+        -0.24119030288908405,
+        -0.002080334653819793,
+        0.9801409999999999
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_a",
+        13
+      ],
+      "key2": [
+        "robot_a",
+        14
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.22314227162123468,
+        0.05682769233142437,
+        0.9462900000000001
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_a",
+        14
+      ],
+      "key2": [
+        "robot_a",
+        15
+      ],
+      "match_id": "",
+      "measurement": [
+        0.14228166853180518,
+        0.14246096588120372,
+        0.794319
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_a",
+        15
+      ],
+      "key2": [
+        "robot_a",
+        16
+      ],
+      "match_id": "",
+      "measurement": [
+        0.26763948198895005,
+        0.06899360608553862,
+        0.20495000000000013
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_a",
+        16
+      ],
+      "key2": [
+        "robot_a",
+        17
+      ],
+      "match_id": "",
+      "measurement": [
+        0.2909911884815379,
+        -0.015086027512307143,
+        0.20127899999999999
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_a",
+        17
+      ],
+      "key2": [
+        "robot_a",
+        18
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.010829444313117165,
+        0.05166752496364707,
+        0.3085759999999999
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_a",
+        18
+      ],
+      "key2": [
+        "robot_a",
+        19
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.02941728923607584,
+        0.030244224142818688,
+        0.20343230717958632
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_a",
+        19
+      ],
+      "key2": [
+        "robot_a",
+        20
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.12224652574472211,
+        0.022636186590170165,
+        1.158719
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_a",
+        20
+      ],
+      "key2": [
+        "robot_a",
+        21
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.6379858712745015,
+        0.11281404191905908,
+        0.41417600000000004
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_a",
+        21
+      ],
+      "key2": [
+        "robot_a",
+        22
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.10620593894045205,
+        0.03007321954458808,
+        1.186641
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -276,9 +447,9 @@
       ],
       "match_id": "",
       "measurement": [
-        0.11059337035143553,
-        0.021334395569366883,
-        0.2943950000000001
+        0.23889837399822503,
+        0.0029354558426574607,
+        0.228483
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -295,9 +466,9 @@
       ],
       "match_id": "",
       "measurement": [
-        0.015914239395010965,
-        0.009076727630499996,
-        -0.28629899999999997
+        0.23989076929653833,
+        0.03623422148073578,
+        0.7240330000000001
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -314,9 +485,9 @@
       ],
       "match_id": "",
       "measurement": [
-        0.014061076637340575,
-        0.007790771707529051,
-        -0.504636
+        0.07612375686937484,
+        0.03653455405629458,
+        0.7525609999999998
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -333,9 +504,9 @@
       ],
       "match_id": "",
       "measurement": [
-        0.2350573472783767,
-        -0.05273379836928703,
-        -0.492801
+        1.0030393638515687,
+        -0.060864066280853946,
+        -0.07269499999999994
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -352,9 +523,9 @@
       ],
       "match_id": "",
       "measurement": [
-        0.23152434135508848,
-        -0.0628143244817014,
-        -0.37462600000000007
+        0.7040026271219217,
+        0.075309501428653,
+        0.21351399999999998
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -371,9 +542,9 @@
       ],
       "match_id": "",
       "measurement": [
-        -0.16648910877192374,
-        -0.07730347120492415,
-        0.7366020000000002
+        0.395278795350261,
+        0.030898122053721222,
+        0.18514199999999995
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -390,9 +561,9 @@
       ],
       "match_id": "",
       "measurement": [
-        -0.1732786414411611,
-        -0.16031803523092947,
-        1.244356
+        0.9098717650781472,
+        0.042880544697758705,
+        0.18146500000000026
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -409,9 +580,9 @@
       ],
       "match_id": "",
       "measurement": [
-        0.1318645157887593,
-        0.09332989593799002,
-        0.9494239999999999
+        0.008029865061620178,
+        0.038179068441911435,
+        -0.2284460000000002
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -428,9 +599,9 @@
       ],
       "match_id": "",
       "measurement": [
-        0.19188532355785282,
-        0.04620089396427447,
-        0.44168900000000005
+        -0.11213465196197969,
+        0.05106172567947276,
+        -0.6859899999999999
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -447,9 +618,9 @@
       ],
       "match_id": "",
       "measurement": [
-        0.27163481100532955,
-        -0.039912021373252005,
-        -0.3226949999999999
+        -0.0018011823097574542,
+        0.02161609914593776,
+        -0.9072830000000002
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -466,9 +637,9 @@
       ],
       "match_id": "",
       "measurement": [
-        0.26347336480704,
-        -0.01706124371950629,
-        -0.2067079999999999
+        0.12033089843015643,
+        -0.06365795223686765,
+        -1.149317
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -485,9 +656,9 @@
       ],
       "match_id": "",
       "measurement": [
-        0.48509033210625807,
-        -0.03056876996282675,
-        -0.17884800000000012
+        -0.036055336932187654,
+        -0.01807934397887423,
+        0.32234300000000005
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -504,9 +675,9 @@
       ],
       "match_id": "",
       "measurement": [
-        1.0118395431420368,
-        -0.03859894990948348,
-        -0.147003
+        -0.047121670956948636,
+        -0.045393811541057705,
+        1.134755
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -523,9 +694,9 @@
       ],
       "match_id": "",
       "measurement": [
-        0.5079892618291146,
-        -0.04308468250215147,
-        -0.1811260000000001
+        -0.029877843743849608,
+        -0.0138330926845045,
+        0.3029080000000001
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -542,9 +713,9 @@
       ],
       "match_id": "",
       "measurement": [
-        0.38623828529225346,
-        -0.014908956184110367,
-        -0.287608
+        -0.42681081530197007,
+        -0.026582474325525185,
+        -0.24401000000000012
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -561,9 +732,9 @@
       ],
       "match_id": "",
       "measurement": [
-        1.0180652756401254,
-        -0.05116243285650168,
-        0.06768800000000007
+        0.07922888664262628,
+        0.009898662605111408,
+        -0.385685
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -580,9 +751,9 @@
       ],
       "match_id": "",
       "measurement": [
-        0.9126191630186016,
-        -0.002015760706430836,
-        -0.2118960000000001
+        -0.5506134586069829,
+        0.014306264392087709,
+        0.1890010000000001
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -599,9 +770,9 @@
       ],
       "match_id": "",
       "measurement": [
-        -0.015914848977987006,
-        -0.021124572942614606,
-        -0.9055719999999999
+        -0.008369862599244327,
+        0.04857206398815794,
+        0.19022999999999995
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -618,9 +789,9 @@
       ],
       "match_id": "",
       "measurement": [
-        0.4640227061139004,
-        -0.04888208476254441,
-        -0.207146
+        -0.04582755965736618,
+        0.08033041003163488,
+        0.232869
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -637,9 +808,9 @@
       ],
       "match_id": "",
       "measurement": [
-        0.31574203888108343,
-        -0.11745439490805065,
-        -0.275201
+        0.007445305428948945,
+        0.02382052533152157,
+        0.195104
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -656,9 +827,9 @@
       ],
       "match_id": "",
       "measurement": [
-        0.30808655812631347,
-        0.11314734951328731,
-        0.500372
+        -0.02393359758677427,
+        -0.03945013189527247,
+        0.23602799999999993
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -675,9 +846,9 @@
       ],
       "match_id": "",
       "measurement": [
-        0.7373102553576321,
-        0.03042494608809676,
-        0.19398900000000005
+        -0.008866903175034135,
+        0.008725710749535986,
+        0.18888800000000014
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -694,9 +865,9 @@
       ],
       "match_id": "",
       "measurement": [
-        0.40837088801095334,
-        0.030384499751451965,
-        0.231878
+        0.012957656065776924,
+        0.010784208328896483,
+        0.21587999999999985
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -713,9 +884,9 @@
       ],
       "match_id": "",
       "measurement": [
-        0.9203889024518492,
-        0.006377949786488646,
-        -0.180965
+        0.002883826352490626,
+        -0.007746841005769944,
+        0.1815050000000002
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -732,560 +903,9 @@
       ],
       "match_id": "",
       "measurement": [
-        0.7627687619070862,
-        -0.06146328870740936,
-        -0.19593700000000003
-      ],
-      "noise_scale": 1.0,
-      "source": "keyframe_odom"
-    },
-    {
-      "factor_type": "odom",
-      "key1": [
-        "robot_b",
-        25
-      ],
-      "key2": [
-        "robot_b",
-        26
-      ],
-      "match_id": "",
-      "measurement": [
-        0.3979827134826097,
-        -0.06799036526611246,
-        -0.24164199999999997
-      ],
-      "noise_scale": 1.0,
-      "source": "keyframe_odom"
-    },
-    {
-      "factor_type": "odom",
-      "key1": [
-        "robot_b",
-        26
-      ],
-      "key2": [
-        "robot_b",
-        27
-      ],
-      "match_id": "",
-      "measurement": [
-        0.11540234560181473,
-        -0.004555066366052074,
-        -0.29507800000000006
-      ],
-      "noise_scale": 1.0,
-      "source": "keyframe_odom"
-    },
-    {
-      "factor_type": "odom",
-      "key1": [
-        "robot_b",
-        27
-      ],
-      "key2": [
-        "robot_b",
-        28
-      ],
-      "match_id": "",
-      "measurement": [
-        -0.16299343721494086,
-        0.12256145162676191,
-        -1.181325
-      ],
-      "noise_scale": 1.0,
-      "source": "keyframe_odom"
-    },
-    {
-      "factor_type": "odom",
-      "key1": [
-        "robot_b",
-        28
-      ],
-      "key2": [
-        "robot_b",
-        29
-      ],
-      "match_id": "",
-      "measurement": [
-        0.24328863754540464,
-        -0.14311791935778206,
-        -0.8595669999999997
-      ],
-      "noise_scale": 1.0,
-      "source": "keyframe_odom"
-    },
-    {
-      "factor_type": "odom",
-      "key1": [
-        "robot_b",
-        29
-      ],
-      "key2": [
-        "robot_b",
-        30
-      ],
-      "match_id": "",
-      "measurement": [
-        -0.010403424369811454,
-        -0.06162644530866279,
-        0.3673780000000001
-      ],
-      "noise_scale": 1.0,
-      "source": "keyframe_odom"
-    },
-    {
-      "factor_type": "odom",
-      "key1": [
-        "robot_b",
-        30
-      ],
-      "key2": [
-        "robot_b",
-        31
-      ],
-      "match_id": "",
-      "measurement": [
-        -0.06328403122064152,
-        0.03595805045417011,
-        0.318778
-      ],
-      "noise_scale": 1.0,
-      "source": "keyframe_odom"
-    },
-    {
-      "factor_type": "odom",
-      "key1": [
-        "robot_b",
-        31
-      ],
-      "key2": [
-        "robot_b",
-        32
-      ],
-      "match_id": "",
-      "measurement": [
-        -0.03588405190439481,
-        -0.03579420091191654,
-        0.5821200000000001
-      ],
-      "noise_scale": 1.0,
-      "source": "keyframe_odom"
-    },
-    {
-      "factor_type": "odom",
-      "key1": [
-        "robot_b",
-        32
-      ],
-      "key2": [
-        "robot_b",
-        33
-      ],
-      "match_id": "",
-      "measurement": [
-        0.10892395447423064,
-        0.017398624707022137,
-        0.489544
-      ],
-      "noise_scale": 1.0,
-      "source": "keyframe_odom"
-    },
-    {
-      "factor_type": "odom",
-      "key1": [
-        "robot_b",
-        33
-      ],
-      "key2": [
-        "robot_b",
-        34
-      ],
-      "match_id": "",
-      "measurement": [
-        -0.02433819797165615,
-        -0.01853057256245716,
-        0.22480499999999992
-      ],
-      "noise_scale": 1.0,
-      "source": "keyframe_odom"
-    },
-    {
-      "factor_type": "odom",
-      "key1": [
-        "robot_b",
-        34
-      ],
-      "key2": [
-        "robot_b",
-        35
-      ],
-      "match_id": "",
-      "measurement": [
-        -0.06718600136968034,
-        0.007542626860271184,
-        0.406381
-      ],
-      "noise_scale": 1.0,
-      "source": "keyframe_odom"
-    },
-    {
-      "factor_type": "odom",
-      "key1": [
-        "robot_b",
-        35
-      ],
-      "key2": [
-        "robot_b",
-        36
-      ],
-      "match_id": "",
-      "measurement": [
-        -0.09721712532259286,
-        -0.03695240917736431,
-        0.397825
-      ],
-      "noise_scale": 1.0,
-      "source": "keyframe_odom"
-    },
-    {
-      "factor_type": "odom",
-      "key1": [
-        "robot_b",
-        36
-      ],
-      "key2": [
-        "robot_b",
-        37
-      ],
-      "match_id": "",
-      "measurement": [
-        -0.029181043173073462,
-        -0.0015220773079001049,
-        0.333122
-      ],
-      "noise_scale": 1.0,
-      "source": "keyframe_odom"
-    },
-    {
-      "factor_type": "odom",
-      "key1": [
-        "robot_b",
-        37
-      ],
-      "key2": [
-        "robot_b",
-        38
-      ],
-      "match_id": "",
-      "measurement": [
-        0.010778957385481291,
-        -0.006385458298507007,
-        0.383173
-      ],
-      "noise_scale": 1.0,
-      "source": "keyframe_odom"
-    },
-    {
-      "factor_type": "odom",
-      "key1": [
-        "robot_b",
-        38
-      ],
-      "key2": [
-        "robot_b",
-        39
-      ],
-      "match_id": "",
-      "measurement": [
-        0.011356385360666188,
-        -0.002047562340942388,
-        0.24468199999999998
-      ],
-      "noise_scale": 1.0,
-      "source": "keyframe_odom"
-    },
-    {
-      "factor_type": "odom",
-      "key1": [
-        "robot_b",
-        39
-      ],
-      "key2": [
-        "robot_b",
-        40
-      ],
-      "match_id": "",
-      "measurement": [
-        0.04727604524040885,
-        -0.011447949442008998,
-        0.20651400000000014
-      ],
-      "noise_scale": 1.0,
-      "source": "keyframe_odom"
-    },
-    {
-      "factor_type": "odom",
-      "key1": [
-        "robot_b",
-        40
-      ],
-      "key2": [
-        "robot_b",
-        41
-      ],
-      "match_id": "",
-      "measurement": [
-        0.08171739391162358,
-        0.026654596832301536,
-        0.1769429999999999
-      ],
-      "noise_scale": 1.0,
-      "source": "keyframe_odom"
-    },
-    {
-      "factor_type": "odom",
-      "key1": [
-        "robot_b",
-        41
-      ],
-      "key2": [
-        "robot_b",
-        42
-      ],
-      "match_id": "",
-      "measurement": [
-        0.1433999380263522,
-        0.0035577765582832654,
-        0.19531700000000016
-      ],
-      "noise_scale": 1.0,
-      "source": "keyframe_odom"
-    },
-    {
-      "factor_type": "odom",
-      "key1": [
-        "robot_b",
-        42
-      ],
-      "key2": [
-        "robot_b",
-        43
-      ],
-      "match_id": "",
-      "measurement": [
-        0.29579240115533345,
-        0.032887922080331755,
-        0.17543699999999984
-      ],
-      "noise_scale": 1.0,
-      "source": "keyframe_odom"
-    },
-    {
-      "factor_type": "odom",
-      "key1": [
-        "robot_b",
-        43
-      ],
-      "key2": [
-        "robot_b",
-        44
-      ],
-      "match_id": "",
-      "measurement": [
-        1.019959105456548,
-        -0.04876098026372855,
-        -0.11734599999999995
-      ],
-      "noise_scale": 1.0,
-      "source": "keyframe_odom"
-    },
-    {
-      "factor_type": "odom",
-      "key1": [
-        "robot_b",
-        44
-      ],
-      "key2": [
-        "robot_b",
-        45
-      ],
-      "match_id": "",
-      "measurement": [
-        0.0763553803819077,
-        -0.014442502786361722,
-        0.18438100000000013
-      ],
-      "noise_scale": 1.0,
-      "source": "keyframe_odom"
-    },
-    {
-      "factor_type": "odom",
-      "key1": [
-        "robot_b",
-        45
-      ],
-      "key2": [
-        "robot_b",
-        46
-      ],
-      "match_id": "",
-      "measurement": [
-        -0.032218644754967496,
-        0.011696534963537175,
-        0.531139
-      ],
-      "noise_scale": 1.0,
-      "source": "keyframe_odom"
-    },
-    {
-      "factor_type": "odom",
-      "key1": [
-        "robot_b",
-        46
-      ],
-      "key2": [
-        "robot_b",
-        47
-      ],
-      "match_id": "",
-      "measurement": [
-        -0.024450639782995776,
-        -0.033294086775314646,
-        0.5484289999999999
-      ],
-      "noise_scale": 1.0,
-      "source": "keyframe_odom"
-    },
-    {
-      "factor_type": "odom",
-      "key1": [
-        "robot_b",
-        47
-      ],
-      "key2": [
-        "robot_b",
-        48
-      ],
-      "match_id": "",
-      "measurement": [
-        -0.05177229010997664,
-        -0.026918209018588435,
-        0.45892630717958643
-      ],
-      "noise_scale": 1.0,
-      "source": "keyframe_odom"
-    },
-    {
-      "factor_type": "odom",
-      "key1": [
-        "robot_b",
-        48
-      ],
-      "key2": [
-        "robot_b",
-        49
-      ],
-      "match_id": "",
-      "measurement": [
-        -0.17451882999627344,
-        0.015435607429957976,
-        -0.17894430717958643
-      ],
-      "noise_scale": 1.0,
-      "source": "keyframe_odom"
-    },
-    {
-      "factor_type": "odom",
-      "key1": [
-        "robot_b",
-        49
-      ],
-      "key2": [
-        "robot_b",
-        50
-      ],
-      "match_id": "",
-      "measurement": [
-        -0.6657080617837501,
-        0.0015480555943119256,
-        0.2389433071795864
-      ],
-      "noise_scale": 1.0,
-      "source": "keyframe_odom"
-    },
-    {
-      "factor_type": "odom",
-      "key1": [
-        "robot_b",
-        50
-      ],
-      "key2": [
-        "robot_b",
-        51
-      ],
-      "match_id": "",
-      "measurement": [
-        -0.018404566485853202,
-        0.020163133002284006,
-        0.3710469999999999
-      ],
-      "noise_scale": 1.0,
-      "source": "keyframe_odom"
-    },
-    {
-      "factor_type": "odom",
-      "key1": [
-        "robot_b",
-        51
-      ],
-      "key2": [
-        "robot_b",
-        52
-      ],
-      "match_id": "",
-      "measurement": [
-        -0.015063063278216049,
-        -0.023870151333338363,
-        0.25649299999999986
-      ],
-      "noise_scale": 1.0,
-      "source": "keyframe_odom"
-    },
-    {
-      "factor_type": "odom",
-      "key1": [
-        "robot_b",
-        52
-      ],
-      "key2": [
-        "robot_b",
-        53
-      ],
-      "match_id": "",
-      "measurement": [
-        -0.05436350955929292,
-        -0.010079128355007683,
-        0.5875000000000001
-      ],
-      "noise_scale": 1.0,
-      "source": "keyframe_odom"
-    },
-    {
-      "factor_type": "odom",
-      "key1": [
-        "robot_b",
-        53
-      ],
-      "key2": [
-        "robot_b",
-        54
-      ],
-      "match_id": "",
-      "measurement": [
-        -0.019316956023283538,
-        -0.021924078315736395,
-        0.24158200000000019
+        -0.010639030813174966,
+        -0.0188841474087742,
+        0.26676999999999973
       ],
       "noise_scale": 1.0,
       "source": "keyframe_odom"
@@ -1293,132 +913,151 @@
     {
       "factor_type": "inter_robot",
       "key1": [
-        "robot_b",
-        25
-      ],
-      "key2": [
-        "robot_a",
-        12
-      ],
-      "match_id": "robot_b|robot_b_kf_000025|robot_a|robot_a_kf_000012|82.786",
-      "measurement": [
-        0.24704,
-        0.6693,
-        -0.851531
-      ],
-      "noise_scale": 0.26051,
-      "source": "robust"
-    },
-    {
-      "factor_type": "inter_robot",
-      "key1": [
-        "robot_b",
-        28
-      ],
-      "key2": [
-        "robot_a",
-        2
-      ],
-      "match_id": "robot_b|robot_b_kf_000028|robot_a|robot_a_kf_000002|86.746",
-      "measurement": [
-        0.75787,
-        -0.32809,
-        2.601734
-      ],
-      "noise_scale": 0.31077,
-      "source": "robust"
-    },
-    {
-      "factor_type": "inter_robot",
-      "key1": [
-        "robot_b",
-        28
-      ],
-      "key2": [
         "robot_a",
         0
       ],
-      "match_id": "robot_b|robot_b_kf_000028|robot_a|robot_a_kf_000000|86.746",
-      "measurement": [
-        0.7703,
-        -0.1873,
-        2.726715
+      "key2": [
+        "robot_b",
+        0
       ],
-      "noise_scale": 0.30321,
+      "match_id": "robot_a|robot_a_kf_000000|robot_b|robot_b_kf_000000|19.058",
+      "measurement": [
+        -1.60227,
+        -0.04609,
+        0.042008
+      ],
+      "noise_scale": 0.2,
       "source": "robust"
     },
     {
       "factor_type": "inter_robot",
       "key1": [
-        "robot_b",
-        31
-      ],
-      "key2": [
         "robot_a",
-        2
+        3
       ],
-      "match_id": "robot_b|robot_b_kf_000031|robot_a|robot_a_kf_000002|89.17",
+      "key2": [
+        "robot_b",
+        0
+      ],
+      "match_id": "robot_a|robot_a_kf_000003|robot_b|robot_b_kf_000000|26.56",
       "measurement": [
-        0.60316,
-        -0.41024,
-        2.434033
+        -1.52066,
+        -0.08704,
+        -0.289339
       ],
-      "noise_scale": 0.29857,
+      "noise_scale": 0.2,
       "source": "robust"
     },
     {
       "factor_type": "inter_robot",
       "key1": [
-        "robot_b",
-        36
+        "robot_a",
+        8
       ],
       "key2": [
+        "robot_b",
+        0
+      ],
+      "match_id": "robot_a|robot_a_kf_000008|robot_b|robot_b_kf_000000|35.79",
+      "measurement": [
+        -1.58055,
+        -0.20508,
+        0.132316
+      ],
+      "noise_scale": 0.2,
+      "source": "robust"
+    },
+    {
+      "factor_type": "inter_robot",
+      "key1": [
+        "robot_a",
+        9
+      ],
+      "key2": [
+        "robot_b",
+        0
+      ],
+      "match_id": "robot_a|robot_a_kf_000009|robot_b|robot_b_kf_000000|36.378",
+      "measurement": [
+        -0.46271,
+        -0.25912,
+        -0.18139
+      ],
+      "noise_scale": 0.2,
+      "source": "robust"
+    },
+    {
+      "factor_type": "inter_robot",
+      "key1": [
+        "robot_a",
+        10
+      ],
+      "key2": [
+        "robot_b",
+        0
+      ],
+      "match_id": "robot_a|robot_a_kf_000010|robot_b|robot_b_kf_000000|37.696",
+      "measurement": [
+        -0.64295,
+        -0.26083,
+        -0.248391
+      ],
+      "noise_scale": 0.2,
+      "source": "robust"
+    },
+    {
+      "factor_type": "inter_robot",
+      "key1": [
+        "robot_a",
+        11
+      ],
+      "key2": [
+        "robot_b",
+        0
+      ],
+      "match_id": "robot_a|robot_a_kf_000011|robot_b|robot_b_kf_000000|40.016",
+      "measurement": [
+        -0.36442,
+        -0.55591,
+        -0.780056
+      ],
+      "noise_scale": 0.2,
+      "source": "robust"
+    },
+    {
+      "factor_type": "inter_robot",
+      "key1": [
         "robot_a",
         12
       ],
-      "match_id": "robot_b|robot_b_kf_000036|robot_a|robot_a_kf_000012|93.948",
-      "measurement": [
-        0.32646,
-        0.52314,
-        -0.581317
+      "key2": [
+        "robot_b",
+        0
       ],
-      "noise_scale": 0.23986,
+      "match_id": "robot_a|robot_a_kf_000012|robot_b|robot_b_kf_000000|41.316",
+      "measurement": [
+        -0.87706,
+        -0.56235,
+        -0.398293
+      ],
+      "noise_scale": 0.2,
       "source": "robust"
     },
     {
       "factor_type": "inter_robot",
       "key1": [
-        "robot_b",
-        37
-      ],
-      "key2": [
         "robot_a",
         13
       ],
-      "match_id": "robot_b|robot_b_kf_000037|robot_a|robot_a_kf_000013|94.22",
-      "measurement": [
-        0.8314,
-        -0.45248,
-        -1.002741
-      ],
-      "noise_scale": 0.21807,
-      "source": "robust"
-    },
-    {
-      "factor_type": "inter_robot",
-      "key1": [
-        "robot_b",
-        38
-      ],
       "key2": [
-        "robot_a",
-        13
+        "robot_b",
+        1
       ],
-      "match_id": "robot_b|robot_b_kf_000038|robot_a|robot_a_kf_000013|94.898",
+      "match_id": "robot_a|robot_a_kf_000013|robot_b|robot_b_kf_000001|42.602",
       "measurement": [
-        0.831,
-        -0.32827,
-        -0.426612
+        -0.88389,
+        -0.24421,
+        0.216146
       ],
       "noise_scale": 0.2,
       "source": "robust"
@@ -1426,96 +1065,20 @@
     {
       "factor_type": "inter_robot",
       "key1": [
-        "robot_b",
-        38
+        "robot_a",
+        22
       ],
       "key2": [
-        "robot_a",
-        2
+        "robot_b",
+        1
       ],
-      "match_id": "robot_b|robot_b_kf_000038|robot_a|robot_a_kf_000002|94.898",
+      "match_id": "robot_a|robot_a_kf_000022|robot_b|robot_b_kf_000001|69.842",
       "measurement": [
-        0.67474,
-        -0.37789,
-        -0.976248
+        -0.7543,
+        0.81329,
+        -0.521035
       ],
       "noise_scale": 0.2,
-      "source": "robust"
-    },
-    {
-      "factor_type": "inter_robot",
-      "key1": [
-        "robot_b",
-        38
-      ],
-      "key2": [
-        "robot_a",
-        1
-      ],
-      "match_id": "robot_b|robot_b_kf_000038|robot_a|robot_a_kf_000001|94.898",
-      "measurement": [
-        0.81493,
-        -0.01115,
-        -0.629148
-      ],
-      "noise_scale": 0.2,
-      "source": "robust"
-    },
-    {
-      "factor_type": "inter_robot",
-      "key1": [
-        "robot_b",
-        39
-      ],
-      "key2": [
-        "robot_a",
-        2
-      ],
-      "match_id": "robot_b|robot_b_kf_000039|robot_a|robot_a_kf_000002|95.198",
-      "measurement": [
-        0.70647,
-        -0.35444,
-        -0.681292
-      ],
-      "noise_scale": 0.20514,
-      "source": "robust"
-    },
-    {
-      "factor_type": "inter_robot",
-      "key1": [
-        "robot_b",
-        39
-      ],
-      "key2": [
-        "robot_a",
-        1
-      ],
-      "match_id": "robot_b|robot_b_kf_000039|robot_a|robot_a_kf_000001|95.198",
-      "measurement": [
-        0.66029,
-        -0.03881,
-        -0.407835
-      ],
-      "noise_scale": 0.22121,
-      "source": "robust"
-    },
-    {
-      "factor_type": "inter_robot",
-      "key1": [
-        "robot_b",
-        40
-      ],
-      "key2": [
-        "robot_a",
-        1
-      ],
-      "match_id": "robot_b|robot_b_kf_000040|robot_a|robot_a_kf_000001|95.566",
-      "measurement": [
-        0.84907,
-        -0.01982,
-        -0.326752
-      ],
-      "noise_scale": 0.22601,
       "source": "robust"
     }
   ],
@@ -1524,557 +1087,397 @@
     {
       "keyframe_id": 0,
       "robot_id": "robot_a",
-      "stamp_sec": 18.563972,
-      "x": 0.0272,
-      "y": -0.0007,
-      "yaw": 0.001125
+      "stamp_sec": 19.043972,
+      "x": 0.0179,
+      "y": 0.0003,
+      "yaw": 0.00081
     },
     {
       "keyframe_id": 1,
       "robot_id": "robot_a",
-      "stamp_sec": 21.361972,
-      "x": 0.063,
-      "y": 0.0069,
-      "yaw": -0.178195
+      "stamp_sec": 23.463972,
+      "x": 0.1521,
+      "y": -0.0291,
+      "yaw": -0.35274
     },
     {
       "keyframe_id": 2,
       "robot_id": "robot_a",
-      "stamp_sec": 36.929972,
-      "x": -0.3867,
-      "y": 0.1388,
-      "yaw": 0.07904
+      "stamp_sec": 25.605972,
+      "x": 0.2744,
+      "y": -0.2154,
+      "yaw": -0.824184
     },
     {
       "keyframe_id": 3,
       "robot_id": "robot_a",
-      "stamp_sec": 37.885972,
-      "x": -0.4731,
-      "y": 0.1667,
-      "yaw": 0.91641
+      "stamp_sec": 26.509972,
+      "x": 0.194,
+      "y": -0.0182,
+      "yaw": -0.315549
     },
     {
       "keyframe_id": 4,
       "robot_id": "robot_a",
-      "stamp_sec": 39.607972,
-      "x": -0.5416,
-      "y": 0.0375,
-      "yaw": 2.464579
+      "stamp_sec": 29.169972,
+      "x": -0.0777,
+      "y": -0.0239,
+      "yaw": -1.771014
     },
     {
       "keyframe_id": 5,
       "robot_id": "robot_a",
-      "stamp_sec": 41.091972,
-      "x": -0.419,
-      "y": 0.0151,
-      "yaw": 2.229845
+      "stamp_sec": 30.917972,
+      "x": -0.0262,
+      "y": 0.0137,
+      "yaw": 3.085199
     },
     {
       "keyframe_id": 6,
       "robot_id": "robot_a",
-      "stamp_sec": 43.233972,
-      "x": -0.5916,
-      "y": 0.1794,
-      "yaw": 2.453745
+      "stamp_sec": 32.773972,
+      "x": -0.0318,
+      "y": 0.2119,
+      "yaw": 1.997154
     },
     {
       "keyframe_id": 7,
       "robot_id": "robot_a",
-      "stamp_sec": 55.613972,
-      "x": -0.6642,
-      "y": 0.0942,
-      "yaw": 2.213044
+      "stamp_sec": 34.441972,
+      "x": 0.0756,
+      "y": -0.0452,
+      "yaw": 1.192842
     },
     {
       "keyframe_id": 8,
       "robot_id": "robot_a",
-      "stamp_sec": 56.563972,
-      "x": -0.6487,
-      "y": -0.0341,
-      "yaw": 2.943795
+      "stamp_sec": 35.655972,
+      "x": 0.1914,
+      "y": -0.1691,
+      "yaw": 0.199959
     },
     {
       "keyframe_id": 9,
       "robot_id": "robot_a",
-      "stamp_sec": 58.125972,
-      "x": -0.4783,
-      "y": -0.0923,
-      "yaw": -1.719527
+      "stamp_sec": 36.295972,
+      "x": 0.4688,
+      "y": -0.1742,
+      "yaw": -0.086977
     },
     {
       "keyframe_id": 10,
       "robot_id": "robot_a",
-      "stamp_sec": 59.247972,
-      "x": -0.4705,
-      "y": 0.0389,
-      "yaw": -2.773537
+      "stamp_sec": 37.605972,
+      "x": 0.9022,
+      "y": -0.2402,
+      "yaw": -0.300796
     },
     {
       "keyframe_id": 11,
       "robot_id": "robot_a",
-      "stamp_sec": 60.355972,
-      "x": -0.3062,
-      "y": 0.0793,
-      "yaw": -2.401329
+      "stamp_sec": 39.363972,
+      "x": 1.1526,
+      "y": -0.4865,
+      "yaw": -0.816376
     },
     {
       "keyframe_id": 12,
       "robot_id": "robot_a",
-      "stamp_sec": 62.373972,
-      "x": -0.1147,
-      "y": -0.0319,
-      "yaw": -1.040097
+      "stamp_sec": 40.977972,
+      "x": 1.2681,
+      "y": -0.5414,
+      "yaw": -0.460406
     },
     {
       "keyframe_id": 13,
       "robot_id": "robot_a",
-      "stamp_sec": 88.087972,
-      "x": -0.3771,
-      "y": 0.5272,
-      "yaw": -0.485031
+      "stamp_sec": 41.963972,
+      "x": 1.0511,
+      "y": -0.4361,
+      "yaw": 0.519735
+    },
+    {
+      "keyframe_id": 14,
+      "robot_id": "robot_a",
+      "stamp_sec": 43.019972,
+      "x": 0.8292,
+      "y": -0.4976,
+      "yaw": 1.466025
+    },
+    {
+      "keyframe_id": 15,
+      "robot_id": "robot_a",
+      "stamp_sec": 44.157972,
+      "x": 0.7024,
+      "y": -0.3412,
+      "yaw": 2.260344
+    },
+    {
+      "keyframe_id": 16,
+      "robot_id": "robot_a",
+      "stamp_sec": 45.137972,
+      "x": 0.4789,
+      "y": -0.1786,
+      "yaw": 2.465294
+    },
+    {
+      "keyframe_id": 17,
+      "robot_id": "robot_a",
+      "stamp_sec": 56.227972,
+      "x": 0.2614,
+      "y": 0.0153,
+      "yaw": 2.666573
+    },
+    {
+      "keyframe_id": 18,
+      "robot_id": "robot_a",
+      "stamp_sec": 56.367972,
+      "x": 0.2474,
+      "y": -0.0356,
+      "yaw": 2.975149
+    },
+    {
+      "keyframe_id": 19,
+      "robot_id": "robot_a",
+      "stamp_sec": 56.679972,
+      "x": 0.2714,
+      "y": -0.0703,
+      "yaw": -3.104604
+    },
+    {
+      "keyframe_id": 20,
+      "robot_id": "robot_a",
+      "stamp_sec": 57.671972,
+      "x": 0.3944,
+      "y": -0.0884,
+      "yaw": -1.945885
+    },
+    {
+      "keyframe_id": 21,
+      "robot_id": "robot_a",
+      "stamp_sec": 68.667972,
+      "x": 0.7331,
+      "y": 0.4639,
+      "yaw": -1.531709
+    },
+    {
+      "keyframe_id": 22,
+      "robot_id": "robot_a",
+      "stamp_sec": 69.635972,
+      "x": 0.759,
+      "y": 0.5712,
+      "yaw": -0.345068
     },
     {
       "keyframe_id": 0,
       "robot_id": "robot_b",
-      "stamp_sec": 18.56399,
-      "x": 0.0042,
-      "y": 0.0018,
-      "yaw": -0.000311
+      "stamp_sec": 18.94799,
+      "x": 0.0024,
+      "y": 0.0022,
+      "yaw": -0.000567
     },
     {
       "keyframe_id": 1,
       "robot_id": "robot_b",
-      "stamp_sec": 35.20199,
-      "x": 0.1148,
-      "y": 0.0231,
-      "yaw": 0.294084
+      "stamp_sec": 38.70999,
+      "x": 0.2413,
+      "y": 0.005,
+      "yaw": 0.227916
     },
     {
       "keyframe_id": 2,
       "robot_id": "robot_b",
-      "stamp_sec": 36.32799,
-      "x": 0.1274,
-      "y": 0.0364,
-      "yaw": 0.007785
+      "stamp_sec": 40.69599,
+      "x": 0.4668,
+      "y": 0.0945,
+      "yaw": 0.951949
     },
     {
       "keyframe_id": 3,
       "robot_id": "robot_b",
-      "stamp_sec": 37.06199,
-      "x": 0.1414,
-      "y": 0.0443,
-      "yaw": -0.496851
+      "stamp_sec": 41.86387,
+      "x": 0.4812,
+      "y": 0.1777,
+      "yaw": 1.70451
     },
     {
       "keyframe_id": 4,
       "robot_id": "robot_b",
-      "stamp_sec": 38.78799,
-      "x": 0.3229,
-      "y": -0.1141,
-      "yaw": -0.989652
+      "stamp_sec": 48.35399,
+      "x": 0.4078,
+      "y": 1.1799,
+      "yaw": 1.631815
     },
     {
       "keyframe_id": 5,
       "robot_id": "robot_b",
-      "stamp_sec": 40.14799,
-      "x": 0.3975,
-      "y": -0.3421,
-      "yaw": -1.364278
+      "stamp_sec": 51.08199,
+      "x": 0.2897,
+      "y": 1.878,
+      "yaw": 1.845329
     },
     {
       "keyframe_id": 6,
       "robot_id": "robot_b",
-      "stamp_sec": 41.75199,
-      "x": 0.2877,
-      "y": -0.195,
-      "yaw": -0.627676
+      "stamp_sec": 52.5438,
+      "x": 0.1528,
+      "y": 2.2501,
+      "yaw": 2.030471
     },
     {
       "keyframe_id": 7,
       "robot_id": "robot_b",
-      "stamp_sec": 43.56599,
-      "x": 0.0533,
-      "y": -0.223,
-      "yaw": 0.61668
+      "stamp_sec": 56.20799,
+      "x": -0.2893,
+      "y": 3.0465,
+      "yaw": 2.211936
     },
     {
       "keyframe_id": 8,
       "robot_id": "robot_b",
-      "stamp_sec": 44.77599,
-      "x": 0.1069,
-      "y": -0.0706,
-      "yaw": 1.566104
+      "stamp_sec": 57.25199,
+      "x": -0.3247,
+      "y": 3.0301,
+      "yaw": 1.98349
     },
     {
       "keyframe_id": 9,
       "robot_id": "robot_b",
-      "stamp_sec": 45.83599,
-      "x": 0.0616,
-      "y": 0.1215,
-      "yaw": 2.007793
+      "stamp_sec": 58.13999,
+      "x": -0.3265,
+      "y": 2.9069,
+      "yaw": 1.2975
     },
     {
       "keyframe_id": 10,
       "robot_id": "robot_b",
-      "stamp_sec": 46.63599,
-      "x": -0.0172,
-      "y": 0.3845,
-      "yaw": 1.685098
+      "stamp_sec": 59.24199,
+      "x": -0.3478,
+      "y": 2.911,
+      "yaw": 0.390217
     },
     {
       "keyframe_id": 11,
       "robot_id": "robot_b",
-      "stamp_sec": 47.62599,
-      "x": -0.0303,
-      "y": 0.6482,
-      "yaw": 1.47839
+      "stamp_sec": 60.53599,
+      "x": -0.2123,
+      "y": 2.8979,
+      "yaw": -0.7591
     },
     {
       "keyframe_id": 12,
       "robot_id": "robot_b",
-      "stamp_sec": 49.58599,
-      "x": 0.0449,
-      "y": 1.1284,
-      "yaw": 1.299542
+      "stamp_sec": 68.18199,
+      "x": -0.2509,
+      "y": 2.9096,
+      "yaw": -0.436757
     },
     {
       "keyframe_id": 13,
       "robot_id": "robot_b",
-      "stamp_sec": 53.94579,
-      "x": 0.3532,
-      "y": 2.0929,
-      "yaw": 1.152539
+      "stamp_sec": 69.47999,
+      "x": -0.3128,
+      "y": 2.8884,
+      "yaw": 0.697998
     },
     {
       "keyframe_id": 14,
       "robot_id": "robot_b",
-      "stamp_sec": 56.19779,
-      "x": 0.5989,
-      "y": 2.5396,
-      "yaw": 0.971413
+      "stamp_sec": 70.00799,
+      "x": -0.3268,
+      "y": 2.8586,
+      "yaw": 1.000906
     },
     {
       "keyframe_id": 15,
       "robot_id": "robot_b",
-      "stamp_sec": 57.87399,
-      "x": 0.8291,
-      "y": 2.8501,
-      "yaw": 0.683805
+      "stamp_sec": 75.88999,
+      "x": -0.5347,
+      "y": 2.4849,
+      "yaw": 0.756896
     },
     {
       "keyframe_id": 16,
       "robot_id": "robot_b",
-      "stamp_sec": 61.77794,
-      "x": 1.6506,
-      "y": 3.4536,
-      "yaw": 0.751493
+      "stamp_sec": 76.50599,
+      "x": -0.4839,
+      "y": 2.5465,
+      "yaw": 0.371211
     },
     {
       "keyframe_id": 17,
       "robot_id": "robot_b",
-      "stamp_sec": 65.45599,
-      "x": 2.3188,
-      "y": 4.0752,
-      "yaw": 0.539597
+      "stamp_sec": 86.65999,
+      "x": -1.0022,
+      "y": 2.3601,
+      "yaw": 0.560212
     },
     {
       "keyframe_id": 18,
       "robot_id": "robot_b",
-      "stamp_sec": 67.02799,
-      "x": 2.316,
-      "y": 4.0489,
-      "yaw": -0.365975
+      "stamp_sec": 87.35599,
+      "x": -1.0351,
+      "y": 2.3968,
+      "yaw": 0.750442
     },
     {
       "keyframe_id": 19,
       "robot_id": "robot_b",
-      "stamp_sec": 68.72199,
-      "x": 2.7318,
-      "y": 3.8372,
-      "yaw": -0.573121
+      "stamp_sec": 94.61199,
+      "x": -1.1234,
+      "y": 2.4243,
+      "yaw": 0.983311
     },
     {
       "keyframe_id": 20,
       "robot_id": "robot_b",
-      "stamp_sec": 70.26999,
-      "x": 2.9334,
-      "y": 3.5673,
-      "yaw": -0.848322
+      "stamp_sec": 101.65199,
+      "x": -1.1391,
+      "y": 2.4437,
+      "yaw": 1.178415
     },
     {
       "keyframe_id": 21,
       "robot_id": "robot_b",
-      "stamp_sec": 71.73573,
-      "x": 3.222,
-      "y": 3.411,
-      "yaw": -0.34795
+      "stamp_sec": 101.89199,
+      "x": -1.1118,
+      "y": 2.4065,
+      "yaw": 1.414443
     },
     {
       "keyframe_id": 22,
       "robot_id": "robot_b",
-      "stamp_sec": 74.56351,
-      "x": 3.9255,
-      "y": 3.1882,
-      "yaw": -0.153961
+      "stamp_sec": 102.49199,
+      "x": -1.1218,
+      "y": 2.3991,
+      "yaw": 1.603331
     },
     {
       "keyframe_id": 23,
       "robot_id": "robot_b",
-      "stamp_sec": 76.13941,
-      "x": 4.3337,
-      "y": 3.1556,
-      "yaw": 0.077917
+      "stamp_sec": 111.95999,
+      "x": -1.133,
+      "y": 2.4117,
+      "yaw": 1.819211
     },
     {
       "keyframe_id": 24,
       "robot_id": "robot_b",
-      "stamp_sec": 79.80565,
-      "x": 5.2508,
-      "y": 3.2336,
-      "yaw": -0.103048
+      "stamp_sec": 112.45199,
+      "x": -1.1262,
+      "y": 2.4164,
+      "yaw": 2.000716
     },
     {
       "keyframe_id": 25,
       "robot_id": "robot_b",
-      "stamp_sec": 82.68779,
-      "x": 6.0032,
-      "y": 3.094,
-      "yaw": -0.298985
-    },
-    {
-      "keyframe_id": 26,
-      "robot_id": "robot_b",
-      "stamp_sec": 84.14799,
-      "x": 6.3635,
-      "y": 2.9118,
-      "yaw": -0.540627
-    },
-    {
-      "keyframe_id": 27,
-      "robot_id": "robot_b",
-      "stamp_sec": 85.07399,
-      "x": 6.4601,
-      "y": 2.8485,
-      "yaw": -0.835705
-    },
-    {
-      "keyframe_id": 28,
-      "robot_id": "robot_b",
-      "stamp_sec": 86.63556,
-      "x": 6.4417,
-      "y": 3.0516,
-      "yaw": -2.01703
-    },
-    {
-      "keyframe_id": 29,
-      "robot_id": "robot_b",
-      "stamp_sec": 88.00399,
-      "x": 6.2076,
-      "y": 2.8939,
-      "yaw": -2.876597
-    },
-    {
-      "keyframe_id": 30,
-      "robot_id": "robot_b",
-      "stamp_sec": 88.56799,
-      "x": 6.2015,
-      "y": 2.9561,
-      "yaw": -2.509219
-    },
-    {
-      "keyframe_id": 31,
-      "robot_id": "robot_b",
-      "stamp_sec": 89.09551,
-      "x": 6.2738,
-      "y": 2.9645,
-      "yaw": -2.190441
-    },
-    {
-      "keyframe_id": 32,
-      "robot_id": "robot_b",
-      "stamp_sec": 89.99957,
-      "x": 6.2655,
-      "y": 3.0145,
-      "yaw": -1.608321
-    },
-    {
-      "keyframe_id": 33,
-      "robot_id": "robot_b",
-      "stamp_sec": 90.45799,
-      "x": 6.2788,
-      "y": 2.905,
-      "yaw": -1.118777
-    },
-    {
-      "keyframe_id": 34,
-      "robot_id": "robot_b",
-      "stamp_sec": 92.71399,
-      "x": 6.2515,
-      "y": 2.9188,
-      "yaw": -0.893972
-    },
-    {
-      "keyframe_id": 35,
-      "robot_id": "robot_b",
-      "stamp_sec": 93.31985,
-      "x": 6.2153,
-      "y": 2.9759,
-      "yaw": -0.487591
-    },
-    {
-      "keyframe_id": 36,
-      "robot_id": "robot_b",
-      "stamp_sec": 93.88346,
-      "x": 6.1121,
-      "y": 2.9888,
-      "yaw": -0.089766
-    },
-    {
-      "keyframe_id": 37,
-      "robot_id": "robot_b",
-      "stamp_sec": 94.16999,
-      "x": 6.0829,
-      "y": 2.9899,
-      "yaw": 0.243356
-    },
-    {
-      "keyframe_id": 38,
-      "robot_id": "robot_b",
-      "stamp_sec": 94.79999,
-      "x": 6.0949,
-      "y": 2.9863,
-      "yaw": 0.626529
-    },
-    {
-      "keyframe_id": 39,
-      "robot_id": "robot_b",
-      "stamp_sec": 95.18399,
-      "x": 6.1053,
-      "y": 2.9913,
-      "yaw": 0.871211
-    },
-    {
-      "keyframe_id": 40,
-      "robot_id": "robot_b",
-      "stamp_sec": 95.44799,
-      "x": 6.1445,
-      "y": 3.0201,
-      "yaw": 1.077725
-    },
-    {
-      "keyframe_id": 41,
-      "robot_id": "robot_b",
-      "stamp_sec": 95.68399,
-      "x": 6.1597,
-      "y": 3.1047,
-      "yaw": 1.254668
-    },
-    {
-      "keyframe_id": 42,
-      "robot_id": "robot_b",
-      "stamp_sec": 96.22599,
-      "x": 6.2009,
-      "y": 3.2421,
-      "yaw": 1.449985
-    },
-    {
-      "keyframe_id": 43,
-      "robot_id": "robot_b",
-      "stamp_sec": 97.40599,
-      "x": 6.2039,
-      "y": 3.5397,
-      "yaw": 1.625422
-    },
-    {
-      "keyframe_id": 44,
-      "robot_id": "robot_b",
-      "stamp_sec": 101.72799,
-      "x": 6.1969,
-      "y": 4.5608,
-      "yaw": 1.508076
-    },
-    {
-      "keyframe_id": 45,
-      "robot_id": "robot_b",
-      "stamp_sec": 104.65199,
-      "x": 6.2161,
-      "y": 4.6361,
-      "yaw": 1.692457
-    },
-    {
-      "keyframe_id": 46,
-      "robot_id": "robot_b",
-      "stamp_sec": 105.30199,
-      "x": 6.2084,
-      "y": 4.6027,
-      "yaw": 2.223596
-    },
-    {
-      "keyframe_id": 47,
-      "robot_id": "robot_b",
-      "stamp_sec": 105.83199,
-      "x": 6.2497,
-      "y": 4.6035,
-      "yaw": 2.772025
-    },
-    {
-      "keyframe_id": 48,
-      "robot_id": "robot_b",
-      "stamp_sec": 106.68163,
-      "x": 6.3077,
-      "y": 4.6099,
-      "yaw": -3.052234
-    },
-    {
-      "keyframe_id": 49,
-      "robot_id": "robot_b",
-      "stamp_sec": 109.70585,
-      "x": 6.4829,
-      "y": 4.6101,
-      "yaw": 3.052007
-    },
-    {
-      "keyframe_id": 50,
-      "robot_id": "robot_b",
-      "stamp_sec": 121.65399,
-      "x": 7.1458,
-      "y": 4.549,
-      "yaw": -2.992235
-    },
-    {
-      "keyframe_id": 51,
-      "robot_id": "robot_b",
-      "stamp_sec": 122.02596,
-      "x": 7.167,
-      "y": 4.5318,
-      "yaw": -2.621188
-    },
-    {
-      "keyframe_id": 52,
-      "robot_id": "robot_b",
-      "stamp_sec": 122.45541,
-      "x": 7.1682,
-      "y": 4.56,
-      "yaw": -2.364695
-    },
-    {
-      "keyframe_id": 53,
-      "robot_id": "robot_b",
-      "stamp_sec": 123.07183,
-      "x": 7.1999,
-      "y": 4.6053,
-      "yaw": -1.777195
-    },
-    {
-      "keyframe_id": 54,
-      "robot_id": "robot_b",
-      "stamp_sec": 124.03179,
-      "x": 7.1824,
-      "y": 4.6287,
-      "yaw": -1.535613
+      "stamp_sec": 119.99799,
+      "x": -1.1046,
+      "y": 2.4146,
+      "yaw": 2.267486
     }
   ],
-  "raw_inter_robot_matches": 299,
-  "rejected_inter_robot_matches": 287,
+  "raw_inter_robot_matches": 164,
+  "rejected_inter_robot_matches": 155,
   "schema": "team_pose_graph_factors/v1"
 }

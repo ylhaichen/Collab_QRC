@@ -1,27 +1,19 @@
 {
-  "blocker": "ROS1 Swarm-LIO2 Docker/catkin and launch smoke passed, but ROS2 did not complete a validated shadow odometry reception pass in this session.",
+  "blocker": "missing_ros1_topics:/robot_a/swarm_lio2_raw/Odometry,/robot_b/swarm_lio2_raw/Odometry,/robot_a/swarm_lio2_raw/cloud_static,/robot_b/swarm_lio2_raw/cloud_static,/robot_a/swarm_lio2_raw/cloud_map,/robot_b/swarm_lio2_raw/cloud_map;/robot_a/swarm_lio2/Odometry:rate<0.1;/robot_b/swarm_lio2/Odometry:rate<0.1;/robot_a/swarm_lio2/cloud_static:rate<0.1;/robot_b/swarm_lio2/cloud_static:rate<0.1;/robot_a/swarm_lio2/cloud_map:rate<0.1;/robot_b/swarm_lio2/cloud_map:rate<0.1;/robot_a/swarm_lio2/Odometry:header.frame_id_empty;/robot_a/swarm_lio2/Odometry:child_frame_id_empty;/robot_b/swarm_lio2/Odometry:header.frame_id_empty;/robot_b/swarm_lio2/Odometry:child_frame_id_empty",
   "deployment_mode": "sim_hybrid_ros1_slam_ros2_nav",
   "fast_lio_baseline_still_runs": true,
   "gt_used_runtime": false,
-  "manual_logs": {
-    "catkin_build": "logs/manual/swarm_lio2_catkin_build_20260507T185323Z.log",
-    "docker_build": "logs/manual/ros1_hybrid_docker_build_20260507T185313Z.log",
-    "launch_smoke": "timeout 30s docker compose -f docker/ros1_hybrid_slam/docker-compose.yml run --rm ros1_hybrid_slam run",
-    "postcheck": "logs/manual/swarm_lio2_docker_postcheck_20260507T185332Z.log",
-    "precheck": "logs/manual/swarm_lio2_docker_precheck_20260507T185313Z.log"
-  },
   "metrics_recorded": true,
   "pass": false,
   "production_downstream_depends_on_swarm": false,
   "ros1_launch_smoke_passed": true,
   "ros2_receives_shadow_odometry": false,
-  "schema": "swarm_lio2_shadow_validation/v3",
+  "schema": "swarm_lio2_shadow_validation/v4",
   "slam_backend": "swarm_lio2_shadow",
   "swarm_lio2_buildable": true,
   "swarm_lio2_odometry_valid": false,
   "swarm_lio2_relative_state_valid": false,
   "swarm_lio2_runtime_ready": true,
   "swarm_lio2_source_available": true,
-  "swarm_lio2_started": true,
-  "updated_utc": "2026-05-07T19:10:19Z"
+  "swarm_lio2_started": true
 }

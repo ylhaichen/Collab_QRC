@@ -1,17 +1,22 @@
 {
   "attempted": true,
-  "blocker": "Required fresh baseline rerun with START_BRIDGE=true was not completed after the script default was corrected to TEAM_POSE_GRAPH_BACKEND=auto and TEAM_ALIGNMENT_ALLOW_EXPORT_ONLY_GATE=false. The escalated Docker/bridge rerun was rejected by the approval reviewer due usage limit; retry was deferred by the environment until 8:06 PM or explicit approval. The last completed rerun used g2o_export_only, so optimized overlap_pass is false and the required Fast-LIO baseline regression cannot be claimed fresh-passing in this pass.",
+  "blocker": "",
   "command": "START_BRIDGE=true bash scripts/bench/run_cross_loop_runtime_validation.sh",
-  "completed_rerun_before_default_fix": {
+  "completed_rerun": {
+    "gt_used_runtime": false,
     "no_overlap_pass": true,
-    "optimized_overlap": false,
-    "overlap_pass": false,
-    "pose_graph_backend": "g2o_export_only"
+    "optimized_overlap": true,
+    "overlap_pass": true,
+    "pose_graph_backend": "gtsam_cpp",
+    "pose_graph_error_after": 69.859186,
+    "pose_graph_error_before": 424.974258,
+    "pose_graph_inter_robot_factors": 9,
+    "pose_graph_optimization_success": true
   },
-  "fresh_corrected_rerun_blocked": true,
-  "passed": false,
+  "fresh_corrected_rerun_blocked": false,
+  "passed": true,
   "previous_baseline_gt_used_runtime": false,
-  "previous_baseline_log_used": true,
+  "previous_baseline_log_used": false,
   "previous_baseline_no_overlap_pass": true,
   "previous_baseline_overlap_pass": true,
   "schema": "baseline_regression_rerun_status/v2",
@@ -20,5 +25,5 @@
     "team_alignment_allow_export_only_gate_default": false,
     "team_pose_graph_backend_default": "auto"
   },
-  "updated_utc": "2026-05-07T19:10:19Z"
+  "updated_utc": "2026-05-07T19:59:00Z"
 }

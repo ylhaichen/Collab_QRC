@@ -33,7 +33,7 @@ Current recovery result:
 - ERASOR source is present.
 - The shared ROS1 hybrid Docker image builds.
 - The ROS1 catkin workspace builds ERASOR targets.
-- Runtime cleanup output is not validated yet.
+- Runtime cleanup output is not validated yet. The current sim hybrid blocker occurs before a live static map export/cleanup/import cycle: Swarm-LIO2 ROS2 cloud topics were visible but had no nonzero rate in the bounded runtime check.
 
 Manual commands:
 
@@ -55,4 +55,5 @@ CONFIRM_REAL_ROBOT=1 bash scripts/manual/run_real_robot_shadow_validation.sh
 
 - Current valid status is `Status D -- External Blocker`.
 - Docker/catkin wrapper build passed, but no completed benchmark/manual cleanup pass generated `cleaned_static_map`, `removed_dynamic_points`, and ROS2 republished cleaned map evidence.
+- ERASOR remains asynchronous only and cannot authorize `/merged_map` or replace odometry.
 - Real robot map cleanup cannot be marked passed without naive map, cleaned map, static wall preservation, and non-blocking runtime evidence.

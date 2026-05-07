@@ -50,7 +50,7 @@ CONFIRM_REAL_ROBOT=1 bash scripts/manual/run_real_robot_primary_validation.sh
 ## Current Blockers
 
 - Current valid status is `Status D -- External Blocker`.
-- Swarm-LIO2 ROS1 launch smoke passed, but ROS2 shadow odometry and primary keyframe/transform flow have not passed.
-- Fresh overlap/no-overlap runtime regression with the corrected GTSAM-capable default was blocked by the execution environment approval/usage limit.
+- Swarm-LIO2 ROS1 wrapper launch smoke passed, but ROS2 shadow odometry and primary keyframe/transform flow have not passed because the live topic contract had zero Swarm-LIO2 odom/cloud rates and empty odometry frame fields.
+- Fresh overlap/no-overlap runtime regression with the corrected GTSAM-capable default passed for the existing Fast-LIO / SC-PGO baseline: overlap aligned, no-overlap rejected, and runtime GT was not used.
 - Swarm-LIO2 runtime transform and team robust transform agreement have not been validated in sim or real runtime.
 - Descriptor-only matches, weak single matches, ERASOR-only cleanup, Swarm-only mutual state, and runtime GT remain forbidden merge triggers.
