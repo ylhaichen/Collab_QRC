@@ -36,19 +36,24 @@
     "remote": "fork",
     "url": "https://github.com/ylhaichen/Collab_QRC.git",
     "success": true,
-    "reason": ""
+    "reason": "latest confirmation returned Everything up-to-date"
   },
   "fork_clean_checkpoint_tag_push": {
     "remote": "fork",
     "url": "https://github.com/ylhaichen/Collab_QRC.git",
     "success": true,
-    "reason": ""
+    "reason": "latest confirmation returned Everything up-to-date"
   },
   "fork_clean_feature_branch_push": {
     "remote": "fork",
     "url": "https://github.com/ylhaichen/Collab_QRC.git",
     "success": true,
-    "reason": ""
+    "reason": "latest confirmation returned Everything up-to-date"
+  },
+  "latest_origin_push_policy": {
+    "origin_url": "https://github.com/HanshangZhu/Collab_QRC.git",
+    "action": "intentionally_skipped",
+    "reason": "origin points to upstream HanshangZhu/Collab_QRC and user only wants pushes to ylhaichen fork"
   },
   "origin_clean_checkpoint_branch_push": {
     "remote": "origin",
