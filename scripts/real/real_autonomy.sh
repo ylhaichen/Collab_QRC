@@ -29,6 +29,13 @@
 #                                         carving, kept for fallback / FAR runs)
 #   oa={true|false}                      default: true    (Unitree api_id=1003)
 #   execute={true|false}                 default: true    (false = dry-run, sport API disconnected)
+#   deployment_mode={real_hybrid_ros1_slam_ros2_nav|real_ros1_only_experimental}
+#                                        optional. real_hybrid forces onboard=true
+#                                        and expects ROS1/Noetic SLAM on robot.
+#   slam_backend={swarm_lio2_shadow|swarm_lio2_primary}
+#                                        used only with deployment_mode=real_hybrid...
+#   dynamic_filter_backend={dynamic_lio_port|dynamic_lio_wrapper|temporal_voxel_fallback|none}
+#   static_map_cleanup_backend={erasor_wrapper|temporal_voxel_fallback|none}
 #   rviz={true|false}                    default: true    (RViz 2D top-down)
 #   rviz_config={autonomy|cartographer|cartographer_grid|octomap}.rviz
 #                                        default: autonomy.rviz
@@ -102,6 +109,7 @@ _kill_autonomy_stack() {
       frontier_3d_markers pointcloud_to_laserscan fastlio_mapping \
       tare_planner_node waypoint_mux far_planner \
       livox_ros_driver2_node \
+      onboard_ros1_slam swarm_lio sr_lio erasor \
       controller_server planner_server behavior_server bt_navigator \
       lifecycle_manager_navigation lifecycle_manager \
       fast_lio_tf_adapter cfpa2_to_nav2_bridge path_relay stuck_watchdog \
@@ -132,6 +140,11 @@ RVIZ_CONFIG="autonomy.rviz"
 RVIZ_3D="true"
 CARTO_MODE="2d"
 ONBOARD="false"
+DEPLOYMENT_MODE=""
+SLAM_BACKEND="swarm_lio2_shadow"
+DYNAMIC_FILTER_BACKEND="temporal_voxel_fallback"
+STATIC_MAP_CLEANUP_BACKEND="none"
+HYBRID_PREFLIGHT="true"
 MANUAL="false"
 HOLONOMIC="false"
 HOLONOMIC_PROFILE="off"
@@ -160,6 +173,11 @@ for arg in "$@"; do
     rviz_3d=*) RVIZ_3D="${arg#rviz_3d=}" ;;
     carto_mode=*) CARTO_MODE="${arg#carto_mode=}" ;;
     onboard=*) ONBOARD="${arg#onboard=}" ;;
+    deployment_mode=*) DEPLOYMENT_MODE="${arg#deployment_mode=}" ;;
+    slam_backend=*) SLAM_BACKEND="${arg#slam_backend=}" ;;
+    dynamic_filter_backend=*) DYNAMIC_FILTER_BACKEND="${arg#dynamic_filter_backend=}" ;;
+    static_map_cleanup_backend=*) STATIC_MAP_CLEANUP_BACKEND="${arg#static_map_cleanup_backend=}" ;;
+    hybrid_preflight=*) HYBRID_PREFLIGHT="${arg#hybrid_preflight=}" ;;
     manual=*) MANUAL="${arg#manual=}" ;;
     holonomic=*) HOLONOMIC="${arg#holonomic=}" ;;
     holonomic_profile=*) HOLONOMIC_PROFILE="${arg#holonomic_profile=}" ;;
@@ -182,12 +200,27 @@ case "$RVIZ"    in true|false) ;; *) echo "ERROR: rviz must be true|false" >&2; 
 case "$RVIZ_3D" in true|false) ;; *) echo "ERROR: rviz_3d must be true|false" >&2; exit 1 ;; esac
 case "$CARTO_MODE" in 2d|3d) ;; *) echo "ERROR: carto_mode must be 2d|3d" >&2; exit 1 ;; esac
 case "$ONBOARD" in true|false) ;; *) echo "ERROR: onboard must be true|false" >&2; exit 1 ;; esac
+case "$DEPLOYMENT_MODE" in ""|real_hybrid_ros1_slam_ros2_nav|real_ros1_only_experimental) ;; *) echo "ERROR: deployment_mode must be real_hybrid_ros1_slam_ros2_nav|real_ros1_only_experimental" >&2; exit 1 ;; esac
+case "$SLAM_BACKEND" in swarm_lio2_shadow|swarm_lio2_primary) ;; *) echo "ERROR: slam_backend must be swarm_lio2_shadow|swarm_lio2_primary" >&2; exit 1 ;; esac
+case "$DYNAMIC_FILTER_BACKEND" in dynamic_lio_port|dynamic_lio_wrapper|temporal_voxel_fallback|none) ;; *) echo "ERROR: dynamic_filter_backend invalid" >&2; exit 1 ;; esac
+case "$STATIC_MAP_CLEANUP_BACKEND" in erasor_wrapper|temporal_voxel_fallback|none) ;; *) echo "ERROR: static_map_cleanup_backend invalid" >&2; exit 1 ;; esac
+case "$HYBRID_PREFLIGHT" in true|false) ;; *) echo "ERROR: hybrid_preflight must be true|false" >&2; exit 1 ;; esac
 case "$MANUAL" in true|false) ;; *) echo "ERROR: manual must be true|false" >&2; exit 1 ;; esac
 case "$HOLONOMIC" in true|false) ;; *) echo "ERROR: holonomic must be true|false" >&2; exit 1 ;; esac
 case "$HOLONOMIC_PROFILE" in off|omni_2d|se2_holonomic) ;; *) echo "ERROR: holonomic_profile must be off|omni_2d|se2_holonomic" >&2; exit 1 ;; esac
 case "$RECORD"      in true|false) ;; *) echo "ERROR: record must be true|false" >&2; exit 1 ;; esac
 case "$RECORD_FULL" in true|false) ;; *) echo "ERROR: record_full must be true|false" >&2; exit 1 ;; esac
 [[ -n "$BAG_DIR_ROOT" ]] && export BAG_DIR_ROOT
+
+if [[ "$DEPLOYMENT_MODE" == "real_hybrid_ros1_slam_ros2_nav" ]]; then
+  ONBOARD="true"
+elif [[ "$DEPLOYMENT_MODE" == "real_ros1_only_experimental" ]]; then
+  exec "$SCRIPT_DIR/onboard_ros1_slam.sh" \
+    slam_backend="$SLAM_BACKEND" \
+    dynamic_filter_backend="$DYNAMIC_FILTER_BACKEND" \
+    static_map_cleanup_backend="$STATIC_MAP_CLEANUP_BACKEND" \
+    namespace=robot
+fi
 
 # Tell connect_ethernet.sh to add the Jetson as a CycloneDDS peer when
 # onboard SLAM is in use (sourced as env var so the function picks it up).
@@ -200,6 +233,11 @@ fi
 source "$SCRIPT_DIR/connect_ethernet.sh"
 ensure_link
 setup_cyclonedds_ethernet
+
+if [[ "$DEPLOYMENT_MODE" == "real_hybrid_ros1_slam_ros2_nav" && "$HYBRID_PREFLIGHT" == "true" ]]; then
+  echo "Running real hybrid ROS1 SLAM / ROS2 Nav preflight..."
+  "$REPO_ROOT/scripts/deploy/check_real_hybrid_ros1_slam_ros2_nav.sh"
+fi
 
 # ── LiDAR autodetection ──────────────────────────────────────────────
 # Only runs when user requested slam=auto. Uses detect_lidar() from
@@ -236,6 +274,12 @@ case "$NAV" in
   # src/go2w/go2w_real_bringup/launch/real_single_tare_real.launch.py.
   tare_real) LAUNCH="real_single_tare_real.launch.py"; NAV_BACKEND="far" ;;
 esac
+
+LAUNCH_PKG="go2w_real_bringup"
+if [[ "$DEPLOYMENT_MODE" == "real_hybrid_ros1_slam_ros2_nav" ]]; then
+  LAUNCH_PKG="go2_gazebo_sim"
+  LAUNCH="real_hybrid_ros1_slam_ros2_nav.launch.py"
+fi
 
 # Manual point-to-point mode is only meaningful for the Nav2 stack: CFPA2 is
 # disabled and the operator sends goals directly from RViz to /robot/goal_pose.
@@ -289,6 +333,10 @@ echo "    connect : $CONNECT"
 echo "    slam    : $SLAM_BANNER"
 echo "    nav     : $NAV ($NAV_BACKEND)"
 echo "    mapper  : $MAPPER"
+[[ -n "$DEPLOYMENT_MODE" ]] && echo "    deployment_mode: $DEPLOYMENT_MODE"
+[[ -n "$DEPLOYMENT_MODE" ]] && echo "    slam_backend: $SLAM_BACKEND"
+[[ -n "$DEPLOYMENT_MODE" ]] && echo "    dynamic_filter_backend: $DYNAMIC_FILTER_BACKEND"
+[[ -n "$DEPLOYMENT_MODE" ]] && echo "    static_map_cleanup_backend: $STATIC_MAP_CLEANUP_BACKEND"
 echo "    oa      : $OA"
 echo "    execute : $EXECUTE"
 echo "    manual  : $MANUAL$([ "$MANUAL" == "true" ] && echo " (CFPA2 OFF; RViz 2D Goal Pose -> /robot/goal_pose)")"
@@ -300,7 +348,7 @@ if [[ "$RECORD" == "true" ]]; then
 else
   echo "    record  : OFF"
 fi
-echo "  Launch    : go2w_real_bringup $LAUNCH"
+echo "  Launch    : $LAUNCH_PKG $LAUNCH"
 echo "  Stop      : Ctrl+C  or  scripts/real/real_autonomy.sh stop"
 [[ "$MANUAL" == "true" ]] && echo "  RViz goal : click '2D Goal Pose' in RViz to send /robot/goal_pose"
 echo "################################################"
@@ -324,7 +372,23 @@ fi
 # in lifecycle groups) survive — leading to "two parallel launches" the next
 # time the user starts the stack. Trapping INT/TERM and routing through
 # _kill_autonomy_stack guarantees a clean tree teardown.
-ros2 launch go2w_real_bringup "$LAUNCH" \
+if [[ "$DEPLOYMENT_MODE" == "real_hybrid_ros1_slam_ros2_nav" ]]; then
+  ros2 launch "$LAUNCH_PKG" "$LAUNCH" \
+    robot_namespace:=robot_a \
+    robot_model:="$ROBOT" \
+    slam_backend:="$SLAM_BACKEND" \
+    dynamic_filter_backend:="$DYNAMIC_FILTER_BACKEND" \
+    static_map_cleanup_backend:="$STATIC_MAP_CLEANUP_BACKEND" \
+    nav_backend:="$NAV_BACKEND" \
+    map_backend:="$MAPPER" \
+    execute_controller:="$EXECUTE" \
+    rviz:="$RVIZ" \
+    rviz_3d:="$RVIZ_3D" \
+    explore:="$EXPLORE" \
+    start_nav2_stack:=true \
+    start_ros1_slam_bridge:=false &
+else
+  ros2 launch "$LAUNCH_PKG" "$LAUNCH" \
   robot_model:="$ROBOT" \
   slam:="$SLAM" \
   carto_mode:="$CARTO_MODE" \
@@ -339,6 +403,7 @@ ros2 launch go2w_real_bringup "$LAUNCH" \
   holonomic_nav:="$HOLONOMIC_NAV" \
   holonomic_nav_profile:="$NAV2_PROFILE" \
   onboard_slam:="$ONBOARD" &
+fi
 LAUNCH_PID=$!
 
 cleanup_on_signal() {

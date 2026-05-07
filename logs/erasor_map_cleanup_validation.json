@@ -1,15 +1,16 @@
 {
-  "blocker": "ERASOR source exists under external/ERASOR, but upstream package is ROS1/catkin and this host does not expose catkin_make/rospack; asynchronous cleanup cannot be validated",
+  "blocker": "ERASOR source exists, but sim hybrid build requires Docker daemon access for ROS1/Noetic catkin",
   "cleaned_map_published": false,
   "cleaned_map_removes_dynamic_trace": false,
   "control_loop_blocked": false,
-  "erasor_buildable_source": false,
+  "deployment_mode": "sim_hybrid_ros1_slam_ros2_nav",
+  "erasor_buildable": false,
   "erasor_runtime_ready": false,
-  "erasor_source_or_executable_available": true,
+  "erasor_source_available": true,
   "fallback_used": true,
   "gt_used_runtime": false,
   "naive_map_contains_dynamic_trace": false,
-  "schema": "erasor_map_cleanup_validation/v1",
+  "schema": "erasor_map_cleanup_validation/v2",
   "static_map_cleanup_backend": "temporal_voxel_fallback",
   "static_walls_preserved": false
 }

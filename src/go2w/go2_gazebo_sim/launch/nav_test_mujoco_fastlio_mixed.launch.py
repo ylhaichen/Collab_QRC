@@ -1875,6 +1875,7 @@ def _launch_setup(context):
     debug = _as_bool(_get(context, "debug"))
     loop_closure_on = _as_bool(_get(context, "loop_closure"))
     loop_closure_backend = (_get(context, "loop_closure_backend").strip().lower() or "auto")
+    deployment_mode = (_get(context, "deployment_mode").strip().lower() or "sim_ros2")
     slam_backend = (_get(context, "slam_backend").strip().lower() or "fast_lio_scpgo")
     dynamic_filter_backend = (
         _get(context, "dynamic_filter_backend").strip().lower() or "none"
@@ -2022,6 +2023,15 @@ def _launch_setup(context):
         raise ValueError(
             "loop_closure_backend must be 'auto' | 'ros2_sc_pgo' | "
             f"'ros1_bridge', got '{loop_closure_backend}'")
+    if deployment_mode not in {
+        "sim_ros2",
+        "sim_hybrid_ros1_slam_ros2_nav",
+        "real_hybrid_ros1_slam_ros2_nav",
+        "real_ros1_only_experimental",
+    }:
+        raise ValueError(
+            "deployment_mode must be 'sim_ros2' | 'sim_hybrid_ros1_slam_ros2_nav' | "
+            f"'real_hybrid_ros1_slam_ros2_nav' | 'real_ros1_only_experimental', got '{deployment_mode}'")
     if slam_backend not in {"fast_lio_scpgo", "swarm_lio2_shadow", "swarm_lio2_primary"}:
         raise ValueError(
             "slam_backend must be 'fast_lio_scpgo' | 'swarm_lio2_shadow' | "
@@ -2115,7 +2125,8 @@ def _launch_setup(context):
 
     actions = [LogInfo(msg="[nav_test_mujoco_fastlio_mixed] starting heterogeneous dual-robot nav (Go2W + Go2)")]
     actions.append(LogInfo(msg=(
-        f"[nav_test_mujoco_fastlio_mixed] slam_backend:={slam_backend} "
+        f"[nav_test_mujoco_fastlio_mixed] deployment_mode:={deployment_mode} "
+        f"slam_backend:={slam_backend} "
         f"dynamic_filter_backend:={dynamic_filter_backend} "
         f"static_map_cleanup_backend:={static_map_cleanup_backend}"
     )))
@@ -3123,6 +3134,10 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "registration_backend", default_value="icp_2d",
             description="Cross-robot registration backend interface. v2 keeps self-contained icp_2d only.",
+        ),
+        DeclareLaunchArgument(
+            "deployment_mode", default_value="sim_ros2",
+            description="sim_ros2 | sim_hybrid_ros1_slam_ros2_nav | real_hybrid_ros1_slam_ros2_nav | real_ros1_only_experimental.",
         ),
         DeclareLaunchArgument(
             "slam_backend", default_value="fast_lio_scpgo",

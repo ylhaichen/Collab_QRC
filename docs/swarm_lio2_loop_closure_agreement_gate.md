@@ -15,4 +15,4 @@ Default limits:
 - `swarm_loop_agreement_max_translation = 0.5`
 - `swarm_loop_agreement_max_yaw_deg = 5.0`
 
-`relative_transform_manager_node` only publishes `aligned` when robust loop closure, pose graph acceptance, and the Swarm agreement gate pass. Descriptor-only matches, weak single matches, Swarm mutual state alone, ERASOR cleaned maps alone, and runtime GT are not allowed to open `/merged_map`.
+`relative_transform_manager_node` only publishes `aligned` when robust loop closure, pose graph acceptance, and the Swarm agreement gate pass. The gate applies in `swarm_lio2_primary` for both `sim_hybrid_ros1_slam_ros2_nav` and `real_hybrid_ros1_slam_ros2_nav`. Descriptor-only matches, weak single matches, Swarm mutual state alone, ERASOR cleaned maps alone, and runtime GT are not allowed to open `/merged_map`.

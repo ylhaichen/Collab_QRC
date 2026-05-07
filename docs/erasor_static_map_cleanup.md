@@ -22,4 +22,4 @@ It publishes:
 
 `static_map_cleanup_backend` supports `none`, `erasor_wrapper`, and `temporal_voxel_fallback`. `erasor_trigger_mode` supports `manual`, `periodic`, and `benchmark`.
 
-Current blocker: ERASOR source is available under `external/ERASOR`, but upstream package is ROS1/catkin and this host does not expose `catkin_make`/`rospack`. ERASOR cleanup cannot be validated yet.
+Current blocker: ERASOR source is available under `external/ERASOR`. Simulation hybrid requires Docker daemon access for ROS1/Noetic catkin; real hybrid requires native ROS1 Noetic, `catkin_make`, and `rospack` onboard. ERASOR cleanup cannot be validated yet.

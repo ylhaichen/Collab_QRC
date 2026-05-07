@@ -43,6 +43,7 @@ def adapter_contract_for_mode(mode: str, *, namespace: str) -> AdapterContract:
             robot_topics=(
                 f"/{ns}/Odometry",
                 f"/{ns}/corrected_odom",
+                f"/{ns}/odom/nav",
                 f"/{ns}/cloud_registered_body",
                 f"/{ns}/cloud_static",
                 f"/{ns}/cloud_dynamic",

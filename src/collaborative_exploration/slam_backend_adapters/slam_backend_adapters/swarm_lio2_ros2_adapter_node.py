@@ -69,6 +69,7 @@ class SwarmLio2Ros2Adapter(Node):
         if self.mode == "swarm_lio2_shadow":
             self.odom_pub = self.create_publisher(Odometry, f"/{self.ns}/swarm_lio2/Odometry", 10)
             self.corrected_pub = None
+            self.nav_odom_pub = None
             self.cloud_registered_pub = None
             self.static_pub = self.create_publisher(PointCloud2, f"/{self.ns}/swarm_lio2/cloud_static", 5)
             self.dynamic_pub = None
@@ -81,6 +82,7 @@ class SwarmLio2Ros2Adapter(Node):
         else:
             self.odom_pub = self.create_publisher(Odometry, f"/{self.ns}/Odometry", 10)
             self.corrected_pub = self.create_publisher(Odometry, f"/{self.ns}/corrected_odom", 10)
+            self.nav_odom_pub = self.create_publisher(Odometry, f"/{self.ns}/odom/nav", 10)
             self.cloud_registered_pub = self.create_publisher(
                 PointCloud2, f"/{self.ns}/cloud_registered_body", 5
             )
@@ -141,6 +143,8 @@ class SwarmLio2Ros2Adapter(Node):
         self.odom_pub.publish(msg)
         if self.corrected_pub is not None:
             self.corrected_pub.publish(msg)
+        if self.nav_odom_pub is not None:
+            self.nav_odom_pub.publish(msg)
         if self.tf_br is not None:
             tf = TransformStamped()
             tf.header = msg.header

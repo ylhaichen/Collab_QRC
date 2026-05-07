@@ -17,6 +17,7 @@ def test_primary_contract_preserves_fast_lio_topic_surface() -> None:
 
     assert "/robot_b/Odometry" in contract.robot_topics
     assert "/robot_b/corrected_odom" in contract.robot_topics
+    assert "/robot_b/odom/nav" in contract.robot_topics
     assert "/robot_b/cloud_registered_body" in contract.robot_topics
     assert "/robot_b/cloud_static" in contract.robot_topics
     assert "/robot_b/cloud_dynamic" in contract.robot_topics

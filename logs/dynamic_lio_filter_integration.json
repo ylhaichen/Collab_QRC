@@ -1,14 +1,15 @@
 {
-  "blocker": "Dynamic-LIO source exists under external/dynamic_lio, but upstream packages are ROS1/catkin and this host does not expose catkin_make/rospack; using temporal voxel fallback only",
+  "blocker": "Dynamic-LIO source exists, but sim hybrid build requires Docker daemon access for ROS1/Noetic catkin",
+  "deployment_mode": "sim_hybrid_ros1_slam_ros2_nav",
   "dynamic_filter_backend": "temporal_voxel_fallback",
   "dynamic_filter_ratio": 0.14286,
-  "dynamic_lio_buildable_source": false,
+  "dynamic_lio_buildable": false,
   "dynamic_lio_runtime_ready": false,
   "dynamic_lio_source_available": true,
   "dynamic_points_filtered": 1,
   "fallback_used": true,
   "gt_used_runtime": false,
-  "schema": "dynamic_lio_filter_integration/v1",
+  "schema": "dynamic_lio_filter_integration/v2",
   "stale_obstacle_decay_time_sec": 1.5,
   "static_points_kept": 6
 }
