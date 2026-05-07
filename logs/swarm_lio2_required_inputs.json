@@ -1,0 +1,110 @@
+{
+  "blocker": "rosnode list:exit=127;rosnode info /laserMapping_quad1:exit=127;rosnode info /laserMapping_quad2:exit=127;rostopic info /quad1_pcl_render_node/sensor_cloud:exit=127;rostopic info /quad2_pcl_render_node/sensor_cloud:exit=127;rostopic info /quad_1/imu:exit=127;rostopic info /quad_2/imu:exit=127",
+  "config_file": "external/Swarm-LIO2/swarm_lio/config/simulation.yaml",
+  "launch_file": "external/Swarm-LIO2/swarm_lio/launch/single_drone_sim.xml",
+  "lidar_type": "SIM=6",
+  "mode": "host",
+  "mutual_or_relative_topics": [
+    "/quadstate_to_teammate",
+    "/quadstate_from_teammate",
+    "/global_extrinsic_to_teammate",
+    "/global_extrinsic_from_teammate"
+  ],
+  "pointcloud_support": {
+    "blind_min_range_m": 0.2,
+    "det_range_m": 20.0,
+    "livox_custom_message_required": false,
+    "message_type": "sensor_msgs/PointCloud2",
+    "minimum_valid_points": 2,
+    "optional_fields": [
+      "intensity"
+    ],
+    "required_fields": [
+      "x",
+      "y",
+      "z"
+    ]
+  },
+  "recommended_next_action": "Start ros1_hybrid_slam runtime and rerun with --docker.",
+  "robots": {
+    "robot_a": {
+      "native_cloud_body_output": "/quad1/cloud_registered_body",
+      "native_cloud_registered_output": "/quad1/cloud_registered",
+      "native_odom_output": "/quad1/lidar_slam/odom",
+      "native_path_output": "/quad1/path",
+      "ros1_imu_input": "/quad_1/imu",
+      "ros1_lidar_input": "/quad1_pcl_render_node/sensor_cloud",
+      "ros2_imu_legacy_source": "/robot_a/imu",
+      "ros2_imu_source": "/robot_a/imu/data",
+      "ros2_lidar_raw_fallback_source": "/mujoco_sim/mujoco_lidar_sensor/registered_scan",
+      "ros2_lidar_source": "/robot_a/velodyne_points",
+      "swarm_lio2_drone_id": 1
+    },
+    "robot_b": {
+      "native_cloud_body_output": "/quad2/cloud_registered_body",
+      "native_cloud_registered_output": "/quad2/cloud_registered",
+      "native_odom_output": "/quad2/lidar_slam/odom",
+      "native_path_output": "/quad2/path",
+      "ros1_imu_input": "/quad_2/imu",
+      "ros1_lidar_input": "/quad2_pcl_render_node/sensor_cloud",
+      "ros2_imu_legacy_source": "/robot_b/imu",
+      "ros2_imu_source": "/robot_b/imu/data",
+      "ros2_lidar_raw_fallback_source": "/mujoco_sim/b_mujoco_lidar_sensor/registered_scan",
+      "ros2_lidar_source": "/robot_b/velodyne_points",
+      "swarm_lio2_drone_id": 2
+    }
+  },
+  "runtime_inspection_available": false,
+  "runtime_inspection_results": [
+    {
+      "command": "rosnode list",
+      "returncode": 127,
+      "stderr_tail": "bash: line 1: rosnode: command not found\n",
+      "stdout_tail": ""
+    },
+    {
+      "command": "rosnode info /laserMapping_quad1",
+      "returncode": 127,
+      "stderr_tail": "bash: line 1: rosnode: command not found\n",
+      "stdout_tail": ""
+    },
+    {
+      "command": "rosnode info /laserMapping_quad2",
+      "returncode": 127,
+      "stderr_tail": "bash: line 1: rosnode: command not found\n",
+      "stdout_tail": ""
+    },
+    {
+      "command": "rostopic info /quad1_pcl_render_node/sensor_cloud",
+      "returncode": 127,
+      "stderr_tail": "bash: line 1: rostopic: command not found\n",
+      "stdout_tail": ""
+    },
+    {
+      "command": "rostopic info /quad2_pcl_render_node/sensor_cloud",
+      "returncode": 127,
+      "stderr_tail": "bash: line 1: rostopic: command not found\n",
+      "stdout_tail": ""
+    },
+    {
+      "command": "rostopic info /quad_1/imu",
+      "returncode": 127,
+      "stderr_tail": "bash: line 1: rostopic: command not found\n",
+      "stdout_tail": ""
+    },
+    {
+      "command": "rostopic info /quad_2/imu",
+      "returncode": 127,
+      "stderr_tail": "bash: line 1: rostopic: command not found\n",
+      "stdout_tail": ""
+    }
+  ],
+  "schema": "swarm_lio2_required_inputs/v1",
+  "source_code": "external/Swarm-LIO2/swarm_lio/src/laserMapping.cpp",
+  "time_sync_assumptions": {
+    "imu_stamp_must_reach_lidar_stamp": true,
+    "sim_per_point_time_required": false,
+    "time_offset_lidar_imu_sec": 0.0
+  },
+  "updated_utc": "2026-05-07T22:12:51Z"
+}

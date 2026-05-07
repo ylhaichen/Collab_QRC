@@ -2,10 +2,14 @@ topics:
   - {topic: /clock, type: rosgraph_msgs/msg/Clock, queue_size: 10}
 
   # ROS2 simulation sensors to ROS1 SLAM side.
+  - {topic: /mujoco_sim/mujoco_lidar_sensor/registered_scan, type: sensor_msgs/msg/PointCloud2, queue_size: 5}
+  - {topic: /mujoco_sim/b_mujoco_lidar_sensor/registered_scan, type: sensor_msgs/msg/PointCloud2, queue_size: 5}
   - {topic: /robot_a/velodyne_points, type: sensor_msgs/msg/PointCloud2, queue_size: 5}
   - {topic: /robot_b/velodyne_points, type: sensor_msgs/msg/PointCloud2, queue_size: 5}
   - {topic: /robot_a/imu, type: sensor_msgs/msg/Imu, queue_size: 50}
   - {topic: /robot_b/imu, type: sensor_msgs/msg/Imu, queue_size: 50}
+  - {topic: /robot_a/imu/data, type: sensor_msgs/msg/Imu, queue_size: 50}
+  - {topic: /robot_b/imu/data, type: sensor_msgs/msg/Imu, queue_size: 50}
 
   # Swarm-LIO2 shadow and raw adapter feeds.
   - {topic: /robot_a/swarm_lio2_raw/Odometry, type: nav_msgs/msg/Odometry, queue_size: 20}

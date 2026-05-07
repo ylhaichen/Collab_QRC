@@ -92,6 +92,10 @@ def bridge_contract() -> dict:
     return read_json(LOGS / "ros1_ros2_slam_bridge_validation.json", {})
 
 
+def topic_discovery() -> dict:
+    return read_json(LOGS / "swarm_lio2_topic_discovery.json", {})
+
+
 def topic_present(payload: dict, topic: str) -> bool:
     return topic in set(payload.get("ros2_present_topics", []))
 
@@ -113,25 +117,42 @@ def join_blockers(*items: object) -> str:
 def shadow(deployment_mode: str) -> dict:
     swarm = swarm_backend_check(deployment_mode)
     bridge = bridge_contract()
+    discovery = topic_discovery()
     source = str(bridge.get("source", "unknown"))
     buildable = bool(swarm.get("buildable", False)) or bool(
         docker_backend_status().get("catkin_workspace_build_success", False)
     )
     runtime_ready = bool(swarm.get("runtime_ready", False)) or docker_launch_smoke_passed()
+    current_runtime_blocked = (
+        "docker_runtime_blocked" in str(bridge.get("blocker", ""))
+        or "docker_runtime_blocked" in str(discovery.get("blocker", ""))
+    )
+    runtime_ready = runtime_ready and not current_runtime_blocked
     bridge_contract_passed = bool(bridge.get("bridge_contract_passed", False) or bridge.get("pass", False))
     ros2_shadow_odom = (
         topic_present(bridge, "/robot_a/swarm_lio2/Odometry")
         and topic_present(bridge, "/robot_b/swarm_lio2/Odometry")
         and bridge_contract_passed
     )
+    native_source = source in {"real_swarm_lio2", "real_sensor", "bag_replay", "sim_bridge"}
+    native_odom_ok = bool(discovery.get("native_swarm_lio2_odom_nonzero_rate", False))
+    native_cloud_registered_ok = bool(
+        discovery.get("native_swarm_lio2_cloud_registered_nonzero_rate", False)
+    )
+    native_cloud_body_ok = bool(discovery.get("native_swarm_lio2_cloud_body_nonzero_rate", False))
+    native_output_ok = native_odom_ok and native_cloud_registered_ok and native_cloud_body_ok
     real_shadow_slam_passed = (
         runtime_ready
         and ros2_shadow_odom
-        and source in {"real_swarm_lio2", "bag_replay", "sim_bridge"}
+        and native_source
+        and native_output_ok
     )
     blocker = join_blockers(
         "" if runtime_ready else swarm.get("blocker", "swarm_lio2_runtime_not_ready"),
         "" if ros2_shadow_odom else bridge.get("blocker", "ros2_shadow_odometry_not_validated"),
+        "" if (not native_source or native_odom_ok) else "native_swarm_lio2_odom_zero_rate",
+        "" if (not native_source or native_cloud_registered_ok) else "native_swarm_lio2_cloud_registered_zero_rate",
+        "" if (not native_source or native_cloud_body_ok) else "native_swarm_lio2_cloud_registered_body_zero_rate",
         "" if source != "synthetic_contract_test" else "synthetic_contract_test_does_not_validate_swarm_lio2_slam",
     )
     payload = {
@@ -146,11 +167,17 @@ def shadow(deployment_mode: str) -> dict:
         "ros1_launch_smoke_passed": docker_launch_smoke_passed(),
         "bridge_contract_passed": bridge_contract_passed,
         "swarm_lio2_shadow_slam_passed": real_shadow_slam_passed,
+        "native_swarm_lio2_output_passed": native_output_ok,
+        "native_swarm_lio2_odom_nonzero_rate": native_odom_ok,
+        "native_swarm_lio2_cloud_registered_nonzero_rate": native_cloud_registered_ok,
+        "native_swarm_lio2_cloud_body_nonzero_rate": native_cloud_body_ok,
+        "native_swarm_lio2_nonzero_rate_topics": discovery.get("native_swarm_lio2_nonzero_rate_topics", []),
         "swarm_lio2_odometry_valid": ros2_shadow_odom,
         "swarm_lio2_relative_state_valid": False,
         "ros2_receives_shadow_odometry": ros2_shadow_odom,
         "fast_lio_baseline_still_runs": baseline()["overlap_pass"] and baseline()["no_overlap_pass"],
         "production_downstream_depends_on_swarm": False,
+        "primary_attempted": False,
         "metrics_recorded": topic_present(bridge, "/team_slam/swarm_lio2_metrics"),
         "gt_used_runtime": False,
         "pass": real_shadow_slam_passed,

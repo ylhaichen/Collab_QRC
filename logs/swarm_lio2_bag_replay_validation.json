@@ -1,0 +1,19 @@
+{
+  "blocker": "swarm_lio2_example_bag_unavailable",
+  "bridge_contract_passed": false,
+  "deployment_mode": "sim_hybrid_ros1_slam_ros2_nav",
+  "gt_used_runtime": false,
+  "native_swarm_lio2_cloud_body_nonzero_rate": false,
+  "native_swarm_lio2_cloud_registered_nonzero_rate": false,
+  "native_swarm_lio2_odom_nonzero_rate": false,
+  "native_swarm_lio2_output_passed": false,
+  "pass": false,
+  "primary_attempted": false,
+  "production_downstream_depends_on_swarm": false,
+  "ros2_receives_shadow_odometry": false,
+  "schema": "swarm_lio2_shadow_validation/v5",
+  "slam_backend": "swarm_lio2_shadow",
+  "source": "bag_replay",
+  "swarm_lio2_shadow_slam_passed": false,
+  "updated_utc": "2026-05-07T22:03:40Z"
+}

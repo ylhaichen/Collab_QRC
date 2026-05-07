@@ -26,6 +26,10 @@ services:
       - ROBOT_NAMESPACES=${ROBOT_NAMESPACES:-robot_a robot_b}
       - SWARM_LIO2_FEED_SOURCE=${SWARM_LIO2_FEED_SOURCE:-sim_bridge}
       - SWARM_LIO2_SYNTHETIC_RATE_HZ=${SWARM_LIO2_SYNTHETIC_RATE_HZ:-5.0}
+      - ROBOT_A_SWARM_LIO2_LIDAR_TOPIC=${ROBOT_A_SWARM_LIO2_LIDAR_TOPIC:-/robot_a/velodyne_points}
+      - ROBOT_A_SWARM_LIO2_IMU_TOPIC=${ROBOT_A_SWARM_LIO2_IMU_TOPIC:-/robot_a/imu/data}
+      - ROBOT_B_SWARM_LIO2_LIDAR_TOPIC=${ROBOT_B_SWARM_LIO2_LIDAR_TOPIC:-/robot_b/velodyne_points}
+      - ROBOT_B_SWARM_LIO2_IMU_TOPIC=${ROBOT_B_SWARM_LIO2_IMU_TOPIC:-/robot_b/imu/data}
     volumes:
       - ../../external:/external:ro
       - ../../.local_deps/ros1_hybrid_slam_ws:/catkin_ws

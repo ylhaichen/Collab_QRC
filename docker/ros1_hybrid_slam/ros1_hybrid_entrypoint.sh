@@ -67,15 +67,39 @@ install_livox_sdk_if_needed() {
 
 write_swarm_lio2_collab_wrapper_launch() {
   local wrapper="/tmp/collab_swarm_lio2_wrapper.launch"
-  cat > "${wrapper}" <<'EOF'
+  local robot_a_lidar_topic="${ROBOT_A_SWARM_LIO2_LIDAR_TOPIC:-/robot_a/velodyne_points}"
+  local robot_b_lidar_topic="${ROBOT_B_SWARM_LIO2_LIDAR_TOPIC:-/robot_b/velodyne_points}"
+  local robot_a_imu_topic="${ROBOT_A_SWARM_LIO2_IMU_TOPIC:-/robot_a/imu/data}"
+  local robot_b_imu_topic="${ROBOT_B_SWARM_LIO2_IMU_TOPIC:-/robot_b/imu/data}"
+  cat > "${wrapper}" <<EOF
 <launch>
-  <include file="$(find swarm_lio)/launch/simulation.launch" />
+  <node pkg="swarm_lio" type="swarm_lio" name="laserMapping_quad1" output="screen">
+    <rosparam command="load" file="\$(find swarm_lio)/config/simulation.yaml" />
+    <param name="drone_id" type="int" value="1" />
+    <param name="common/drone_id" type="int" value="1" />
+    <param name="common/lid_topic" type="string" value="/quad1_pcl_render_node/sensor_cloud" />
+    <param name="common/imu_topic" type="string" value="/quad_1/imu" />
+    <param name="sub_gt_pose_topic" type="string" value="/quad_1/lidar_slam/odom" />
+    <param name="multiuav/actual_uav_num" type="int" value="2" />
+    <param name="publish/scan_bodyframe_pub_en" type="bool" value="true" />
+  </node>
+
+  <node pkg="swarm_lio" type="swarm_lio" name="laserMapping_quad2" output="log">
+    <rosparam command="load" file="\$(find swarm_lio)/config/simulation.yaml" />
+    <param name="drone_id" type="int" value="2" />
+    <param name="common/drone_id" type="int" value="2" />
+    <param name="common/lid_topic" type="string" value="/quad2_pcl_render_node/sensor_cloud" />
+    <param name="common/imu_topic" type="string" value="/quad_2/imu" />
+    <param name="sub_gt_pose_topic" type="string" value="/quad_2/lidar_slam/odom" />
+    <param name="multiuav/actual_uav_num" type="int" value="2" />
+    <param name="publish/scan_bodyframe_pub_en" type="bool" value="true" />
+  </node>
 
   <!-- ROS2 simulation sensor topics, bridged into ROS1, adapted to Swarm-LIO2 simulation names. -->
-  <node pkg="topic_tools" type="relay" name="robot_a_lidar_to_swarm_lio2" args="/robot_a/velodyne_points /quad1_pcl_render_node/sensor_cloud" output="log" />
-  <node pkg="topic_tools" type="relay" name="robot_a_imu_to_swarm_lio2" args="/robot_a/imu /quad_1/imu" output="log" />
-  <node pkg="topic_tools" type="relay" name="robot_b_lidar_to_swarm_lio2" args="/robot_b/velodyne_points /quad2_pcl_render_node/sensor_cloud" output="log" />
-  <node pkg="topic_tools" type="relay" name="robot_b_imu_to_swarm_lio2" args="/robot_b/imu /quad_2/imu" output="log" />
+  <node pkg="topic_tools" type="relay" name="robot_a_lidar_to_swarm_lio2" args="${robot_a_lidar_topic} /quad1_pcl_render_node/sensor_cloud" output="log" />
+  <node pkg="topic_tools" type="relay" name="robot_a_imu_to_swarm_lio2" args="${robot_a_imu_topic} /quad_1/imu" output="log" />
+  <node pkg="topic_tools" type="relay" name="robot_b_lidar_to_swarm_lio2" args="${robot_b_lidar_topic} /quad2_pcl_render_node/sensor_cloud" output="log" />
+  <node pkg="topic_tools" type="relay" name="robot_b_imu_to_swarm_lio2" args="${robot_b_imu_topic} /quad_2/imu" output="log" />
 
   <!-- Swarm-LIO2 native outputs normalized to the ROS2 adapter raw contract. -->
   <node pkg="topic_tools" type="relay" name="swarm_lio2_robot_a_odom_raw" args="/quad1/lidar_slam/odom /robot_a/swarm_lio2_raw/Odometry" output="log" />
@@ -84,8 +108,6 @@ write_swarm_lio2_collab_wrapper_launch() {
   <node pkg="topic_tools" type="relay" name="swarm_lio2_robot_b_odom_raw" args="/quad2/lidar_slam/odom /robot_b/swarm_lio2_raw/Odometry" output="log" />
   <node pkg="topic_tools" type="relay" name="swarm_lio2_robot_b_static_raw" args="/quad2/cloud_registered_body /robot_b/swarm_lio2_raw/cloud_static" output="log" />
   <node pkg="topic_tools" type="relay" name="swarm_lio2_robot_b_map_raw" args="/quad2/cloud_registered /robot_b/swarm_lio2_raw/cloud_map" output="log" />
-EOF
-  cat >> "${wrapper}" <<'EOF'
 </launch>
 EOF
   printf '%s\n' "${wrapper}"
@@ -131,6 +153,10 @@ echo "  slam_backend=${SLAM_BACKEND}"
 echo "  dynamic_filter_backend=${DYNAMIC_FILTER_BACKEND}"
 echo "  static_map_cleanup_backend=${STATIC_MAP_CLEANUP_BACKEND}"
 echo "  swarm_lio2_feed_source=${SWARM_LIO2_FEED_SOURCE:-sim_bridge}"
+echo "  robot_a_swarm_lio2_lidar_topic=${ROBOT_A_SWARM_LIO2_LIDAR_TOPIC:-/robot_a/velodyne_points}"
+echo "  robot_a_swarm_lio2_imu_topic=${ROBOT_A_SWARM_LIO2_IMU_TOPIC:-/robot_a/imu/data}"
+echo "  robot_b_swarm_lio2_lidar_topic=${ROBOT_B_SWARM_LIO2_LIDAR_TOPIC:-/robot_b/velodyne_points}"
+echo "  robot_b_swarm_lio2_imu_topic=${ROBOT_B_SWARM_LIO2_IMU_TOPIC:-/robot_b/imu/data}"
 
 case "${SLAM_BACKEND}" in
   swarm_lio2_shadow|swarm_lio2_primary)

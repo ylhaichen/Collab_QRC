@@ -1,122 +1,155 @@
 {
+  "blocker": "docker_runtime_blocked:docker_socket_permission_denied;native_swarm_lio2_odom_zero_rate;native_swarm_lio2_cloud_registered_zero_rate;native_swarm_lio2_cloud_registered_body_zero_rate",
   "candidate_results": [
     {
-      "echo_raw_tail": "WARNING: topic [/quad1/lidar_slam/odom] does not appear to be published yet",
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
       "echo_received": false,
-      "hz_raw_tail": "e 2132, in rostopicmain\n    _rostopic_cmd_hz(argv)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rostopic/__init__.py\", line 1523, in _rostopic_cmd_hz\n    _rostopic_hz(topics, window_size=window_size, filter_expr=filter_expr,\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rostopic/__init__.py\", line 315, in _rostopic_hz\n    rospy.Subscriber(real_topic, rospy.AnyMsg, rt.callback_hz, callback_args=topic, tcp_nodelay=tcp_nodelay)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rospy/topics.py\", line 563, in __init__\n    super(Subscriber, self).__init__(name, data_class, Registration.SUB)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rospy/topics.py\", line 131, in __init__\n    raise ValueError(\"topic name is not a non-empty string\")\nValueError: topic name is not a non-empty string",
-      "info_raw_tail": "Type: unknown type\n\nPublishers: None\n\nSubscribers: \n * /swarm_lio2_robot_a_odom_raw (http://127.0.0.1:34021/)",
-      "listed": true,
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
       "publishers": [],
       "rate_hz": 0.0,
-      "subscribers": [
-        "/swarm_lio2_robot_a_odom_raw (http://127.0.0.1:34021/)"
-      ],
+      "subscribers": [],
       "topic": "/quad1/lidar_slam/odom",
-      "type": "unknown type"
+      "type": ""
     },
     {
-      "echo_raw_tail": "WARNING: topic [/quad2/lidar_slam/odom] does not appear to be published yet",
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
       "echo_received": false,
-      "hz_raw_tail": "e 2132, in rostopicmain\n    _rostopic_cmd_hz(argv)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rostopic/__init__.py\", line 1523, in _rostopic_cmd_hz\n    _rostopic_hz(topics, window_size=window_size, filter_expr=filter_expr,\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rostopic/__init__.py\", line 315, in _rostopic_hz\n    rospy.Subscriber(real_topic, rospy.AnyMsg, rt.callback_hz, callback_args=topic, tcp_nodelay=tcp_nodelay)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rospy/topics.py\", line 563, in __init__\n    super(Subscriber, self).__init__(name, data_class, Registration.SUB)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rospy/topics.py\", line 131, in __init__\n    raise ValueError(\"topic name is not a non-empty string\")\nValueError: topic name is not a non-empty string",
-      "info_raw_tail": "Type: unknown type\n\nPublishers: None\n\nSubscribers: \n * /swarm_lio2_robot_b_odom_raw (http://127.0.0.1:36335/)",
-      "listed": true,
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
       "publishers": [],
       "rate_hz": 0.0,
-      "subscribers": [
-        "/swarm_lio2_robot_b_odom_raw (http://127.0.0.1:36335/)"
-      ],
+      "subscribers": [],
       "topic": "/quad2/lidar_slam/odom",
-      "type": "unknown type"
+      "type": ""
     },
     {
-      "echo_raw_tail": "",
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
       "echo_received": false,
-      "hz_raw_tail": "subscribed to [/quad_1/lidar_slam/odom]\nno new messages",
-      "info_raw_tail": "Type: nav_msgs/Odometry\n\nPublishers: None\n\nSubscribers: \n * /laserMapping_quad1 (http://127.0.0.1:46217/)",
-      "listed": true,
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
       "publishers": [],
       "rate_hz": 0.0,
-      "subscribers": [
-        "/laserMapping_quad1 (http://127.0.0.1:46217/)"
-      ],
+      "subscribers": [],
       "topic": "/quad_1/lidar_slam/odom",
-      "type": "nav_msgs/Odometry"
+      "type": ""
     },
     {
-      "echo_raw_tail": "",
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
       "echo_received": false,
-      "hz_raw_tail": "subscribed to [/quad_2/lidar_slam/odom]\nno new messages",
-      "info_raw_tail": "Type: nav_msgs/Odometry\n\nPublishers: None\n\nSubscribers: \n * /laserMapping_quad2 (http://127.0.0.1:45065/)",
-      "listed": true,
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
       "publishers": [],
       "rate_hz": 0.0,
-      "subscribers": [
-        "/laserMapping_quad2 (http://127.0.0.1:45065/)"
-      ],
+      "subscribers": [],
       "topic": "/quad_2/lidar_slam/odom",
-      "type": "nav_msgs/Odometry"
+      "type": ""
     },
     {
-      "echo_raw_tail": "WARNING: topic [/quad1/cloud_registered_body] does not appear to be published yet",
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
       "echo_received": false,
-      "hz_raw_tail": "e 2132, in rostopicmain\n    _rostopic_cmd_hz(argv)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rostopic/__init__.py\", line 1523, in _rostopic_cmd_hz\n    _rostopic_hz(topics, window_size=window_size, filter_expr=filter_expr,\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rostopic/__init__.py\", line 315, in _rostopic_hz\n    rospy.Subscriber(real_topic, rospy.AnyMsg, rt.callback_hz, callback_args=topic, tcp_nodelay=tcp_nodelay)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rospy/topics.py\", line 563, in __init__\n    super(Subscriber, self).__init__(name, data_class, Registration.SUB)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rospy/topics.py\", line 131, in __init__\n    raise ValueError(\"topic name is not a non-empty string\")\nValueError: topic name is not a non-empty string",
-      "info_raw_tail": "Type: unknown type\n\nPublishers: None\n\nSubscribers: \n * /swarm_lio2_robot_a_static_raw (http://127.0.0.1:37639/)",
-      "listed": true,
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
       "publishers": [],
       "rate_hz": 0.0,
-      "subscribers": [
-        "/swarm_lio2_robot_a_static_raw (http://127.0.0.1:37639/)"
-      ],
+      "subscribers": [],
+      "topic": "/quad1_pcl_render_node/sensor_cloud",
+      "type": ""
+    },
+    {
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "echo_received": false,
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
+      "publishers": [],
+      "rate_hz": 0.0,
+      "subscribers": [],
+      "topic": "/quad2_pcl_render_node/sensor_cloud",
+      "type": ""
+    },
+    {
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "echo_received": false,
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
+      "publishers": [],
+      "rate_hz": 0.0,
+      "subscribers": [],
+      "topic": "/quad_1/imu",
+      "type": ""
+    },
+    {
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "echo_received": false,
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
+      "publishers": [],
+      "rate_hz": 0.0,
+      "subscribers": [],
+      "topic": "/quad_2/imu",
+      "type": ""
+    },
+    {
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "echo_received": false,
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
+      "publishers": [],
+      "rate_hz": 0.0,
+      "subscribers": [],
       "topic": "/quad1/cloud_registered_body",
-      "type": "unknown type"
+      "type": ""
     },
     {
-      "echo_raw_tail": "WARNING: topic [/quad2/cloud_registered_body] does not appear to be published yet",
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
       "echo_received": false,
-      "hz_raw_tail": "e 2132, in rostopicmain\n    _rostopic_cmd_hz(argv)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rostopic/__init__.py\", line 1523, in _rostopic_cmd_hz\n    _rostopic_hz(topics, window_size=window_size, filter_expr=filter_expr,\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rostopic/__init__.py\", line 315, in _rostopic_hz\n    rospy.Subscriber(real_topic, rospy.AnyMsg, rt.callback_hz, callback_args=topic, tcp_nodelay=tcp_nodelay)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rospy/topics.py\", line 563, in __init__\n    super(Subscriber, self).__init__(name, data_class, Registration.SUB)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rospy/topics.py\", line 131, in __init__\n    raise ValueError(\"topic name is not a non-empty string\")\nValueError: topic name is not a non-empty string",
-      "info_raw_tail": "Type: unknown type\n\nPublishers: None\n\nSubscribers: \n * /swarm_lio2_robot_b_static_raw (http://127.0.0.1:42393/)",
-      "listed": true,
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
       "publishers": [],
       "rate_hz": 0.0,
-      "subscribers": [
-        "/swarm_lio2_robot_b_static_raw (http://127.0.0.1:42393/)"
-      ],
+      "subscribers": [],
       "topic": "/quad2/cloud_registered_body",
-      "type": "unknown type"
+      "type": ""
     },
     {
-      "echo_raw_tail": "WARNING: topic [/quad1/cloud_registered] does not appear to be published yet",
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
       "echo_received": false,
-      "hz_raw_tail": "e 2132, in rostopicmain\n    _rostopic_cmd_hz(argv)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rostopic/__init__.py\", line 1523, in _rostopic_cmd_hz\n    _rostopic_hz(topics, window_size=window_size, filter_expr=filter_expr,\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rostopic/__init__.py\", line 315, in _rostopic_hz\n    rospy.Subscriber(real_topic, rospy.AnyMsg, rt.callback_hz, callback_args=topic, tcp_nodelay=tcp_nodelay)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rospy/topics.py\", line 563, in __init__\n    super(Subscriber, self).__init__(name, data_class, Registration.SUB)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rospy/topics.py\", line 131, in __init__\n    raise ValueError(\"topic name is not a non-empty string\")\nValueError: topic name is not a non-empty string",
-      "info_raw_tail": "Type: unknown type\n\nPublishers: None\n\nSubscribers: \n * /swarm_lio2_robot_a_map_raw (http://127.0.0.1:42745/)",
-      "listed": true,
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
       "publishers": [],
       "rate_hz": 0.0,
-      "subscribers": [
-        "/swarm_lio2_robot_a_map_raw (http://127.0.0.1:42745/)"
-      ],
+      "subscribers": [],
       "topic": "/quad1/cloud_registered",
-      "type": "unknown type"
+      "type": ""
     },
     {
-      "echo_raw_tail": "WARNING: topic [/quad2/cloud_registered] does not appear to be published yet",
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
       "echo_received": false,
-      "hz_raw_tail": "e 2132, in rostopicmain\n    _rostopic_cmd_hz(argv)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rostopic/__init__.py\", line 1523, in _rostopic_cmd_hz\n    _rostopic_hz(topics, window_size=window_size, filter_expr=filter_expr,\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rostopic/__init__.py\", line 315, in _rostopic_hz\n    rospy.Subscriber(real_topic, rospy.AnyMsg, rt.callback_hz, callback_args=topic, tcp_nodelay=tcp_nodelay)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rospy/topics.py\", line 563, in __init__\n    super(Subscriber, self).__init__(name, data_class, Registration.SUB)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rospy/topics.py\", line 131, in __init__\n    raise ValueError(\"topic name is not a non-empty string\")\nValueError: topic name is not a non-empty string",
-      "info_raw_tail": "Type: unknown type\n\nPublishers: None\n\nSubscribers: \n * /swarm_lio2_robot_b_map_raw (http://127.0.0.1:34661/)",
-      "listed": true,
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
       "publishers": [],
       "rate_hz": 0.0,
-      "subscribers": [
-        "/swarm_lio2_robot_b_map_raw (http://127.0.0.1:34661/)"
-      ],
+      "subscribers": [],
       "topic": "/quad2/cloud_registered",
-      "type": "unknown type"
+      "type": ""
     },
     {
-      "echo_raw_tail": "WARNING: topic [/quad1/downsampled_map] does not appear to be published yet",
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
       "echo_received": false,
-      "hz_raw_tail": "e 2132, in rostopicmain\n    _rostopic_cmd_hz(argv)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rostopic/__init__.py\", line 1523, in _rostopic_cmd_hz\n    _rostopic_hz(topics, window_size=window_size, filter_expr=filter_expr,\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rostopic/__init__.py\", line 315, in _rostopic_hz\n    rospy.Subscriber(real_topic, rospy.AnyMsg, rt.callback_hz, callback_args=topic, tcp_nodelay=tcp_nodelay)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rospy/topics.py\", line 563, in __init__\n    super(Subscriber, self).__init__(name, data_class, Registration.SUB)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rospy/topics.py\", line 131, in __init__\n    raise ValueError(\"topic name is not a non-empty string\")\nValueError: topic name is not a non-empty string",
-      "info_raw_tail": "ERROR: Unknown topic /quad1/downsampled_map",
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
       "listed": false,
       "publishers": [],
       "rate_hz": 0.0,
@@ -125,10 +158,10 @@
       "type": ""
     },
     {
-      "echo_raw_tail": "WARNING: topic [/quad2/downsampled_map] does not appear to be published yet",
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
       "echo_received": false,
-      "hz_raw_tail": "e 2132, in rostopicmain\n    _rostopic_cmd_hz(argv)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rostopic/__init__.py\", line 1523, in _rostopic_cmd_hz\n    _rostopic_hz(topics, window_size=window_size, filter_expr=filter_expr,\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rostopic/__init__.py\", line 315, in _rostopic_hz\n    rospy.Subscriber(real_topic, rospy.AnyMsg, rt.callback_hz, callback_args=topic, tcp_nodelay=tcp_nodelay)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rospy/topics.py\", line 563, in __init__\n    super(Subscriber, self).__init__(name, data_class, Registration.SUB)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rospy/topics.py\", line 131, in __init__\n    raise ValueError(\"topic name is not a non-empty string\")\nValueError: topic name is not a non-empty string",
-      "info_raw_tail": "ERROR: Unknown topic /quad2/downsampled_map",
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
       "listed": false,
       "publishers": [],
       "rate_hz": 0.0,
@@ -137,10 +170,10 @@
       "type": ""
     },
     {
-      "echo_raw_tail": "WARNING: topic [/quad1/path] does not appear to be published yet",
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
       "echo_received": false,
-      "hz_raw_tail": "e 2132, in rostopicmain\n    _rostopic_cmd_hz(argv)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rostopic/__init__.py\", line 1523, in _rostopic_cmd_hz\n    _rostopic_hz(topics, window_size=window_size, filter_expr=filter_expr,\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rostopic/__init__.py\", line 315, in _rostopic_hz\n    rospy.Subscriber(real_topic, rospy.AnyMsg, rt.callback_hz, callback_args=topic, tcp_nodelay=tcp_nodelay)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rospy/topics.py\", line 563, in __init__\n    super(Subscriber, self).__init__(name, data_class, Registration.SUB)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rospy/topics.py\", line 131, in __init__\n    raise ValueError(\"topic name is not a non-empty string\")\nValueError: topic name is not a non-empty string",
-      "info_raw_tail": "ERROR: Unknown topic /quad1/path",
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
       "listed": false,
       "publishers": [],
       "rate_hz": 0.0,
@@ -149,10 +182,10 @@
       "type": ""
     },
     {
-      "echo_raw_tail": "WARNING: topic [/quad2/path] does not appear to be published yet",
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
       "echo_received": false,
-      "hz_raw_tail": "e 2132, in rostopicmain\n    _rostopic_cmd_hz(argv)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rostopic/__init__.py\", line 1523, in _rostopic_cmd_hz\n    _rostopic_hz(topics, window_size=window_size, filter_expr=filter_expr,\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rostopic/__init__.py\", line 315, in _rostopic_hz\n    rospy.Subscriber(real_topic, rospy.AnyMsg, rt.callback_hz, callback_args=topic, tcp_nodelay=tcp_nodelay)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rospy/topics.py\", line 563, in __init__\n    super(Subscriber, self).__init__(name, data_class, Registration.SUB)\n  File \"/opt/ros/noetic/lib/python3/dist-packages/rospy/topics.py\", line 131, in __init__\n    raise ValueError(\"topic name is not a non-empty string\")\nValueError: topic name is not a non-empty string",
-      "info_raw_tail": "ERROR: Unknown topic /quad2/path",
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
       "listed": false,
       "publishers": [],
       "rate_hz": 0.0,
@@ -161,220 +194,237 @@
       "type": ""
     },
     {
-      "echo_raw_tail": "",
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
       "echo_received": false,
-      "hz_raw_tail": "subscribed to [/quadstate_to_teammate]\nno new messages",
-      "info_raw_tail": "Type: swarm_msgs/QuadStatePub\n\nPublishers: \n * /laserMapping_quad3 (http://127.0.0.1:36513/)\n * /laserMapping_quad2 (http://127.0.0.1:45065/)\n * /laserMapping_quad1 (http://127.0.0.1:46217/)\n * /laserMapping_quad5 (http://127.0.0.1:36701/)\n * /laserMapping_quad4 (http://127.0.0.1:41787/)\n\nSubscribers: \n * /laserMapping_quad3 (http://127.0.0.1:36513/)\n * /laserMapping_quad2 (http://127.0.0.1:45065/)\n * /laserMapping_quad1 (http://127.0.0.1:46217/)\n * /laserMapping_quad5 (http://127.0.0.1:36701/)\n * /laserMapping_quad4 (http://127.0.0.1:41787/)",
-      "listed": true,
-      "publishers": [
-        "/laserMapping_quad3 (http://127.0.0.1:36513/)",
-        "/laserMapping_quad2 (http://127.0.0.1:45065/)",
-        "/laserMapping_quad1 (http://127.0.0.1:46217/)",
-        "/laserMapping_quad5 (http://127.0.0.1:36701/)",
-        "/laserMapping_quad4 (http://127.0.0.1:41787/)"
-      ],
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
+      "publishers": [],
       "rate_hz": 0.0,
-      "subscribers": [
-        "/laserMapping_quad3 (http://127.0.0.1:36513/)",
-        "/laserMapping_quad2 (http://127.0.0.1:45065/)",
-        "/laserMapping_quad1 (http://127.0.0.1:46217/)",
-        "/laserMapping_quad5 (http://127.0.0.1:36701/)",
-        "/laserMapping_quad4 (http://127.0.0.1:41787/)"
-      ],
+      "subscribers": [],
       "topic": "/quadstate_to_teammate",
-      "type": "swarm_msgs/QuadStatePub"
+      "type": ""
     },
     {
-      "echo_raw_tail": "",
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
       "echo_received": false,
-      "hz_raw_tail": "subscribed to [/quadstate_from_teammate]\nno new messages",
-      "info_raw_tail": "Type: swarm_msgs/QuadStatePub\n\nPublishers: None\n\nSubscribers: \n * /laserMapping_quad3 (http://127.0.0.1:36513/)\n * /laserMapping_quad2 (http://127.0.0.1:45065/)\n * /laserMapping_quad1 (http://127.0.0.1:46217/)\n * /laserMapping_quad5 (http://127.0.0.1:36701/)\n * /laserMapping_quad4 (http://127.0.0.1:41787/)",
-      "listed": true,
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
       "publishers": [],
       "rate_hz": 0.0,
-      "subscribers": [
-        "/laserMapping_quad3 (http://127.0.0.1:36513/)",
-        "/laserMapping_quad2 (http://127.0.0.1:45065/)",
-        "/laserMapping_quad1 (http://127.0.0.1:46217/)",
-        "/laserMapping_quad5 (http://127.0.0.1:36701/)",
-        "/laserMapping_quad4 (http://127.0.0.1:41787/)"
-      ],
+      "subscribers": [],
       "topic": "/quadstate_from_teammate",
-      "type": "swarm_msgs/QuadStatePub"
+      "type": ""
     },
     {
-      "echo_raw_tail": "",
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
       "echo_received": false,
-      "hz_raw_tail": "subscribed to [/global_extrinsic_to_teammate]\nno new messages",
-      "info_raw_tail": "Type: swarm_msgs/GlobalExtrinsicStatus\n\nPublishers: \n * /laserMapping_quad3 (http://127.0.0.1:36513/)\n * /laserMapping_quad2 (http://127.0.0.1:45065/)\n * /laserMapping_quad1 (http://127.0.0.1:46217/)\n * /laserMapping_quad5 (http://127.0.0.1:36701/)\n * /laserMapping_quad4 (http://127.0.0.1:41787/)\n\nSubscribers: \n * /laserMapping_quad3 (http://127.0.0.1:36513/)\n * /laserMapping_quad2 (http://127.0.0.1:45065/)\n * /laserMapping_quad1 (http://127.0.0.1:46217/)\n * /laserMapping_quad5 (http://127.0.0.1:36701/)\n * /laserMapping_quad4 (http://127.0.0.1:41787/)",
-      "listed": true,
-      "publishers": [
-        "/laserMapping_quad3 (http://127.0.0.1:36513/)",
-        "/laserMapping_quad2 (http://127.0.0.1:45065/)",
-        "/laserMapping_quad1 (http://127.0.0.1:46217/)",
-        "/laserMapping_quad5 (http://127.0.0.1:36701/)",
-        "/laserMapping_quad4 (http://127.0.0.1:41787/)"
-      ],
-      "rate_hz": 0.0,
-      "subscribers": [
-        "/laserMapping_quad3 (http://127.0.0.1:36513/)",
-        "/laserMapping_quad2 (http://127.0.0.1:45065/)",
-        "/laserMapping_quad1 (http://127.0.0.1:46217/)",
-        "/laserMapping_quad5 (http://127.0.0.1:36701/)",
-        "/laserMapping_quad4 (http://127.0.0.1:41787/)"
-      ],
-      "topic": "/global_extrinsic_to_teammate",
-      "type": "swarm_msgs/GlobalExtrinsicStatus"
-    },
-    {
-      "echo_raw_tail": "",
-      "echo_received": false,
-      "hz_raw_tail": "subscribed to [/global_extrinsic_from_teammate]\nno new messages",
-      "info_raw_tail": "Type: swarm_msgs/GlobalExtrinsicStatus\n\nPublishers: None\n\nSubscribers: \n * /laserMapping_quad3 (http://127.0.0.1:36513/)\n * /laserMapping_quad2 (http://127.0.0.1:45065/)\n * /laserMapping_quad1 (http://127.0.0.1:46217/)\n * /laserMapping_quad5 (http://127.0.0.1:36701/)\n * /laserMapping_quad4 (http://127.0.0.1:41787/)",
-      "listed": true,
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
       "publishers": [],
       "rate_hz": 0.0,
-      "subscribers": [
-        "/laserMapping_quad3 (http://127.0.0.1:36513/)",
-        "/laserMapping_quad2 (http://127.0.0.1:45065/)",
-        "/laserMapping_quad1 (http://127.0.0.1:46217/)",
-        "/laserMapping_quad5 (http://127.0.0.1:36701/)",
-        "/laserMapping_quad4 (http://127.0.0.1:41787/)"
-      ],
+      "subscribers": [],
+      "topic": "/global_extrinsic_to_teammate",
+      "type": ""
+    },
+    {
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "echo_received": false,
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
+      "publishers": [],
+      "rate_hz": 0.0,
+      "subscribers": [],
       "topic": "/global_extrinsic_from_teammate",
-      "type": "swarm_msgs/GlobalExtrinsicStatus"
+      "type": ""
     },
     {
-      "echo_raw_tail": "header: \n  seq: 5605\n  stamp: \n    secs: 1778189707\n    nsecs: 870815992\n  frame_id: \"robot_a/odom\"\nchild_frame_id: \"robot_a/base_link\"\npose: \n  pose: \n    position: \n      x: 280.6\n      y: 0.0\n      z: 0.0\n    orientation: \n      x: 0.0\n      y: 0.0\n      z: 0.0\n      w: 1.0\n  covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\ntwist: \n  twist: \n    linear: \n      x: 0.02\n      y: 0.0\n      z: 0.0\n    angular: \n      x: 0.0\n      y: 0.0\n      z: 0.0\n  covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\n---",
-      "echo_received": true,
-      "hz_raw_tail": "subscribed to [/robot_a/swarm_lio2_raw/Odometry]\naverage rate: 5.004\n\tmin: 0.200s max: 0.200s std dev: 0.00033s window: 3",
-      "info_raw_tail": "Type: nav_msgs/Odometry\n\nPublishers: \n * /swarm_lio2_synthetic_contract_feeder (http://127.0.0.1:43343/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:40841/)",
-      "listed": true,
-      "publishers": [
-        "/swarm_lio2_synthetic_contract_feeder (http://127.0.0.1:43343/)"
-      ],
-      "rate_hz": 5.004,
-      "subscribers": [
-        "/ros_bridge (http://127.0.0.1:40841/)"
-      ],
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "echo_received": false,
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
+      "publishers": [],
+      "rate_hz": 0.0,
+      "subscribers": [],
       "topic": "/robot_a/swarm_lio2_raw/Odometry",
-      "type": "nav_msgs/Odometry"
+      "type": ""
     },
     {
-      "echo_raw_tail": "header: \n  seq: 5625\n  stamp: \n    secs: 1778189711\n    nsecs: 870857000\n  frame_id: \"robot_b/odom\"\nchild_frame_id: \"robot_b/base_link\"\npose: \n  pose: \n    position: \n      x: 281.6\n      y: 0.25\n      z: 0.0\n    orientation: \n      x: 0.0\n      y: 0.0\n      z: 0.0\n      w: 1.0\n  covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\ntwist: \n  twist: \n    linear: \n      x: 0.02\n      y: 0.0\n      z: 0.0\n    angular: \n      x: 0.0\n      y: 0.0\n      z: 0.0\n  covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\n---",
-      "echo_received": true,
-      "hz_raw_tail": "subscribed to [/robot_b/swarm_lio2_raw/Odometry]\naverage rate: 5.007\n\tmin: 0.199s max: 0.200s std dev: 0.00057s window: 3",
-      "info_raw_tail": "Type: nav_msgs/Odometry\n\nPublishers: \n * /swarm_lio2_synthetic_contract_feeder (http://127.0.0.1:43343/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:40841/)",
-      "listed": true,
-      "publishers": [
-        "/swarm_lio2_synthetic_contract_feeder (http://127.0.0.1:43343/)"
-      ],
-      "rate_hz": 5.007,
-      "subscribers": [
-        "/ros_bridge (http://127.0.0.1:40841/)"
-      ],
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "echo_received": false,
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
+      "publishers": [],
+      "rate_hz": 0.0,
+      "subscribers": [],
       "topic": "/robot_b/swarm_lio2_raw/Odometry",
-      "type": "nav_msgs/Odometry"
+      "type": ""
     },
     {
-      "echo_raw_tail": "header: \n  seq: 5644\n  stamp: \n    secs: 1778189715\n    nsecs: 670705556\n  frame_id: \"robot_a/base_link\"\nheight: 1\nwidth: 3\nfields: \n  - \n    name: \"x\"\n    offset: 0\n    datatype: 7\n    count: 1\n  - \n    name: \"y\"\n    offset: 4\n    datatype: 7\n    count: 1\n  - \n    name: \"z\"\n    offset: 8\n    datatype: 7\n    count: 1\nis_bigendian: False\npoint_step: 12\nrow_step: 36\ndata: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 205, 204, 204, 62, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 205, 204, 204, 62, 0, 0, 0, 0]\nis_dense: False\n---",
-      "echo_received": true,
-      "hz_raw_tail": "subscribed to [/robot_a/swarm_lio2_raw/cloud_static]\naverage rate: 5.011\n\tmin: 0.200s max: 0.200s std dev: 0.00000s window: 3",
-      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /swarm_lio2_synthetic_contract_feeder (http://127.0.0.1:43343/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:40841/)",
-      "listed": true,
-      "publishers": [
-        "/swarm_lio2_synthetic_contract_feeder (http://127.0.0.1:43343/)"
-      ],
-      "rate_hz": 5.011,
-      "subscribers": [
-        "/ros_bridge (http://127.0.0.1:40841/)"
-      ],
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "echo_received": false,
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
+      "publishers": [],
+      "rate_hz": 0.0,
+      "subscribers": [],
       "topic": "/robot_a/swarm_lio2_raw/cloud_static",
-      "type": "sensor_msgs/PointCloud2"
+      "type": ""
     },
     {
-      "echo_raw_tail": "header: \n  seq: 5664\n  stamp: \n    secs: 1778189719\n    nsecs: 671016931\n  frame_id: \"robot_b/base_link\"\nheight: 1\nwidth: 3\nfields: \n  - \n    name: \"x\"\n    offset: 0\n    datatype: 7\n    count: 1\n  - \n    name: \"y\"\n    offset: 4\n    datatype: 7\n    count: 1\n  - \n    name: \"z\"\n    offset: 8\n    datatype: 7\n    count: 1\nis_bigendian: False\npoint_step: 12\nrow_step: 36\ndata: [0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 51, 51, 179, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 63, 205, 204, 204, 62, 0, 0, 0, 0]\nis_dense: False\n---",
-      "echo_received": true,
-      "hz_raw_tail": "subscribed to [/robot_b/swarm_lio2_raw/cloud_static]\naverage rate: 4.989\n\tmin: 0.200s max: 0.201s std dev: 0.00075s window: 3",
-      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /swarm_lio2_synthetic_contract_feeder (http://127.0.0.1:43343/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:40841/)",
-      "listed": true,
-      "publishers": [
-        "/swarm_lio2_synthetic_contract_feeder (http://127.0.0.1:43343/)"
-      ],
-      "rate_hz": 4.989,
-      "subscribers": [
-        "/ros_bridge (http://127.0.0.1:40841/)"
-      ],
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "echo_received": false,
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
+      "publishers": [],
+      "rate_hz": 0.0,
+      "subscribers": [],
       "topic": "/robot_b/swarm_lio2_raw/cloud_static",
-      "type": "sensor_msgs/PointCloud2"
+      "type": ""
     },
     {
-      "echo_raw_tail": "header: \n  seq: 5684\n  stamp: \n    secs: 1778189723\n    nsecs: 670894145\n  frame_id: \"robot_a/map\"\nheight: 1\nwidth: 2\nfields: \n  - \n    name: \"x\"\n    offset: 0\n    datatype: 7\n    count: 1\n  - \n    name: \"y\"\n    offset: 4\n    datatype: 7\n    count: 1\n  - \n    name: \"z\"\n    offset: 8\n    datatype: 7\n    count: 1\nis_bigendian: False\npoint_step: 12\nrow_step: 24\ndata: [123, 233, 120, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 218, 74, 111, 190, 0, 0, 0, 0]\nis_dense: False\n---",
-      "echo_received": true,
-      "hz_raw_tail": "subscribed to [/robot_a/swarm_lio2_raw/cloud_map]\naverage rate: 5.002\n\tmin: 0.200s max: 0.200s std dev: 0.00007s window: 4",
-      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /swarm_lio2_synthetic_contract_feeder (http://127.0.0.1:43343/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:40841/)",
-      "listed": true,
-      "publishers": [
-        "/swarm_lio2_synthetic_contract_feeder (http://127.0.0.1:43343/)"
-      ],
-      "rate_hz": 5.002,
-      "subscribers": [
-        "/ros_bridge (http://127.0.0.1:40841/)"
-      ],
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "echo_received": false,
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
+      "publishers": [],
+      "rate_hz": 0.0,
+      "subscribers": [],
       "topic": "/robot_a/swarm_lio2_raw/cloud_map",
-      "type": "sensor_msgs/PointCloud2"
+      "type": ""
     },
     {
-      "echo_raw_tail": "header: \n  seq: 5704\n  stamp: \n    secs: 1778189727\n    nsecs: 671032428\n  frame_id: \"robot_b/map\"\nheight: 1\nwidth: 2\nfields: \n  - \n    name: \"x\"\n    offset: 0\n    datatype: 7\n    count: 1\n  - \n    name: \"y\"\n    offset: 4\n    datatype: 7\n    count: 1\n  - \n    name: \"z\"\n    offset: 8\n    datatype: 7\n    count: 1\nis_bigendian: False\npoint_step: 12\nrow_step: 24\ndata: [253, 18, 170, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 63, 90, 198, 113, 191, 0, 0, 0, 0]\nis_dense: False\n---",
-      "echo_received": true,
-      "hz_raw_tail": "subscribed to [/robot_b/swarm_lio2_raw/cloud_map]\naverage rate: 5.007\n\tmin: 0.199s max: 0.200s std dev: 0.00031s window: 4",
-      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /swarm_lio2_synthetic_contract_feeder (http://127.0.0.1:43343/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:40841/)",
-      "listed": true,
-      "publishers": [
-        "/swarm_lio2_synthetic_contract_feeder (http://127.0.0.1:43343/)"
-      ],
-      "rate_hz": 5.007,
-      "subscribers": [
-        "/ros_bridge (http://127.0.0.1:40841/)"
-      ],
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "echo_received": false,
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
+      "publishers": [],
+      "rate_hz": 0.0,
+      "subscribers": [],
       "topic": "/robot_b/swarm_lio2_raw/cloud_map",
-      "type": "sensor_msgs/PointCloud2"
+      "type": ""
     },
     {
-      "echo_raw_tail": "header: \n  seq: 5724\n  stamp: \n    secs: 1778189731\n    nsecs: 670710802\n  frame_id: \"robot_a/map\"\nchild_frame_id: \"robot_a/base_link\"\ntransform: \n  translation: \n    x: 0.0\n    y: 0.0\n    z: 0.0\n  rotation: \n    x: 0.0\n    y: 0.0\n    z: 0.0\n    w: 1.0\n---",
-      "echo_received": true,
-      "hz_raw_tail": "subscribed to [/robot_a/swarm_lio2_raw/relative_transform]\naverage rate: 4.995\n\tmin: 0.200s max: 0.201s std dev: 0.00035s window: 4",
-      "info_raw_tail": "Type: geometry_msgs/TransformStamped\n\nPublishers: \n * /swarm_lio2_synthetic_contract_feeder (http://127.0.0.1:43343/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:40841/)",
-      "listed": true,
-      "publishers": [
-        "/swarm_lio2_synthetic_contract_feeder (http://127.0.0.1:43343/)"
-      ],
-      "rate_hz": 4.995,
-      "subscribers": [
-        "/ros_bridge (http://127.0.0.1:40841/)"
-      ],
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "echo_received": false,
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
+      "publishers": [],
+      "rate_hz": 0.0,
+      "subscribers": [],
       "topic": "/robot_a/swarm_lio2_raw/relative_transform",
-      "type": "geometry_msgs/TransformStamped"
+      "type": ""
     },
     {
-      "echo_raw_tail": "header: \n  seq: 5744\n  stamp: \n    secs: 1778189735\n    nsecs: 670831680\n  frame_id: \"robot_b/map\"\nchild_frame_id: \"robot_b/base_link\"\ntransform: \n  translation: \n    x: 0.0\n    y: 0.0\n    z: 0.0\n  rotation: \n    x: 0.0\n    y: 0.0\n    z: 0.0\n    w: 1.0\n---",
-      "echo_received": true,
-      "hz_raw_tail": "subscribed to [/robot_b/swarm_lio2_raw/relative_transform]\naverage rate: 4.998\n\tmin: 0.200s max: 0.200s std dev: 0.00022s window: 3",
-      "info_raw_tail": "Type: geometry_msgs/TransformStamped\n\nPublishers: \n * /swarm_lio2_synthetic_contract_feeder (http://127.0.0.1:43343/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:40841/)",
-      "listed": true,
-      "publishers": [
-        "/swarm_lio2_synthetic_contract_feeder (http://127.0.0.1:43343/)"
-      ],
-      "rate_hz": 4.998,
-      "subscribers": [
-        "/ros_bridge (http://127.0.0.1:40841/)"
-      ],
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "echo_received": false,
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
+      "publishers": [],
+      "rate_hz": 0.0,
+      "subscribers": [],
       "topic": "/robot_b/swarm_lio2_raw/relative_transform",
-      "type": "geometry_msgs/TransformStamped"
+      "type": ""
+    },
+    {
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "echo_received": false,
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
+      "publishers": [],
+      "rate_hz": 0.0,
+      "subscribers": [],
+      "topic": "/robot_a/velodyne_points",
+      "type": ""
+    },
+    {
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "echo_received": false,
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
+      "publishers": [],
+      "rate_hz": 0.0,
+      "subscribers": [],
+      "topic": "/robot_b/velodyne_points",
+      "type": ""
+    },
+    {
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "echo_received": false,
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
+      "publishers": [],
+      "rate_hz": 0.0,
+      "subscribers": [],
+      "topic": "/robot_a/imu/data",
+      "type": ""
+    },
+    {
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "echo_received": false,
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
+      "publishers": [],
+      "rate_hz": 0.0,
+      "subscribers": [],
+      "topic": "/robot_b/imu/data",
+      "type": ""
+    },
+    {
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "echo_received": false,
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
+      "publishers": [],
+      "rate_hz": 0.0,
+      "subscribers": [],
+      "topic": "/robot_a/imu",
+      "type": ""
+    },
+    {
+      "echo_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "echo_received": false,
+      "hz_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "info_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
+      "listed": false,
+      "publishers": [],
+      "rate_hz": 0.0,
+      "subscribers": [],
+      "topic": "/robot_b/imu",
+      "type": ""
     }
   ],
-  "listed_topic_count": 152,
+  "listed_topic_count": 0,
+  "min_topic_rate_hz": 0.1,
   "mode": "docker",
+  "native_required_cloud_body_topics": [
+    "/quad1/cloud_registered_body",
+    "/quad2/cloud_registered_body"
+  ],
+  "native_required_cloud_registered_topics": [
+    "/quad1/cloud_registered",
+    "/quad2/cloud_registered"
+  ],
+  "native_required_odom_topics": [
+    "/quad1/lidar_slam/odom",
+    "/quad2/lidar_slam/odom"
+  ],
   "native_swarm_lio2_candidate_topics": [
     "/quad1/lidar_slam/odom",
     "/quad2/lidar_slam/odom",
@@ -393,29 +443,16 @@
     "/global_extrinsic_to_teammate",
     "/global_extrinsic_from_teammate"
   ],
+  "native_swarm_lio2_cloud_body_nonzero_rate": false,
+  "native_swarm_lio2_cloud_registered_nonzero_rate": false,
   "native_swarm_lio2_nonzero_rate_topics": [],
-  "nonzero_rate_topics": [
-    "/robot_a/swarm_lio2_raw/Odometry",
-    "/robot_b/swarm_lio2_raw/Odometry",
-    "/robot_a/swarm_lio2_raw/cloud_static",
-    "/robot_b/swarm_lio2_raw/cloud_static",
-    "/robot_a/swarm_lio2_raw/cloud_map",
-    "/robot_b/swarm_lio2_raw/cloud_map",
-    "/robot_a/swarm_lio2_raw/relative_transform",
-    "/robot_b/swarm_lio2_raw/relative_transform"
-  ],
-  "raw_adapter_nonzero_rate_topics": [
-    "/robot_a/swarm_lio2_raw/Odometry",
-    "/robot_b/swarm_lio2_raw/Odometry",
-    "/robot_a/swarm_lio2_raw/cloud_static",
-    "/robot_b/swarm_lio2_raw/cloud_static",
-    "/robot_a/swarm_lio2_raw/cloud_map",
-    "/robot_b/swarm_lio2_raw/cloud_map",
-    "/robot_a/swarm_lio2_raw/relative_transform",
-    "/robot_b/swarm_lio2_raw/relative_transform"
-  ],
-  "ros_master_uri": "http://127.0.0.1:11312",
-  "rostopic_list_available": true,
+  "native_swarm_lio2_odom_nonzero_rate": false,
+  "native_swarm_lio2_shadow_output_nonzero_rate": false,
+  "nonzero_rate_topics": [],
+  "raw_adapter_nonzero_rate_topics": [],
+  "ros_master_uri": "",
+  "rostopic_list_available": false,
+  "rostopic_list_raw_tail": "permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dros1_hybrid_slam%22%3Atrue%2C%22com.docker.compose.service%3Dros1_hybrid_slam%22%3Atrue%7D%7D\": dial unix /var/run/docker.sock: connect: operation not permitted",
   "schema": "swarm_lio2_topic_discovery/v1",
-  "updated_utc": "2026-05-07T21:35:38Z"
+  "updated_utc": "2026-05-07T22:14:44Z"
 }

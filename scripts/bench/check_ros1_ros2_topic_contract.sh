@@ -6,6 +6,7 @@ MODE="shadow"
 DEPLOYMENT_MODE="${DEPLOYMENT_MODE:-sim_hybrid_ros1_slam_ros2_nav}"
 LOG_JSON="${ROOT}/logs/ros1_ros2_slam_bridge_validation.json"
 LOG_MD="${ROOT}/logs/ros1_ros2_slam_bridge_validation.md"
+DISCOVERY_JSON="${ROOT}/logs/swarm_lio2_topic_discovery.json"
 TOPIC_TIMEOUT_SEC="${TOPIC_TIMEOUT_SEC:-5}"
 RATE_TIMEOUT_SEC="${RATE_TIMEOUT_SEC:-8}"
 MIN_TOPIC_RATE_HZ="${MIN_TOPIC_RATE_HZ:-0.1}"
@@ -31,6 +32,10 @@ while [[ $# -gt 0 ]]; do
       LOG_MD="${2:-}"
       shift 2
       ;;
+    --discovery-json)
+      DISCOVERY_JSON="${2:-}"
+      shift 2
+      ;;
     --no-ros1)
       CHECK_ROS1_TOPICS=false
       shift
@@ -53,6 +58,7 @@ Environment overrides:
   TOPIC_TIMEOUT_SEC         topic list / echo timeout
   RATE_TIMEOUT_SEC          ros2 topic hz timeout
   MIN_TOPIC_RATE_HZ         minimum accepted nonzero rate
+  DISCOVERY_JSON            Swarm-LIO2 native topic discovery JSON
   CHECK_ROS1_TOPICS=false   skip ROS1 topic presence checks
   CHECK_RATES=false         skip ROS2 rate checks
 EOF
@@ -72,7 +78,7 @@ esac
 
 mkdir -p "$(dirname "${LOG_JSON}")" "$(dirname "${LOG_MD}")"
 
-export ROOT MODE DEPLOYMENT_MODE LOG_JSON LOG_MD TOPIC_TIMEOUT_SEC RATE_TIMEOUT_SEC SOURCE
+export ROOT MODE DEPLOYMENT_MODE LOG_JSON LOG_MD DISCOVERY_JSON TOPIC_TIMEOUT_SEC RATE_TIMEOUT_SEC SOURCE
 export MIN_TOPIC_RATE_HZ CHECK_ROS1_TOPICS CHECK_RATES
 
 python3 - <<'PY'
@@ -92,6 +98,7 @@ MODE = os.environ["MODE"]
 DEPLOYMENT_MODE = os.environ["DEPLOYMENT_MODE"]
 LOG_JSON = Path(os.environ["LOG_JSON"])
 LOG_MD = Path(os.environ["LOG_MD"])
+DISCOVERY_JSON = Path(os.environ["DISCOVERY_JSON"])
 TOPIC_TIMEOUT_SEC = float(os.environ["TOPIC_TIMEOUT_SEC"])
 RATE_TIMEOUT_SEC = float(os.environ["RATE_TIMEOUT_SEC"])
 MIN_TOPIC_RATE_HZ = float(os.environ["MIN_TOPIC_RATE_HZ"])
@@ -154,8 +161,8 @@ def expected_ros1_topics() -> list[str]:
     topics = [
         "/robot_a/velodyne_points",
         "/robot_b/velodyne_points",
-        "/robot_a/imu",
-        "/robot_b/imu",
+        "/robot_a/imu/data",
+        "/robot_b/imu/data",
         "/quad1_pcl_render_node/sensor_cloud",
         "/quad2_pcl_render_node/sensor_cloud",
         "/quad_1/imu",
@@ -174,6 +181,15 @@ def expected_ros1_topics() -> list[str]:
         "/robot_b/swarm_lio2_raw/cloud_map",
     ]
     return topics
+
+
+def read_json(path: Path) -> dict:
+    if not path.exists():
+        return {}
+    try:
+        return json.loads(path.read_text())
+    except json.JSONDecodeError as exc:
+        return {"blocker": f"invalid_json:{path}:{exc}"}
 
 
 def expected_ros2_topics() -> list[str]:
@@ -241,6 +257,7 @@ def ros2_field(topic: str, field: str) -> dict:
 
 ros1_ok, ros1_topics, ros1_error = topic_list_ros1()
 ros2_ok, ros2_topics, ros2_error = topic_list_ros2()
+discovery = read_json(DISCOVERY_JSON)
 ros1_expected = expected_ros1_topics()
 ros2_expected = expected_ros2_topics()
 ros1_missing = [] if not CHECK_ROS1_TOPICS else [t for t in ros1_expected if t not in ros1_topics]
@@ -275,6 +292,27 @@ if ros2_missing:
 blockers.extend(rate_blockers)
 blockers.extend(frame_blockers)
 
+bridge_blockers = list(blockers)
+native_source = SOURCE in {"real_swarm_lio2", "real_sensor", "bag_replay", "sim_bridge"}
+native_odom_ok = bool(discovery.get("native_swarm_lio2_odom_nonzero_rate", False))
+native_cloud_registered_ok = bool(discovery.get("native_swarm_lio2_cloud_registered_nonzero_rate", False))
+native_cloud_body_ok = bool(discovery.get("native_swarm_lio2_cloud_body_nonzero_rate", False))
+native_output_ok = native_odom_ok and native_cloud_registered_ok and native_cloud_body_ok
+native_blockers: list[str] = []
+if MODE == "shadow" and native_source:
+    if not discovery:
+        native_blockers.append("native_swarm_lio2_topic_discovery_missing")
+    if not native_odom_ok:
+        native_blockers.append("native_swarm_lio2_odom_zero_rate")
+    if not native_cloud_registered_ok:
+        native_blockers.append("native_swarm_lio2_cloud_registered_zero_rate")
+    if not native_cloud_body_ok:
+        native_blockers.append("native_swarm_lio2_cloud_registered_body_zero_rate")
+blockers.extend(native_blockers)
+bridge_contract_passed = not bridge_blockers
+shadow_slam_passed = MODE == "shadow" and native_source and bridge_contract_passed and native_output_ok
+overall_pass = bridge_contract_passed if SOURCE == "synthetic_contract_test" else not blockers
+
 payload = {
     "schema": "ros1_ros2_slam_bridge_validation/v1",
     "updated_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -282,11 +320,14 @@ payload = {
     "slam_backend": f"swarm_lio2_{MODE}",
     "mode": MODE,
     "source": SOURCE,
-    "pass": not blockers,
-    "bridge_contract_passed": not blockers,
-    "swarm_lio2_shadow_slam_passed": (
-        MODE == "shadow" and SOURCE in {"real_swarm_lio2", "bag_replay", "sim_bridge"} and not blockers
-    ),
+    "pass": overall_pass,
+    "bridge_contract_passed": bridge_contract_passed,
+    "native_swarm_lio2_output_passed": native_output_ok,
+    "swarm_lio2_shadow_slam_passed": shadow_slam_passed,
+    "native_swarm_lio2_odom_nonzero_rate": native_odom_ok,
+    "native_swarm_lio2_cloud_registered_nonzero_rate": native_cloud_registered_ok,
+    "native_swarm_lio2_cloud_body_nonzero_rate": native_cloud_body_ok,
+    "native_swarm_lio2_nonzero_rate_topics": discovery.get("native_swarm_lio2_nonzero_rate_topics", []),
     "ros1_topic_list_available": ros1_ok,
     "ros2_topic_list_available": ros2_ok,
     "ros1_expected_topics": ros1_expected,
@@ -297,6 +338,11 @@ payload = {
     "ros2_missing_topics": ros2_missing,
     "ros2_rate_checks": rate_checks,
     "ros2_frame_checks": frame_checks,
+    "native_topic_discovery": {
+        "path": str(DISCOVERY_JSON),
+        "available": bool(discovery),
+        "blocker": discovery.get("blocker", "") if discovery else "native_swarm_lio2_topic_discovery_missing",
+    },
     "message_rates_nonzero": bool(rate_checks) and all(item["ok"] for item in rate_checks),
     "frames_valid": bool(frame_checks) and all(item["ok"] for item in frame_checks),
     "gt_used_runtime": False,
@@ -317,7 +363,11 @@ LOG_MD.write_text(
         f"- source: `{SOURCE}`",
         f"- pass: `{payload['pass']}`",
         f"- bridge_contract_passed: `{payload['bridge_contract_passed']}`",
+        f"- native_swarm_lio2_output_passed: `{payload['native_swarm_lio2_output_passed']}`",
         f"- swarm_lio2_shadow_slam_passed: `{payload['swarm_lio2_shadow_slam_passed']}`",
+        f"- native_swarm_lio2_odom_nonzero_rate: `{payload['native_swarm_lio2_odom_nonzero_rate']}`",
+        f"- native_swarm_lio2_cloud_registered_nonzero_rate: `{payload['native_swarm_lio2_cloud_registered_nonzero_rate']}`",
+        f"- native_swarm_lio2_cloud_body_nonzero_rate: `{payload['native_swarm_lio2_cloud_body_nonzero_rate']}`",
         f"- ros1_topic_list_available: `{ros1_ok}`",
         f"- ros2_topic_list_available: `{ros2_ok}`",
         f"- ros1_missing_topics: `{','.join(ros1_missing)}`",
