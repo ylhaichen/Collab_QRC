@@ -11,4 +11,4 @@ The integration node `dynamic_lio_filtering_node` supports:
 
 The required metrics fields are published with schema `team_dynamic_filter_metrics/v1`, including `dynamic_filter_backend`, point counts, fallback state, and blocker text.
 
-Current blocker: Dynamic-LIO source is available under `external/dynamic_lio`, but the native filtering runtime artifact is not installed. Only the temporal voxel fallback is validated.
+Current blocker: Dynamic-LIO source is available under `external/dynamic_lio`, but upstream packages are ROS1/catkin and this host does not expose `catkin_make`/`rospack`. Only the temporal voxel fallback is validated.

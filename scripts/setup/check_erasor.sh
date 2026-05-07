@@ -18,7 +18,11 @@ if [[ ! -d "${SRC_DIR}/.git" && ! -d "${SRC_DIR}" ]]; then
 else
   available=true
   if find "${SRC_DIR}" -maxdepth 4 \( -name package.xml -o -name CMakeLists.txt -o -name setup.py \) | grep -q .; then
-    buildable=true
+    if command -v catkin_make >/dev/null 2>&1 && command -v rospack >/dev/null 2>&1; then
+      buildable=true
+    else
+      blocker="ERASOR source exists, but upstream package is ROS1/catkin and this host does not expose catkin_make/rospack"
+    fi
   else
     blocker="ERASOR source exists, but no package.xml/CMakeLists.txt/setup.py was found within depth 4"
   fi

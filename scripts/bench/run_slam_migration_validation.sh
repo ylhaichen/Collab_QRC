@@ -30,6 +30,10 @@ dynamic_validation = (
 swarm_available = swarm_src.exists()
 dynamic_available = dynamic_src.exists()
 erasor_available = erasor_src.exists() or shutil.which("erasor") is not None
+catkin_available = shutil.which("catkin_make") is not None and shutil.which("rospack") is not None
+swarm_buildable = swarm_available and catkin_available
+dynamic_buildable = dynamic_available and catkin_available
+erasor_buildable = erasor_available and catkin_available
 swarm_runtime_ready = Path("install/swarm_lio").exists() or (swarm_src / "devel").exists()
 dynamic_runtime_ready = Path("install/dynamic_lio").exists() or (dynamic_src / "devel").exists()
 erasor_runtime_ready = Path("install/erasor").exists() or (erasor_src / "devel").exists() or shutil.which("erasor") is not None
@@ -44,7 +48,7 @@ shadow = {
     "schema": "swarm_lio2_shadow_validation/v1",
     "slam_backend": "swarm_lio2_shadow",
     "swarm_lio2_source_available": swarm_available,
-    "swarm_lio2_buildable_source": swarm_available,
+    "swarm_lio2_buildable_source": swarm_buildable,
     "swarm_lio2_runtime_ready": swarm_runtime_ready,
     "swarm_lio2_started": False,
     "swarm_lio2_odometry_valid": False,
@@ -53,7 +57,7 @@ shadow = {
     "production_downstream_depends_on_swarm": False,
     "metrics_recorded": True,
     "gt_used_runtime": False,
-    "blocker": "" if swarm_runtime_ready else "Swarm-LIO2 source is available under external/Swarm-LIO2 and adapter wrapper builds, but native runtime artifact is not installed; shadow odometry cannot be validated",
+    "blocker": "" if swarm_runtime_ready else "Swarm-LIO2 source exists under external/Swarm-LIO2, but upstream packages are ROS1/catkin and this host does not expose catkin_make/rospack; shadow odometry cannot be validated",
 }
 write_json(root / "swarm_lio2_shadow_validation.json", shadow)
 
@@ -61,7 +65,7 @@ primary = {
     "schema": "swarm_lio2_primary_validation/v1",
     "slam_backend": "swarm_lio2_primary",
     "swarm_lio2_source_available": swarm_available,
-    "swarm_lio2_buildable_source": swarm_available,
+    "swarm_lio2_buildable_source": swarm_buildable,
     "swarm_lio2_runtime_ready": swarm_runtime_ready,
     "adapter_contract_configured": True,
     "odometry_valid": False,
@@ -73,14 +77,14 @@ primary = {
     "no_overlap_pass": False,
     "gt_used_runtime": False,
     "merged_map_agreement_gated": True,
-    "blocker": "" if swarm_runtime_ready else "Swarm-LIO2 source is available under external/Swarm-LIO2 and adapter wrapper builds, but native runtime artifact is not installed; primary mode cannot be validated",
+    "blocker": "" if swarm_runtime_ready else "Swarm-LIO2 source exists under external/Swarm-LIO2, but upstream packages are ROS1/catkin and this host does not expose catkin_make/rospack; primary mode cannot be validated",
 }
 write_json(root / "swarm_lio2_primary_validation.json", primary)
 
 dynamic = {
     "schema": "dynamic_lio_filter_integration/v1",
     "dynamic_lio_source_available": dynamic_available,
-    "dynamic_lio_buildable_source": dynamic_available,
+    "dynamic_lio_buildable_source": dynamic_buildable,
     "dynamic_lio_runtime_ready": dynamic_runtime_ready,
     "dynamic_filter_backend": "dynamic_lio_wrapper" if dynamic_runtime_ready else "temporal_voxel_fallback",
     "dynamic_points_filtered": int(dynamic_validation.get("dynamic_points_filtered", 0) or 0),
@@ -88,7 +92,7 @@ dynamic = {
     "dynamic_filter_ratio": float(dynamic_validation.get("dynamic_filter_ratio", 0.0) or 0.0),
     "stale_obstacle_decay_time_sec": dynamic_validation.get("stale_obstacle_decay_time_sec"),
     "fallback_used": not dynamic_runtime_ready,
-    "blocker": "" if dynamic_runtime_ready else "Dynamic-LIO source is available under external/dynamic_lio and wrapper feasibility builds, but native filtering runtime artifact is not installed; using temporal voxel fallback only",
+    "blocker": "" if dynamic_runtime_ready else "Dynamic-LIO source exists under external/dynamic_lio, but upstream packages are ROS1/catkin and this host does not expose catkin_make/rospack; using temporal voxel fallback only",
     "gt_used_runtime": False,
 }
 write_json(root / "dynamic_lio_filter_integration.json", dynamic)
@@ -97,7 +101,7 @@ erasor = {
     "schema": "erasor_map_cleanup_validation/v1",
     "static_map_cleanup_backend": "erasor_wrapper" if erasor_runtime_ready else "temporal_voxel_fallback",
     "erasor_source_or_executable_available": erasor_available,
-    "erasor_buildable_source": erasor_available,
+    "erasor_buildable_source": erasor_buildable,
     "erasor_runtime_ready": erasor_runtime_ready,
     "naive_map_contains_dynamic_trace": False,
     "cleaned_map_removes_dynamic_trace": False,
@@ -105,7 +109,7 @@ erasor = {
     "cleaned_map_published": False,
     "control_loop_blocked": False,
     "fallback_used": not erasor_runtime_ready,
-    "blocker": "" if erasor_runtime_ready else "ERASOR source is available under external/ERASOR and adapter wrapper builds, but native runtime artifact is not installed; asynchronous cleanup cannot be validated",
+    "blocker": "" if erasor_runtime_ready else "ERASOR source exists under external/ERASOR, but upstream package is ROS1/catkin and this host does not expose catkin_make/rospack; asynchronous cleanup cannot be validated",
     "gt_used_runtime": False,
 }
 write_json(root / "erasor_map_cleanup_validation.json", erasor)

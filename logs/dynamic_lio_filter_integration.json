@@ -1,8 +1,8 @@
 {
-  "blocker": "Dynamic-LIO source is available under external/dynamic_lio and wrapper feasibility builds, but native filtering runtime artifact is not installed; using temporal voxel fallback only",
+  "blocker": "Dynamic-LIO source exists under external/dynamic_lio, but upstream packages are ROS1/catkin and this host does not expose catkin_make/rospack; using temporal voxel fallback only",
   "dynamic_filter_backend": "temporal_voxel_fallback",
   "dynamic_filter_ratio": 0.14286,
-  "dynamic_lio_buildable_source": true,
+  "dynamic_lio_buildable_source": false,
   "dynamic_lio_runtime_ready": false,
   "dynamic_lio_source_available": true,
   "dynamic_points_filtered": 1,
