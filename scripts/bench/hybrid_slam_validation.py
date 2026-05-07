@@ -60,6 +60,13 @@ def backend_checks(deployment_mode: str) -> tuple[dict, dict, dict]:
     )
 
 
+def swarm_backend_check(deployment_mode: str) -> dict:
+    return run_json(
+        ["bash", "scripts/setup/check_swarm_lio2.sh", backend_check_arg(deployment_mode)],
+        deployment_mode,
+    )
+
+
 def baseline() -> dict:
     data = read_json(LOGS / "cross_loop_closure_final_eval.json", {})
     return {
@@ -104,30 +111,41 @@ def join_blockers(*items: object) -> str:
 
 
 def shadow(deployment_mode: str) -> dict:
-    swarm, _, _ = backend_checks(deployment_mode)
+    swarm = swarm_backend_check(deployment_mode)
     bridge = bridge_contract()
+    source = str(bridge.get("source", "unknown"))
     buildable = bool(swarm.get("buildable", False)) or bool(
         docker_backend_status().get("catkin_workspace_build_success", False)
     )
     runtime_ready = bool(swarm.get("runtime_ready", False)) or docker_launch_smoke_passed()
+    bridge_contract_passed = bool(bridge.get("bridge_contract_passed", False) or bridge.get("pass", False))
     ros2_shadow_odom = (
         topic_present(bridge, "/robot_a/swarm_lio2/Odometry")
         and topic_present(bridge, "/robot_b/swarm_lio2/Odometry")
-        and not bridge.get("blocker", "")
+        and bridge_contract_passed
+    )
+    real_shadow_slam_passed = (
+        runtime_ready
+        and ros2_shadow_odom
+        and source in {"real_swarm_lio2", "bag_replay", "sim_bridge"}
     )
     blocker = join_blockers(
         "" if runtime_ready else swarm.get("blocker", "swarm_lio2_runtime_not_ready"),
         "" if ros2_shadow_odom else bridge.get("blocker", "ros2_shadow_odometry_not_validated"),
+        "" if source != "synthetic_contract_test" else "synthetic_contract_test_does_not_validate_swarm_lio2_slam",
     )
     payload = {
         "schema": "swarm_lio2_shadow_validation/v4",
         "deployment_mode": deployment_mode,
         "slam_backend": "swarm_lio2_shadow",
+        "source": source,
         "swarm_lio2_source_available": bool(swarm.get("available", False)),
         "swarm_lio2_buildable": buildable,
         "swarm_lio2_runtime_ready": runtime_ready,
         "swarm_lio2_started": runtime_ready,
         "ros1_launch_smoke_passed": docker_launch_smoke_passed(),
+        "bridge_contract_passed": bridge_contract_passed,
+        "swarm_lio2_shadow_slam_passed": real_shadow_slam_passed,
         "swarm_lio2_odometry_valid": ros2_shadow_odom,
         "swarm_lio2_relative_state_valid": False,
         "ros2_receives_shadow_odometry": ros2_shadow_odom,
@@ -135,7 +153,7 @@ def shadow(deployment_mode: str) -> dict:
         "production_downstream_depends_on_swarm": False,
         "metrics_recorded": topic_present(bridge, "/team_slam/swarm_lio2_metrics"),
         "gt_used_runtime": False,
-        "pass": bool(runtime_ready and ros2_shadow_odom),
+        "pass": real_shadow_slam_passed,
         "blocker": blocker,
     }
     write_json(LOGS / "swarm_lio2_shadow_validation.json", payload)
@@ -144,7 +162,7 @@ def shadow(deployment_mode: str) -> dict:
 
 
 def primary(deployment_mode: str) -> dict:
-    swarm, _, _ = backend_checks(deployment_mode)
+    swarm = swarm_backend_check(deployment_mode)
     bridge = bridge_contract()
     buildable = bool(swarm.get("buildable", False)) or bool(
         docker_backend_status().get("catkin_workspace_build_success", False)

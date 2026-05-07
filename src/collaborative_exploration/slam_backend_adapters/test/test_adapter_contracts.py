@@ -73,21 +73,50 @@ def test_swarm_lio2_adapter_forwards_synthetic_primary_odometry_contract() -> No
         "relative_transform": 0,
     }
     node.last_seen = {}
+    node.output_odom_frame_id = "robot_a/odom"
+    node.output_child_frame_id = "robot_a/base_link"
 
     msg = Odometry()
-    msg.header.frame_id = "robot_a/map"
-    msg.child_frame_id = "robot_a/base_link"
+    msg.header.frame_id = ""
+    msg.child_frame_id = ""
     msg.pose.pose.position.x = 1.25
     msg.pose.pose.orientation.w = 1.0
 
     SwarmLio2Ros2Adapter._on_odom(node, msg)
 
-    assert node.odom_pub.messages == [msg]
-    assert node.corrected_pub.messages == [msg]
-    assert node.nav_odom_pub.messages == [msg]
+    assert len(node.odom_pub.messages) == 1
+    assert len(node.corrected_pub.messages) == 1
+    assert len(node.nav_odom_pub.messages) == 1
     assert node.forward_counts["odometry"] == 1
-    assert node.odom_pub.messages[0].header.frame_id == "robot_a/map"
+    assert node.odom_pub.messages[0].header.frame_id == "robot_a/odom"
     assert node.odom_pub.messages[0].child_frame_id == "robot_a/base_link"
+
+
+def test_swarm_lio2_adapter_prefers_configurable_topic_aliases() -> None:
+    node = SwarmLio2Ros2Adapter.__new__(SwarmLio2Ros2Adapter)
+    params = {
+        "swarm_lio2_odom_topic": "/custom/odom",
+        "input_odometry_topic": "/legacy/odom",
+        "swarm_lio2_cloud_static_topic": "",
+        "input_cloud_static_topic": "/legacy/cloud_static",
+    }
+    node.get_parameter = lambda name: Param(params.get(name, ""))
+
+    assert (
+        SwarmLio2Ros2Adapter._param_topic(
+            node, "swarm_lio2_odom_topic", "input_odometry_topic", "/fallback/odom"
+        )
+        == "/custom/odom"
+    )
+    assert (
+        SwarmLio2Ros2Adapter._param_topic(
+            node,
+            "swarm_lio2_cloud_static_topic",
+            "input_cloud_static_topic",
+            "/fallback/cloud_static",
+        )
+        == "/legacy/cloud_static"
+    )
 
 
 def test_dynamic_lio_wrapper_forwards_clouds_and_metrics_contract() -> None:

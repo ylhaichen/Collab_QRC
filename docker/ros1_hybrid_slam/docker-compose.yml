@@ -24,6 +24,8 @@ services:
       - DYNAMIC_FILTER_BACKEND=${DYNAMIC_FILTER_BACKEND:-temporal_voxel_fallback}
       - STATIC_MAP_CLEANUP_BACKEND=${STATIC_MAP_CLEANUP_BACKEND:-none}
       - ROBOT_NAMESPACES=${ROBOT_NAMESPACES:-robot_a robot_b}
+      - SWARM_LIO2_FEED_SOURCE=${SWARM_LIO2_FEED_SOURCE:-sim_bridge}
+      - SWARM_LIO2_SYNTHETIC_RATE_HZ=${SWARM_LIO2_SYNTHETIC_RATE_HZ:-5.0}
     volumes:
       - ../../external:/external:ro
       - ../../.local_deps/ros1_hybrid_slam_ws:/catkin_ws

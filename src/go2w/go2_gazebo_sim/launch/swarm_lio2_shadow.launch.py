@@ -16,6 +16,11 @@ def _adapter(ns: str, base_frame: str, use_sim_time, dynamic_filter_backend):
             "slam_backend": "swarm_lio2_shadow",
             "dynamic_filter_backend": dynamic_filter_backend,
             "base_frame": base_frame,
+            "output_odom_frame_id": f"{ns}/odom",
+            "output_child_frame_id": f"{ns}/base_link",
+            "output_map_frame_id": f"{ns}/map",
+            "output_static_cloud_frame_id": f"{ns}/base_link",
+            "output_map_cloud_frame_id": f"{ns}/map",
             "use_sim_time": use_sim_time,
             "publish_tf": False,
         }],
@@ -30,5 +35,5 @@ def generate_launch_description():
         DeclareLaunchArgument("use_sim_time", default_value="true"),
         DeclareLaunchArgument("dynamic_filter_backend", default_value="none"),
         _adapter("robot_a", "base_link", use_sim_time, dynamic_filter_backend),
-        _adapter("robot_b", "b_base_link", use_sim_time, dynamic_filter_backend),
+        _adapter("robot_b", "base_link", use_sim_time, dynamic_filter_backend),
     ])

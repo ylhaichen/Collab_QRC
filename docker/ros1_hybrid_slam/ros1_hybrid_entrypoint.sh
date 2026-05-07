@@ -84,6 +84,8 @@ write_swarm_lio2_collab_wrapper_launch() {
   <node pkg="topic_tools" type="relay" name="swarm_lio2_robot_b_odom_raw" args="/quad2/lidar_slam/odom /robot_b/swarm_lio2_raw/Odometry" output="log" />
   <node pkg="topic_tools" type="relay" name="swarm_lio2_robot_b_static_raw" args="/quad2/cloud_registered_body /robot_b/swarm_lio2_raw/cloud_static" output="log" />
   <node pkg="topic_tools" type="relay" name="swarm_lio2_robot_b_map_raw" args="/quad2/cloud_registered /robot_b/swarm_lio2_raw/cloud_map" output="log" />
+EOF
+  cat >> "${wrapper}" <<'EOF'
 </launch>
 EOF
   printf '%s\n' "${wrapper}"
@@ -128,11 +130,15 @@ echo "  deployment_mode=${DEPLOYMENT_MODE:-sim_hybrid_ros1_slam_ros2_nav}"
 echo "  slam_backend=${SLAM_BACKEND}"
 echo "  dynamic_filter_backend=${DYNAMIC_FILTER_BACKEND}"
 echo "  static_map_cleanup_backend=${STATIC_MAP_CLEANUP_BACKEND}"
+echo "  swarm_lio2_feed_source=${SWARM_LIO2_FEED_SOURCE:-sim_bridge}"
 
 case "${SLAM_BACKEND}" in
   swarm_lio2_shadow|swarm_lio2_primary)
     if roslaunch --files swarm_lio simulation.launch >/dev/null 2>&1; then
       wrapper_launch="$(write_swarm_lio2_collab_wrapper_launch)"
+      if [[ "${SWARM_LIO2_FEED_SOURCE:-sim_bridge}" == "synthetic_contract_test" ]]; then
+        /swarm_lio2_synthetic_contract_feeder.py &
+      fi
       exec roslaunch "${wrapper_launch}"
     fi
     echo "ERROR: swarm_lio simulation.launch not available after catkin build." >&2

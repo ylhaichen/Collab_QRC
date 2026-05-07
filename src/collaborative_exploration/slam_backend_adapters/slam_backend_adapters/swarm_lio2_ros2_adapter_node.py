@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import math
+import copy
 import time
 from typing import Any
 
@@ -29,18 +30,36 @@ class SwarmLio2Ros2Adapter(Node):
         self.declare_parameter("publish_tf", True)
         self.declare_parameter("base_frame", "base_link")
         self.declare_parameter("dynamic_filter_backend", "none")
+        self.declare_parameter("swarm_lio2_odom_topic", "")
+        self.declare_parameter("swarm_lio2_cloud_static_topic", "")
+        self.declare_parameter("swarm_lio2_cloud_map_topic", "")
+        self.declare_parameter("swarm_lio2_relative_transform_topic", "")
         self.declare_parameter("input_odometry_topic", "")
         self.declare_parameter("input_cloud_static_topic", "")
         self.declare_parameter("input_cloud_dynamic_topic", "")
         self.declare_parameter("input_cloud_map_topic", "")
         self.declare_parameter("input_mutual_state_topic", "")
         self.declare_parameter("input_relative_transform_topic", "")
+        self.declare_parameter("output_odom_frame_id", "")
+        self.declare_parameter("output_child_frame_id", "")
+        self.declare_parameter("output_map_frame_id", "")
+        self.declare_parameter("output_static_cloud_frame_id", "")
+        self.declare_parameter("output_map_cloud_frame_id", "")
 
         self.ns = str(self.get_parameter("namespace").value).strip().strip("/")
         self.mode = str(self.get_parameter("slam_backend").value).strip().lower()
         self.contract = adapter_contract_for_mode(self.mode, namespace=self.ns)
         self.dynamic_filter_backend = str(self.get_parameter("dynamic_filter_backend").value)
         self.base_frame = str(self.get_parameter("base_frame").value).strip() or "base_link"
+        self.output_odom_frame_id = self._param_value("output_odom_frame_id", f"{self.ns}/odom")
+        self.output_child_frame_id = self._param_value("output_child_frame_id", f"{self.ns}/base_link")
+        self.output_map_frame_id = self._param_value("output_map_frame_id", f"{self.ns}/map")
+        self.output_static_cloud_frame_id = self._param_value(
+            "output_static_cloud_frame_id", f"{self.ns}/base_link"
+        )
+        self.output_map_cloud_frame_id = self._param_value(
+            "output_map_cloud_frame_id", f"{self.ns}/map"
+        )
         self.publish_tf = bool(self.get_parameter("publish_tf").value)
         self.tf_br = TransformBroadcaster(self) if self.publish_tf and self.mode == "swarm_lio2_primary" else None
         self.last_seen: dict[str, float] = {}
@@ -61,9 +80,16 @@ class SwarmLio2Ros2Adapter(Node):
             f"swarm_lio2_ros2_adapter_node up ns={self.ns} mode={self.mode}"
         )
 
-    def _param_topic(self, name: str, fallback: str) -> str:
+    def _param_value(self, name: str, fallback: str) -> str:
         value = str(self.get_parameter(name).value).strip()
         return value if value else fallback
+
+    def _param_topic(self, primary_name: str, legacy_name: str, fallback: str) -> str:
+        primary = str(self.get_parameter(primary_name).value).strip()
+        if primary:
+            return primary
+        legacy = str(self.get_parameter(legacy_name).value).strip()
+        return legacy if legacy else fallback
 
     def _make_publishers(self) -> None:
         if self.mode == "swarm_lio2_shadow":
@@ -100,37 +126,49 @@ class SwarmLio2Ros2Adapter(Node):
         raw_prefix = f"/{self.ns}/swarm_lio2_raw"
         self.create_subscription(
             Odometry,
-            self._param_topic("input_odometry_topic", f"{raw_prefix}/Odometry"),
+            self._param_topic(
+                "swarm_lio2_odom_topic", "input_odometry_topic", f"{raw_prefix}/Odometry"
+            ),
             self._on_odom,
             20,
         )
         self.create_subscription(
             PointCloud2,
-            self._param_topic("input_cloud_static_topic", f"{raw_prefix}/cloud_static"),
+            self._param_topic(
+                "swarm_lio2_cloud_static_topic",
+                "input_cloud_static_topic",
+                f"{raw_prefix}/cloud_static",
+            ),
             self._on_static_cloud,
             5,
         )
         self.create_subscription(
             PointCloud2,
-            self._param_topic("input_cloud_dynamic_topic", f"{raw_prefix}/cloud_dynamic"),
+            self._param_value("input_cloud_dynamic_topic", f"{raw_prefix}/cloud_dynamic"),
             self._on_dynamic_cloud,
             5,
         )
         self.create_subscription(
             PointCloud2,
-            self._param_topic("input_cloud_map_topic", f"{raw_prefix}/cloud_map"),
+            self._param_topic(
+                "swarm_lio2_cloud_map_topic", "input_cloud_map_topic", f"{raw_prefix}/cloud_map"
+            ),
             self._on_map_cloud,
             5,
         )
         self.create_subscription(
             String,
-            self._param_topic("input_mutual_state_topic", f"{raw_prefix}/mutual_state"),
+            self._param_value("input_mutual_state_topic", f"{raw_prefix}/mutual_state"),
             self._on_mutual_state,
             10,
         )
         self.create_subscription(
             TransformStamped,
-            self._param_topic("input_relative_transform_topic", f"{raw_prefix}/relative_transform"),
+            self._param_topic(
+                "swarm_lio2_relative_transform_topic",
+                "input_relative_transform_topic",
+                f"{raw_prefix}/relative_transform",
+            ),
             self._on_relative_transform,
             10,
         )
@@ -139,27 +177,51 @@ class SwarmLio2Ros2Adapter(Node):
         self.forward_counts[key] += 1
         self.last_seen[key] = stamp_sec if stamp_sec is not None else time.time()
 
+    def _normalize_odom(self, msg: Odometry) -> Odometry:
+        out = copy.deepcopy(msg)
+        out.header.frame_id = self.output_odom_frame_id
+        out.child_frame_id = self.output_child_frame_id
+        return out
+
+    def _normalize_static_cloud(self, msg: PointCloud2) -> PointCloud2:
+        out = copy.deepcopy(msg)
+        out.header.frame_id = self.output_static_cloud_frame_id
+        return out
+
+    def _normalize_map_cloud(self, msg: PointCloud2) -> PointCloud2:
+        out = copy.deepcopy(msg)
+        out.header.frame_id = self.output_map_cloud_frame_id
+        return out
+
+    def _normalize_relative_transform(self, msg: TransformStamped) -> TransformStamped:
+        out = copy.deepcopy(msg)
+        out.header.frame_id = out.header.frame_id or self.output_map_frame_id
+        out.child_frame_id = out.child_frame_id or self.output_child_frame_id
+        return out
+
     def _on_odom(self, msg: Odometry) -> None:
-        self.odom_pub.publish(msg)
+        out = self._normalize_odom(msg)
+        self.odom_pub.publish(out)
         if self.corrected_pub is not None:
-            self.corrected_pub.publish(msg)
+            self.corrected_pub.publish(out)
         if self.nav_odom_pub is not None:
-            self.nav_odom_pub.publish(msg)
+            self.nav_odom_pub.publish(out)
         if self.tf_br is not None:
             tf = TransformStamped()
-            tf.header = msg.header
-            tf.child_frame_id = msg.child_frame_id or self.base_frame
-            tf.transform.translation.x = msg.pose.pose.position.x
-            tf.transform.translation.y = msg.pose.pose.position.y
-            tf.transform.translation.z = msg.pose.pose.position.z
-            tf.transform.rotation = msg.pose.pose.orientation
+            tf.header = out.header
+            tf.child_frame_id = out.child_frame_id
+            tf.transform.translation.x = out.pose.pose.position.x
+            tf.transform.translation.y = out.pose.pose.position.y
+            tf.transform.translation.z = out.pose.pose.position.z
+            tf.transform.rotation = out.pose.pose.orientation
             self.tf_br.sendTransform(tf)
         self._seen("odometry", _stamp_to_sec(msg.header.stamp))
 
     def _on_static_cloud(self, msg: PointCloud2) -> None:
-        self.static_pub.publish(msg)
+        out = self._normalize_static_cloud(msg)
+        self.static_pub.publish(out)
         if self.cloud_registered_pub is not None:
-            self.cloud_registered_pub.publish(msg)
+            self.cloud_registered_pub.publish(out)
         self._seen("cloud_static", _stamp_to_sec(msg.header.stamp))
 
     def _on_dynamic_cloud(self, msg: PointCloud2) -> None:
@@ -168,10 +230,11 @@ class SwarmLio2Ros2Adapter(Node):
         self._seen("cloud_dynamic", _stamp_to_sec(msg.header.stamp))
 
     def _on_map_cloud(self, msg: PointCloud2) -> None:
+        out = self._normalize_map_cloud(msg)
         if self.map_pub is not None:
-            self.map_pub.publish(msg)
+            self.map_pub.publish(out)
         elif self.cloud_registered_pub is not None and self.forward_counts["cloud_static"] == 0:
-            self.cloud_registered_pub.publish(msg)
+            self.cloud_registered_pub.publish(out)
         self._seen("cloud_map", _stamp_to_sec(msg.header.stamp))
 
     def _on_mutual_state(self, msg: String) -> None:
@@ -180,10 +243,11 @@ class SwarmLio2Ros2Adapter(Node):
         self._seen("mutual_state")
 
     def _on_relative_transform(self, msg: TransformStamped) -> None:
+        out = self._normalize_relative_transform(msg)
         if self.relative_pub is not None:
-            self.relative_pub.publish(msg)
+            self.relative_pub.publish(out)
         if self.team_relative_pub is not None:
-            self.team_relative_pub.publish(msg)
+            self.team_relative_pub.publish(out)
         self._seen("relative_transform", _stamp_to_sec(msg.header.stamp))
 
     def _publish_metrics(self) -> None:

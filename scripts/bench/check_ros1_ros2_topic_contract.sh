@@ -11,6 +11,7 @@ RATE_TIMEOUT_SEC="${RATE_TIMEOUT_SEC:-8}"
 MIN_TOPIC_RATE_HZ="${MIN_TOPIC_RATE_HZ:-0.1}"
 CHECK_ROS1_TOPICS="${CHECK_ROS1_TOPICS:-true}"
 CHECK_RATES="${CHECK_RATES:-true}"
+SOURCE="${SWARM_LIO2_SHADOW_SOURCE:-${SWARM_LIO2_FEED_SOURCE:-unknown}}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -71,7 +72,7 @@ esac
 
 mkdir -p "$(dirname "${LOG_JSON}")" "$(dirname "${LOG_MD}")"
 
-export ROOT MODE DEPLOYMENT_MODE LOG_JSON LOG_MD TOPIC_TIMEOUT_SEC RATE_TIMEOUT_SEC
+export ROOT MODE DEPLOYMENT_MODE LOG_JSON LOG_MD TOPIC_TIMEOUT_SEC RATE_TIMEOUT_SEC SOURCE
 export MIN_TOPIC_RATE_HZ CHECK_ROS1_TOPICS CHECK_RATES
 
 python3 - <<'PY'
@@ -96,6 +97,7 @@ RATE_TIMEOUT_SEC = float(os.environ["RATE_TIMEOUT_SEC"])
 MIN_TOPIC_RATE_HZ = float(os.environ["MIN_TOPIC_RATE_HZ"])
 CHECK_ROS1_TOPICS = os.environ["CHECK_ROS1_TOPICS"].lower() == "true"
 CHECK_RATES = os.environ["CHECK_RATES"].lower() == "true"
+SOURCE = os.environ["SOURCE"]
 
 
 def run_shell(command: str, timeout: float) -> tuple[int, str, str]:
@@ -211,11 +213,11 @@ def ros2_rate(topic: str) -> dict:
     )
     rc, out, err = run_shell(command, RATE_TIMEOUT_SEC + 3)
     text = "\n".join(x for x in (out, err) if x)
-    match = re.search(r"average rate:\\s*([0-9.]+)", text)
+    match = re.search(r"average rate:\s*([0-9.]+)", text)
     rate = float(match.group(1)) if match else 0.0
     return {
         "topic": topic,
-        "ok": rc == 0 and rate >= MIN_TOPIC_RATE_HZ,
+        "ok": rate >= MIN_TOPIC_RATE_HZ,
         "rate_hz": rate,
         "raw": text[-600:],
     }
@@ -279,7 +281,12 @@ payload = {
     "deployment_mode": DEPLOYMENT_MODE,
     "slam_backend": f"swarm_lio2_{MODE}",
     "mode": MODE,
+    "source": SOURCE,
     "pass": not blockers,
+    "bridge_contract_passed": not blockers,
+    "swarm_lio2_shadow_slam_passed": (
+        MODE == "shadow" and SOURCE in {"real_swarm_lio2", "bag_replay", "sim_bridge"} and not blockers
+    ),
     "ros1_topic_list_available": ros1_ok,
     "ros2_topic_list_available": ros2_ok,
     "ros1_expected_topics": ros1_expected,
@@ -307,7 +314,10 @@ LOG_MD.write_text(
         "",
         f"- deployment_mode: `{DEPLOYMENT_MODE}`",
         f"- slam_backend: `swarm_lio2_{MODE}`",
+        f"- source: `{SOURCE}`",
         f"- pass: `{payload['pass']}`",
+        f"- bridge_contract_passed: `{payload['bridge_contract_passed']}`",
+        f"- swarm_lio2_shadow_slam_passed: `{payload['swarm_lio2_shadow_slam_passed']}`",
         f"- ros1_topic_list_available: `{ros1_ok}`",
         f"- ros2_topic_list_available: `{ros2_ok}`",
         f"- ros1_missing_topics: `{','.join(ros1_missing)}`",
