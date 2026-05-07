@@ -30,7 +30,8 @@
   "clean_checkpoint_commit": "9fabffd",
   "clean_checkpoint_tag": "v3-status-b-stable-clean",
   "clean_feature_branch": "feature/swarm-lio2-primary-dynamiclio-erasor-clean",
-  "clean_feature_commit": "5c50235",
+  "clean_feature_infrastructure_commit": "207d056",
+  "push_status_record_commit": "ac74ea7",
   "fork_clean_checkpoint_branch_push": {
     "remote": "fork",
     "url": "https://github.com/ylhaichen/Collab_QRC.git",
