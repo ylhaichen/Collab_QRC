@@ -48,6 +48,7 @@
   <exec_depend>team_loop_closure</exec_depend>
   <exec_depend>team_pose_graph_optimizer</exec_depend>
   <exec_depend>dynamic_scene_filter</exec_depend>
+  <exec_depend>slam_backend_adapters</exec_depend>
   
   <export>
     <build_type>ament_cmake</build_type>

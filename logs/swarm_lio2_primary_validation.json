@@ -1,0 +1,18 @@
+{
+  "adapter_contract_configured": true,
+  "blocker": "Swarm-LIO2 source is available under external/Swarm-LIO2 and adapter wrapper builds, but native runtime artifact is not installed; primary mode cannot be validated",
+  "cloud_static_or_registered_valid": false,
+  "corrected_odom_valid": false,
+  "gt_used_runtime": false,
+  "merged_map_agreement_gated": true,
+  "nav2_runtime_valid": false,
+  "no_overlap_pass": false,
+  "odometry_valid": false,
+  "overlap_pass": false,
+  "schema": "swarm_lio2_primary_validation/v1",
+  "slam_backend": "swarm_lio2_primary",
+  "swarm_lio2_buildable_source": true,
+  "swarm_lio2_runtime_ready": false,
+  "swarm_lio2_source_available": true,
+  "team_loop_closure_keyframes_valid": false
+}

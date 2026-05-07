@@ -1,0 +1,15 @@
+{
+  "blocker": "ERASOR source is available under external/ERASOR and adapter wrapper builds, but native runtime artifact is not installed; asynchronous cleanup cannot be validated",
+  "cleaned_map_published": false,
+  "cleaned_map_removes_dynamic_trace": false,
+  "control_loop_blocked": false,
+  "erasor_buildable_source": true,
+  "erasor_runtime_ready": false,
+  "erasor_source_or_executable_available": true,
+  "fallback_used": true,
+  "gt_used_runtime": false,
+  "naive_map_contains_dynamic_trace": false,
+  "schema": "erasor_map_cleanup_validation/v1",
+  "static_map_cleanup_backend": "temporal_voxel_fallback",
+  "static_walls_preserved": false
+}

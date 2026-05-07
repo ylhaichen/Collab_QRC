@@ -1,0 +1,38 @@
+{
+  "schema": "external_slam_backend_fetch_status/v1",
+  "swarm_lio2": {
+    "url": "https://github.com/hku-mars/Swarm-LIO2.git",
+    "source_dir": "external/Swarm-LIO2",
+    "available_locally": true,
+    "revision": "a5f751a",
+    "available": true,
+    "buildable": true,
+    "runtime_ready": false,
+    "blocker": "Swarm-LIO2 source is present and appears buildable, but no installed runtime artifact was found under install/"
+  },
+  "dynamic_lio": {
+    "url": "https://github.com/ZikangYuan/dynamic_lio.git",
+    "source_dir": "external/dynamic_lio",
+    "available_locally": true,
+    "revision": "4e91af4",
+    "available": true,
+    "buildable": true,
+    "runtime_ready": false,
+    "blocker": "Dynamic-LIO source is present and appears buildable, but no installed filtering/runtime artifact was found under install/"
+  },
+  "erasor": {
+    "url": "https://github.com/LimHyungTae/ERASOR.git",
+    "source_dir": "external/ERASOR",
+    "available_locally": true,
+    "revision": "ad7e4dc",
+    "available": true,
+    "buildable": true,
+    "runtime_ready": false,
+    "blocker": "ERASOR source is present and appears buildable, but no installed runtime artifact was found under install/"
+  },
+  "fetch_attempted": true,
+  "fetch_success": true,
+  "initial_sandbox_error": "fatal: unable to access 'https://github.com/hku-mars/Swarm-LIO2.git/': Could not resolve host: github.com",
+  "transient_erasor_fetch_error": "fatal: unable to access 'https://github.com/LimHyungTae/ERASOR.git/': Failed to connect to github.com port 443 after 1024 ms: Connection refused",
+  "final_blocker": "External sources are now present under external/, but native backend runtime artifacts are not installed; Fast-LIO remains production backend."
+}

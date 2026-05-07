@@ -1,0 +1,29 @@
+{
+  "checkpoint_branch": "checkpoint/v3-status-b-stable",
+  "checkpoint_commit": "f8fa9f8",
+  "checkpoint_tag": "v3-status-b-stable",
+  "fork_branch_push": {
+    "remote": "fork",
+    "url": "https://github.com/ylhaichen/Collab_QRC.git",
+    "success": false,
+    "reason": "remote rejected checkpoint/v3-status-b-stable: GH001 large files detected; logs/cross_loop_overlap_runtime_pass/robust_loop_inliers.jsonl is 963.36 MB and logs/cross_loop_no_overlap_runtime_pass/robust_loop_inliers.jsonl is 950.38 MB, exceeding GitHub's 100.00 MB file size limit"
+  },
+  "fork_tag_push": {
+    "remote": "fork",
+    "url": "https://github.com/ylhaichen/Collab_QRC.git",
+    "success": false,
+    "reason": "remote rejected v3-status-b-stable: GH001 large files detected; logs/cross_loop_overlap_runtime_pass/robust_loop_inliers.jsonl is 963.36 MB and logs/cross_loop_no_overlap_runtime_pass/robust_loop_inliers.jsonl is 950.38 MB, exceeding GitHub's 100.00 MB file size limit"
+  },
+  "origin_branch_push": {
+    "remote": "origin",
+    "url": "https://github.com/HanshangZhu/Collab_QRC.git",
+    "success": false,
+    "reason": "remote: Permission to HanshangZhu/Collab_QRC.git denied to ylhaichen; HTTP 403"
+  },
+  "origin_tag_push": {
+    "remote": "origin",
+    "url": "https://github.com/HanshangZhu/Collab_QRC.git",
+    "success": false,
+    "reason": "remote: Permission to HanshangZhu/Collab_QRC.git denied to ylhaichen; HTTP 403"
+  }
+}

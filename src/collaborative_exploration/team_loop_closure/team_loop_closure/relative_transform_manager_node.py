@@ -11,6 +11,11 @@ from std_msgs.msg import String
 from tf2_ros import TransformBroadcaster
 
 from .common import dumps_compact, loads_dict, quat_from_yaw, se2_from_xyyaw, wrap_pi, xyyaw_from_se2
+from .swarm_loop_agreement import (
+    SwarmLoopAgreementResult,
+    evaluate_swarm_loop_agreement,
+    se2_from_transform_msg,
+)
 
 
 class RelativeTransformManager(Node):
@@ -25,6 +30,13 @@ class RelativeTransformManager(Node):
         self.declare_parameter("parent_frame", "robot_a/map")
         self.declare_parameter("child_frame", "robot_b/map")
         self.declare_parameter("team_alignment_allow_export_only_gate", False)
+        self.declare_parameter("require_swarm_loop_agreement", False)
+        self.declare_parameter(
+            "swarm_loop_relative_transform_topic",
+            "/team_slam/swarm_lio2_relative_transform",
+        )
+        self.declare_parameter("swarm_loop_agreement_max_translation", 0.5)
+        self.declare_parameter("swarm_loop_agreement_max_yaw_deg", 5.0)
         self.declare_parameter("alignment_reject_timeout_sec", 60.0)
         self.declare_parameter("alignment_reject_min_verified_matches", 7)
         self.declare_parameter("publish_rate_hz", 2.0)
@@ -39,6 +51,18 @@ class RelativeTransformManager(Node):
         self.allow_export_only = bool(
             self.get_parameter("team_alignment_allow_export_only_gate").value
         )
+        self.require_swarm_agreement = bool(
+            self.get_parameter("require_swarm_loop_agreement").value
+        )
+        self.swarm_relative_topic = str(
+            self.get_parameter("swarm_loop_relative_transform_topic").value
+        )
+        self.swarm_max_translation = float(
+            self.get_parameter("swarm_loop_agreement_max_translation").value
+        )
+        self.swarm_max_yaw_rad = math.radians(
+            float(self.get_parameter("swarm_loop_agreement_max_yaw_deg").value)
+        )
         self.reject_timeout_sec = float(self.get_parameter("alignment_reject_timeout_sec").value)
         self.reject_min_verified_matches = int(
             self.get_parameter("alignment_reject_min_verified_matches").value
@@ -47,6 +71,8 @@ class RelativeTransformManager(Node):
 
         self.robust_payload: dict[str, Any] | None = None
         self.metrics_payload: dict[str, Any] | None = None
+        self.swarm_transform: np.ndarray | None = None
+        self.swarm_agreement: SwarmLoopAgreementResult | None = None
         self.first_robust_stamp_sec: float | None = None
         self.status = "unaligned"
         self.last_reason = "waiting_for_robust_loop_inliers"
@@ -54,6 +80,12 @@ class RelativeTransformManager(Node):
 
         self.create_subscription(String, self.robust_topic, self._on_robust, 10)
         self.create_subscription(String, self.metrics_topic, self._on_metrics, 10)
+        self.create_subscription(
+            TransformStamped,
+            self.swarm_relative_topic,
+            self._on_swarm_relative_transform,
+            10,
+        )
         self.status_pub = self.create_publisher(String, self.status_topic, 10)
         self.tf_pub = self.create_publisher(TransformStamped, self.relative_topic, 10)
         self.tf_br = TransformBroadcaster(self) if self.publish_tf else None
@@ -79,6 +111,9 @@ class RelativeTransformManager(Node):
         if payload and payload.get("schema") == "team_pose_graph_metrics/v1":
             self.metrics_payload = payload
 
+    def _on_swarm_relative_transform(self, msg: TransformStamped) -> None:
+        self.swarm_transform = se2_from_transform_msg(msg)
+
     def _transform_from_robust(self) -> np.ndarray | None:
         payload = self.robust_payload or {}
         tf = payload.get("transform", {})
@@ -91,6 +126,7 @@ class RelativeTransformManager(Node):
         robust = self.robust_payload or {}
         metrics = self.metrics_payload or {}
         self.current_transform = self._transform_from_robust()
+        self.swarm_agreement = None
         robust_accepted = bool(robust.get("accepted", False)) and robust.get("status") == "accepted"
         gt_used = bool(robust.get("gt_used_runtime", False)) or bool(metrics.get("gt_used_runtime", False))
         backend = str(metrics.get("optimization_backend", "unknown"))
@@ -145,12 +181,33 @@ class RelativeTransformManager(Node):
                 if backend == "g2o_export_only"
                 else "pose_graph_optimization_not_successful"
             )
+        elif self.require_swarm_agreement and self.current_transform is None:
+            self.status = "tentative"
+            self.last_reason = "waiting_for_team_loop_transform"
+        elif self.require_swarm_agreement and self.swarm_transform is None:
+            self.status = "tentative"
+            self.last_reason = "waiting_for_swarm_lio2_relative_transform"
         else:
+            if self.require_swarm_agreement:
+                self.swarm_agreement = evaluate_swarm_loop_agreement(
+                    self.swarm_transform,
+                    self.current_transform,
+                    max_translation_m=self.swarm_max_translation,
+                    max_yaw_rad=self.swarm_max_yaw_rad,
+                )
+                if not self.swarm_agreement.accepted:
+                    self.status = "rejected"
+                    self.last_reason = self.swarm_agreement.reason
+                    return
             self.status = "aligned"
             self.last_reason = (
-                "robust_alignment_and_pose_graph_accepted"
-                if optimization_success
-                else "robust_alignment_export_only_gate_accepted"
+                "robust_alignment_pose_graph_and_swarm_agreement_accepted"
+                if self.require_swarm_agreement
+                else (
+                    "robust_alignment_and_pose_graph_accepted"
+                    if optimization_success
+                    else "robust_alignment_export_only_gate_accepted"
+                )
             )
 
     def _transform_msg(self, transform: np.ndarray) -> TransformStamped:
@@ -196,6 +253,21 @@ class RelativeTransformManager(Node):
             "reject_reason": robust.get("reject_reason", ""),
             "pose_graph_backend": metrics.get("optimization_backend", "unknown"),
             "pose_graph_optimization_success": bool(metrics.get("optimization_success", False)),
+            "swarm_loop_agreement_required": self.require_swarm_agreement,
+            "swarm_loop_agreement_accepted": (
+                bool(self.swarm_agreement.accepted) if self.swarm_agreement is not None else False
+            ),
+            "swarm_loop_agreement_reason": (
+                self.swarm_agreement.reason if self.swarm_agreement is not None else ""
+            ),
+            "swarm_loop_translation_error_m": (
+                round(float(self.swarm_agreement.translation_error_m), 5)
+                if self.swarm_agreement is not None else None
+            ),
+            "swarm_loop_yaw_error_deg": (
+                round(float(self.swarm_agreement.yaw_error_deg), 5)
+                if self.swarm_agreement is not None else None
+            ),
             "gt_used_runtime": bool(robust.get("gt_used_runtime", False))
             or bool(metrics.get("gt_used_runtime", False)),
         }

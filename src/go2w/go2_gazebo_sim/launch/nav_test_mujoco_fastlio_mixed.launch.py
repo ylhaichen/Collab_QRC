@@ -415,6 +415,8 @@ def _build_fastlio_nav_stack(
     loop_closure_backend: str = "auto",
     bootstrap_from_gt: bool = True,
     peer_obstacle_enabled: bool = False,
+    slam_backend: str = "fast_lio_scpgo",
+    dynamic_filter_backend: str = "none",
 ):
     """Per-robot Fast-LIO + octomap + FAR nav stack.
 
@@ -627,8 +629,8 @@ def _build_fastlio_nav_stack(
             )
         )
 
-    # ── Fast-LIO2 SLAM ──
-    slam_nodes = [
+    # ── Primary / shadow SLAM backend ──
+    fastlio_slam_nodes = [
         Node(
             package="fast_lio",
             executable="fastlio_mapping",
@@ -694,6 +696,31 @@ def _build_fastlio_nav_stack(
             output="screen",
         ),
     ]
+    swarm_adapter_node = Node(
+        package="slam_backend_adapters",
+        executable="swarm_lio2_ros2_adapter_node",
+        namespace=ns,
+        name="swarm_lio2_ros2_adapter_node",
+        parameters=[{
+            "use_sim_time": use_sim_time,
+            "namespace": ns,
+            "slam_backend": slam_backend,
+            "base_frame": base_frame,
+            "dynamic_filter_backend": dynamic_filter_backend,
+            "publish_tf": True,
+        }],
+        remappings=[
+            ("/tf", f"/{ns}/tf"),
+            ("/tf_static", f"/{ns}/tf_static"),
+        ],
+        output="screen",
+    )
+    if slam_backend == "swarm_lio2_primary":
+        slam_nodes = [swarm_adapter_node]
+    elif slam_backend == "swarm_lio2_shadow":
+        slam_nodes = [*fastlio_slam_nodes, swarm_adapter_node]
+    else:
+        slam_nodes = fastlio_slam_nodes
     actions.append(TimerAction(period=slam_delay, actions=slam_nodes))
 
     # ── Optional: SC-PGO loop-closure post-processor on top of Fast-LIO ──
@@ -705,7 +732,7 @@ def _build_fastlio_nav_stack(
     #   ros1_bridge  - Docker owns ROS 1 SC-PGO; this launch only converts
     #                   bridged /<ns>/sc_pgo/pose_stamped into
     #                   /<ns>/corrected_odom (nav_msgs/Odometry).
-    if loop_closure:
+    if loop_closure and slam_backend != "swarm_lio2_primary":
         def _launch_ros1_bridge_adapter(reason: str) -> None:
             adapter_path = os.path.join(
                 _ws_root, "scripts", "runtime", "scpgo_pose_to_odom_adapter.py"
@@ -1848,6 +1875,21 @@ def _launch_setup(context):
     debug = _as_bool(_get(context, "debug"))
     loop_closure_on = _as_bool(_get(context, "loop_closure"))
     loop_closure_backend = (_get(context, "loop_closure_backend").strip().lower() or "auto")
+    slam_backend = (_get(context, "slam_backend").strip().lower() or "fast_lio_scpgo")
+    dynamic_filter_backend = (
+        _get(context, "dynamic_filter_backend").strip().lower() or "none"
+    )
+    static_map_cleanup_backend = (
+        _get(context, "static_map_cleanup_backend").strip().lower() or "none"
+    )
+    erasor_trigger_mode = (_get(context, "erasor_trigger_mode").strip().lower() or "manual")
+    require_swarm_loop_agreement = _as_bool(_get(context, "require_swarm_loop_agreement"))
+    swarm_loop_agreement_max_translation = float(
+        _get(context, "swarm_loop_agreement_max_translation").strip() or "0.5"
+    )
+    swarm_loop_agreement_max_yaw_deg = float(
+        _get(context, "swarm_loop_agreement_max_yaw_deg").strip() or "5.0"
+    )
     map_merge_enabled = _as_bool(_get(context, "map_merge"))
     relative_pose_source = (_get(context, "relative_pose_source").strip().lower() or "none")
     inter_robot_loop_closure = _as_bool(_get(context, "inter_robot_loop_closure"))
@@ -1904,8 +1946,11 @@ def _launch_setup(context):
     team_alignment_allow_export_only_gate = _as_bool(
         _get(context, "team_alignment_allow_export_only_gate")
     )
-    use_dynamic_filter = _as_bool(_get(context, "use_dynamic_filter")) or _as_bool(
-        _get(context, "dynamic_filter_enabled")
+    use_dynamic_filter = (
+        _as_bool(_get(context, "use_dynamic_filter"))
+        or _as_bool(_get(context, "dynamic_filter_enabled"))
+        or dynamic_filter_backend != "none"
+        or slam_backend == "swarm_lio2_primary"
     )
     decentralized_mode = _as_bool(_get(context, "decentralized_mode"))
     robot_id = _get(context, "robot_id").strip().strip("/") or "robot_a"
@@ -1977,6 +2022,26 @@ def _launch_setup(context):
         raise ValueError(
             "loop_closure_backend must be 'auto' | 'ros2_sc_pgo' | "
             f"'ros1_bridge', got '{loop_closure_backend}'")
+    if slam_backend not in {"fast_lio_scpgo", "swarm_lio2_shadow", "swarm_lio2_primary"}:
+        raise ValueError(
+            "slam_backend must be 'fast_lio_scpgo' | 'swarm_lio2_shadow' | "
+            f"'swarm_lio2_primary', got '{slam_backend}'")
+    if dynamic_filter_backend not in {
+        "dynamic_lio_port",
+        "dynamic_lio_wrapper",
+        "temporal_voxel_fallback",
+        "none",
+    }:
+        raise ValueError(
+            "dynamic_filter_backend must be 'dynamic_lio_port' | 'dynamic_lio_wrapper' | "
+            f"'temporal_voxel_fallback' | 'none', got '{dynamic_filter_backend}'")
+    if static_map_cleanup_backend not in {"erasor_wrapper", "temporal_voxel_fallback", "none"}:
+        raise ValueError(
+            "static_map_cleanup_backend must be 'erasor_wrapper' | "
+            f"'temporal_voxel_fallback' | 'none', got '{static_map_cleanup_backend}'")
+    if erasor_trigger_mode not in {"manual", "periodic", "benchmark"}:
+        raise ValueError(
+            f"erasor_trigger_mode must be 'manual' | 'periodic' | 'benchmark', got '{erasor_trigger_mode}'")
     if team_pose_graph_backend not in {"auto", "gtsam", "gtsam_python", "gtsam_cpp", "g2o_export_only"}:
         raise ValueError(
             "team_pose_graph_backend must be 'auto' | 'gtsam' | 'gtsam_python' | 'gtsam_cpp' | "
@@ -2049,6 +2114,11 @@ def _launch_setup(context):
     sim_ns = "mujoco_sim"
 
     actions = [LogInfo(msg="[nav_test_mujoco_fastlio_mixed] starting heterogeneous dual-robot nav (Go2W + Go2)")]
+    actions.append(LogInfo(msg=(
+        f"[nav_test_mujoco_fastlio_mixed] slam_backend:={slam_backend} "
+        f"dynamic_filter_backend:={dynamic_filter_backend} "
+        f"static_map_cleanup_backend:={static_map_cleanup_backend}"
+    )))
     actions.append(LogInfo(msg=(
         f"[nav_test_mujoco_fastlio_mixed] relative_pose_source:={relative_pose_source} "
         f"bootstrap_from_gt:={'true' if slam_bootstrap_from_gt else 'false'} "
@@ -2229,6 +2299,8 @@ def _launch_setup(context):
             loop_closure_backend=loop_closure_backend,
             bootstrap_from_gt=slam_bootstrap_from_gt,
             peer_obstacle_enabled=peer_obstacle_enabled,
+            slam_backend=slam_backend,
+            dynamic_filter_backend=dynamic_filter_backend,
         )
     )
     actions.extend(
@@ -2264,6 +2336,8 @@ def _launch_setup(context):
             loop_closure_backend=loop_closure_backend,
             bootstrap_from_gt=slam_bootstrap_from_gt,
             peer_obstacle_enabled=peer_obstacle_enabled,
+            slam_backend=slam_backend,
+            dynamic_filter_backend=dynamic_filter_backend,
         )
     )
 
@@ -2273,23 +2347,21 @@ def _launch_setup(context):
         keyframe_input_cloud_topic = "cloud_static" if use_dynamic_filter else "cloud_registered_body"
         team_alignment_nodes = []
         if use_dynamic_filter:
+            selected_dynamic_backend = (
+                dynamic_filter_backend
+                if dynamic_filter_backend != "none"
+                else "temporal_voxel_fallback"
+            )
             team_alignment_nodes.extend([
                 Node(
-                    package="dynamic_scene_filter",
-                    executable="dynamic_obstacle_filter_node",
-                    name="dynamic_obstacle_filter_node",
+                    package="slam_backend_adapters",
+                    executable="dynamic_lio_filtering_node",
+                    name="dynamic_lio_filtering_node",
                     parameters=[{
                         "use_sim_time": use_sim_time,
                         "namespaces": ["robot_a", "robot_b"],
-                        "dynamic_filter_enabled": True,
+                        "dynamic_filter_backend": selected_dynamic_backend,
                     }],
-                    output="screen",
-                ),
-                Node(
-                    package="dynamic_scene_filter",
-                    executable="dynamic_voxel_decay_map_node",
-                    name="dynamic_voxel_decay_map_node",
-                    parameters=[{"use_sim_time": use_sim_time}],
                     output="screen",
                 ),
             ])
@@ -2444,6 +2516,19 @@ def _launch_setup(context):
                             "parent_frame": "robot_a/map",
                             "child_frame": "robot_b/map",
                             "team_alignment_allow_export_only_gate": team_alignment_allow_export_only_gate,
+                            "require_swarm_loop_agreement": (
+                                require_swarm_loop_agreement
+                                and slam_backend == "swarm_lio2_primary"
+                            ),
+                            "swarm_loop_relative_transform_topic": (
+                                "/team_slam/swarm_lio2_relative_transform"
+                            ),
+                            "swarm_loop_agreement_max_translation": (
+                                swarm_loop_agreement_max_translation
+                            ),
+                            "swarm_loop_agreement_max_yaw_deg": (
+                                swarm_loop_agreement_max_yaw_deg
+                            ),
                             "alignment_reject_timeout_sec": alignment_reject_timeout_sec,
                             "alignment_reject_min_verified_matches": alignment_reject_min_verified_matches,
                             "publish_tf": False,
@@ -2455,6 +2540,31 @@ def _launch_setup(context):
             TimerAction(
                 period=slam_delay + 4.0,
                 actions=team_alignment_nodes,
+            )
+        )
+    if static_map_cleanup_backend != "none":
+        actions.append(
+            TimerAction(
+                period=slam_delay + 8.0,
+                actions=[
+                    Node(
+                        package="slam_backend_adapters",
+                        executable="erasor_adapter_node",
+                        name="erasor_adapter_node",
+                        parameters=[{
+                            "use_sim_time": use_sim_time,
+                            "namespaces": ["robot_a", "robot_b"],
+                            "static_map_cleanup_backend": static_map_cleanup_backend,
+                            "erasor_trigger_mode": erasor_trigger_mode,
+                            "export_dir": (
+                                os.path.join(loop_risk_output_dir, "erasor")
+                                if loop_risk_output_dir
+                                else os.path.join(str(workspace_root), "logs", "erasor")
+                            ),
+                        }],
+                        output="screen",
+                    ),
+                ],
             )
         )
 
@@ -3014,6 +3124,28 @@ def generate_launch_description():
             "registration_backend", default_value="icp_2d",
             description="Cross-robot registration backend interface. v2 keeps self-contained icp_2d only.",
         ),
+        DeclareLaunchArgument(
+            "slam_backend", default_value="fast_lio_scpgo",
+            description="fast_lio_scpgo | swarm_lio2_shadow | swarm_lio2_primary.",
+        ),
+        DeclareLaunchArgument(
+            "dynamic_filter_backend", default_value="none",
+            description="dynamic_lio_port | dynamic_lio_wrapper | temporal_voxel_fallback | none.",
+        ),
+        DeclareLaunchArgument(
+            "static_map_cleanup_backend", default_value="none",
+            description="erasor_wrapper | temporal_voxel_fallback | none.",
+        ),
+        DeclareLaunchArgument(
+            "erasor_trigger_mode", default_value="manual",
+            description="manual | periodic | benchmark.",
+        ),
+        DeclareLaunchArgument(
+            "require_swarm_loop_agreement", default_value="true",
+            description="Require Swarm-LIO2 mutual transform to agree with robust loop closure in swarm_lio2_primary mode.",
+        ),
+        DeclareLaunchArgument("swarm_loop_agreement_max_translation", default_value="0.5"),
+        DeclareLaunchArgument("swarm_loop_agreement_max_yaw_deg", default_value="5.0"),
         DeclareLaunchArgument(
             "robust_min_inliers", default_value="7",
             description="Robust inter-robot loop inlier set size required before accepted alignment.",

@@ -220,6 +220,9 @@ realtek-r8126-dkms/
 
 # External SLAM backends may be submodules or local clones; never track
 # their datasets, generated maps, or build products.
+/external/Swarm-LIO2/
+/external/dynamic_lio/
+/external/ERASOR/
 /external/*/build/
 /external/*/devel/
 /external/*/install/
