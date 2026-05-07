@@ -2,70 +2,52 @@
 set -euo pipefail
 
 WS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# shellcheck source=scripts/setup/backend_check_common.sh
+source "${WS_DIR}/scripts/setup/backend_check_common.sh"
+
 SRC_DIR="${SWARM_LIO2_SOURCE_DIR:-${WS_DIR}/external/Swarm-LIO2}"
-DEPLOYMENT_MODE="${DEPLOYMENT_MODE:-${1:-sim_hybrid_ros1_slam_ros2_nav}}"
-SIM_WS="${ROS1_HYBRID_WS:-${WS_DIR}/.local_deps/ros1_hybrid_slam_ws}"
+DEPLOYMENT_MODE="${DEPLOYMENT_MODE:-}"
+REQUESTED_STRATEGY=""
 
-json_escape() { printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'; }
-
-available=false
-buildable=false
-runtime_ready=false
-docker_cli_available=false
-docker_daemon_available=false
-native_catkin_available=false
-blocker=""
-
-[[ -d "${SRC_DIR}/.git" || -d "${SRC_DIR}" ]] && available=true
-if command -v docker >/dev/null 2>&1; then
-  docker_cli_available=true
-  docker info >/dev/null 2>&1 && docker_daemon_available=true || true
-fi
-if [[ -f /opt/ros/noetic/setup.bash ]] && command -v catkin_make >/dev/null 2>&1 && command -v rospack >/dev/null 2>&1; then
-  native_catkin_available=true
-fi
-
-if [[ "${available}" != true ]]; then
-  blocker="Swarm-LIO2 source not found at ${SRC_DIR}; run scripts/setup/fetch_slam_backends.sh"
-else
-  case "${DEPLOYMENT_MODE}" in
-    sim_hybrid_ros1_slam_ros2_nav|sim_ros2)
-      if [[ "${docker_cli_available}" == true && "${docker_daemon_available}" == true ]]; then
-        buildable=true
-      else
-        blocker="Swarm-LIO2 source exists, but sim hybrid build requires Docker daemon access for ROS1/Noetic catkin"
-      fi
+for arg in "$@"; do
+  case "${arg}" in
+    --host)
+      REQUESTED_STRATEGY="host_noetic_catkin"
       ;;
-    real_hybrid_ros1_slam_ros2_nav|real_ros1_only_experimental)
-      if [[ "${native_catkin_available}" == true ]]; then
-        buildable=true
-      else
-        blocker="Swarm-LIO2 source exists, but real hybrid build requires ROS1 Noetic, catkin_make, and rospack on the onboard host"
-      fi
+    --docker)
+      REQUESTED_STRATEGY="docker_catkin"
+      ;;
+    --help|-h)
+      cat <<'EOF'
+Usage: scripts/setup/check_swarm_lio2.sh [--host|--docker] [deployment_mode]
+
+Prints backend availability JSON without claiming runtime success.
+EOF
+      exit 0
       ;;
     *)
-      blocker="unsupported deployment_mode=${DEPLOYMENT_MODE}"
+      DEPLOYMENT_MODE="${arg}"
       ;;
+  esac
+done
+
+if [[ -z "${DEPLOYMENT_MODE}" ]]; then
+  case "${REQUESTED_STRATEGY}" in
+    host_noetic_catkin) DEPLOYMENT_MODE="real_hybrid_ros1_slam_ros2_nav" ;;
+    *) DEPLOYMENT_MODE="sim_hybrid_ros1_slam_ros2_nav" ;;
   esac
 fi
 
-if [[ -f "${SIM_WS}/devel/setup.bash" || -d "${SRC_DIR}/devel" || -d "${SRC_DIR}/install" ]]; then
-  runtime_ready=true
-elif [[ -z "${blocker}" ]]; then
-  blocker="Swarm-LIO2 source is buildable for ${DEPLOYMENT_MODE}, but no ROS1 runtime artifact was found"
-fi
+STRATEGY="$(backend_check_resolve_strategy "${REQUESTED_STRATEGY}" "${DEPLOYMENT_MODE}")"
+WORKSPACE_PATH="${ROS1_HYBRID_WS:-${WS_DIR}/.local_deps/ros1_hybrid_slam_ws}"
 
-cat <<EOF
-{
-  "backend": "Swarm-LIO2",
-  "deployment_mode": "$(json_escape "${DEPLOYMENT_MODE}")",
-  "source_dir": "$(json_escape "${SRC_DIR}")",
-  "available": ${available},
-  "buildable": ${buildable},
-  "runtime_ready": ${runtime_ready},
-  "docker_cli_available": ${docker_cli_available},
-  "docker_daemon_available": ${docker_daemon_available},
-  "native_catkin_available": ${native_catkin_available},
-  "blocker": "$(json_escape "${blocker}")"
-}
-EOF
+backend_check_emit \
+  "swarm_lio2" \
+  "Swarm-LIO2" \
+  "${STRATEGY}" \
+  "${DEPLOYMENT_MODE}" \
+  "${SRC_DIR}" \
+  "${SRC_DIR}/swarm_lio/package.xml" \
+  "${SRC_DIR}/swarm_lio/launch/simulation.launch" \
+  "ros-noetic-pcl-ros, ros-noetic-tf, ros-noetic-cv-bridge, Livox SDK, swarm_msgs, udp_bridge" \
+  "${WORKSPACE_PATH}"

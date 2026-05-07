@@ -19,8 +19,10 @@
   "claim": "Fast-LIO remains production backend; sim hybrid Swarm-LIO2 primary is not validated.",
   "deployment_mode": "sim_hybrid_ros1_slam_ros2_nav",
   "docker_backend_build_blocker": "ROS1 hybrid Docker image build passed, but container catkin build could not be executed because the escalated Docker compose run was rejected by approval reviewer: Automatic approval review failed: usage limit hit; try again after 6:46 PM or with explicit user approval. Swarm-LIO2/Dynamic-LIO/ERASOR source-level build and runtime are not validated.",
+  "docker_image_build_passed": true,
+  "docker_run_blocked": true,
   "dynamic_filter": {
-    "blocker": "Dynamic-LIO source exists, but sim hybrid build requires Docker daemon access for ROS1/Noetic catkin",
+    "blocker": "docker_run_blocked_by_environment",
     "deployment_mode": "sim_hybrid_ros1_slam_ros2_nav",
     "dynamic_filter_backend": "temporal_voxel_fallback",
     "dynamic_filter_ratio": 0.14286,
@@ -35,7 +37,7 @@
     "static_points_kept": 6
   },
   "erasor_cleanup": {
-    "blocker": "ERASOR source exists, but sim hybrid build requires Docker daemon access for ROS1/Noetic catkin",
+    "blocker": "docker_run_blocked_by_environment",
     "cleaned_map_published": false,
     "cleaned_map_removes_dynamic_trace": false,
     "control_loop_blocked": false,
@@ -51,10 +53,17 @@
     "static_walls_preserved": false
   },
   "final_status": "Status D \u2014 External Blocker",
+  "implemented_scaffolding": true,
+  "next_manual_commands": [
+    "bash scripts/manual/run_swarm_lio2_docker_build_and_test.sh",
+    "bash scripts/manual/run_dynamic_lio_docker_build_and_test.sh",
+    "bash scripts/manual/run_erasor_docker_build_and_test.sh",
+    "bash scripts/manual/run_sim_hybrid_full_validation.sh"
+  ],
   "pass": false,
   "primary": {
     "adapter_contract_configured": true,
-    "blocker": "Swarm-LIO2 source exists, but sim hybrid build requires Docker daemon access for ROS1/Noetic catkin",
+    "blocker": "docker_run_blocked_by_environment",
     "cloud_static_or_registered_valid": false,
     "corrected_odom_valid": false,
     "deployment_mode": "sim_hybrid_ros1_slam_ros2_nav",
@@ -75,6 +84,7 @@
     "swarm_lio2_source_available": true,
     "team_loop_closure_keyframes_valid": false
   },
+  "real_robot_available": false,
   "ros1_hybrid_docker_build_status": {
     "blocker": "ROS1 hybrid Docker image build passed, but container catkin build could not be executed because the escalated Docker compose run was rejected by approval reviewer: Automatic approval review failed: usage limit hit; try again after 6:46 PM or with explicit user approval. Swarm-LIO2/Dynamic-LIO/ERASOR source-level build and runtime are not validated.",
     "catkin_workspace_build_attempted": false,
@@ -90,7 +100,7 @@
   },
   "schema": "sim_hybrid_ros1_slam_ros2_nav_validation/v1",
   "shadow": {
-    "blocker": "Swarm-LIO2 source exists, but sim hybrid build requires Docker daemon access for ROS1/Noetic catkin",
+    "blocker": "docker_run_blocked_by_environment",
     "deployment_mode": "sim_hybrid_ros1_slam_ros2_nav",
     "fast_lio_baseline_still_runs": true,
     "gt_used_runtime": false,

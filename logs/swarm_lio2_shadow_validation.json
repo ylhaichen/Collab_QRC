@@ -1,6 +1,6 @@
 {
-  "blocker": "Swarm-LIO2 source exists, but real hybrid build requires ROS1 Noetic, catkin_make, and rospack on the onboard host",
-  "deployment_mode": "real_hybrid_ros1_slam_ros2_nav",
+  "blocker": "docker_run_blocked_by_environment",
+  "deployment_mode": "sim_hybrid_ros1_slam_ros2_nav",
   "fast_lio_baseline_still_runs": true,
   "gt_used_runtime": false,
   "metrics_recorded": true,

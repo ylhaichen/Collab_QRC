@@ -45,11 +45,18 @@ def write_md(path: Path, title: str, payload: dict) -> None:
     path.write_text("\n".join(lines) + "\n")
 
 
+def backend_check_arg(deployment_mode: str) -> str:
+    if deployment_mode in {"sim_ros2", "sim_hybrid_ros1_slam_ros2_nav"}:
+        return "--docker"
+    return "--host"
+
+
 def backend_checks(deployment_mode: str) -> tuple[dict, dict, dict]:
+    mode_arg = backend_check_arg(deployment_mode)
     return (
-        run_json(["bash", "scripts/setup/check_swarm_lio2.sh"], deployment_mode),
-        run_json(["bash", "scripts/setup/check_dynamic_lio.sh"], deployment_mode),
-        run_json(["bash", "scripts/setup/check_erasor.sh"], deployment_mode),
+        run_json(["bash", "scripts/setup/check_swarm_lio2.sh", mode_arg], deployment_mode),
+        run_json(["bash", "scripts/setup/check_dynamic_lio.sh", mode_arg], deployment_mode),
+        run_json(["bash", "scripts/setup/check_erasor.sh", mode_arg], deployment_mode),
     )
 
 
@@ -198,6 +205,20 @@ def sim() -> dict:
         "blocker": docker_blocker or sh.get("blocker") or pr.get("blocker") or dy.get("blocker") or er.get("blocker"),
         "docker_backend_build_blocker": docker_blocker,
         "claim": "Fast-LIO remains production backend; sim hybrid Swarm-LIO2 primary is not validated.",
+        "implemented_scaffolding": True,
+        "docker_image_build_passed": bool(
+            docker_status.get("docker_image_build_passed", False)
+            or docker_status.get("docker_image_build_success", False)
+            or docker_status.get("pass", False)
+        ),
+        "docker_run_blocked": bool(docker_blocker),
+        "real_robot_available": False,
+        "next_manual_commands": [
+            "bash scripts/manual/run_swarm_lio2_docker_build_and_test.sh",
+            "bash scripts/manual/run_dynamic_lio_docker_build_and_test.sh",
+            "bash scripts/manual/run_erasor_docker_build_and_test.sh",
+            "bash scripts/manual/run_sim_hybrid_full_validation.sh",
+        ],
     }
     write_json(LOGS / "sim_hybrid_ros1_slam_ros2_nav_validation.json", payload)
     write_md(LOGS / "sim_hybrid_ros1_slam_ros2_nav_validation.md", "Sim Hybrid ROS1 SLAM / ROS2 Nav Validation", payload)
@@ -219,6 +240,13 @@ def real() -> dict:
         "final_status": "Status D \u2014 External Blocker",
         "blocker": check.get("blocker") or sh.get("blocker") or pr.get("blocker"),
         "claim": "Fast-LIO remains production backend on real robot; real hybrid Swarm-LIO2 primary is not validated.",
+        "implemented_scaffolding": True,
+        "real_robot_available": bool(check.get("pass", False)),
+        "docker_run_blocked": False,
+        "next_manual_commands": [
+            "CONFIRM_REAL_ROBOT=1 bash scripts/manual/run_real_robot_shadow_validation.sh",
+            "CONFIRM_REAL_ROBOT=1 bash scripts/manual/run_real_robot_primary_validation.sh",
+        ],
     }
     write_json(LOGS / "real_hybrid_ros1_slam_ros2_nav_validation.json", payload)
     write_md(LOGS / "real_hybrid_ros1_slam_ros2_nav_validation.md", "Real Hybrid ROS1 SLAM / ROS2 Nav Validation", payload)
@@ -239,6 +267,12 @@ def comparison() -> dict:
         "real_hybrid_ros1_slam_ros2_nav": real_payload,
         "final_status": "Status D \u2014 External Blocker",
         "claim": "Migration interface and hybrid deployment scaffolding are implemented; Fast-LIO remains production backend.",
+        "origin_push_policy": "origin push intentionally skipped when origin points to HanshangZhu/Collab_QRC; fork-only push policy is active.",
+        "next_manual_commands": [
+            "bash scripts/manual/run_sim_hybrid_full_validation.sh",
+            "CONFIRM_REAL_ROBOT=1 bash scripts/manual/run_real_robot_shadow_validation.sh",
+            "CONFIRM_REAL_ROBOT=1 bash scripts/manual/run_real_robot_primary_validation.sh",
+        ],
     }
     write_json(LOGS / "slam_backend_comparison.json", payload)
     write_md(LOGS / "slam_backend_comparison.md", "SLAM Backend Comparison", payload)

@@ -1,5 +1,5 @@
 {
-  "blocker": "Dynamic-LIO source exists, but sim hybrid build requires Docker daemon access for ROS1/Noetic catkin",
+  "blocker": "docker_run_blocked_by_environment",
   "deployment_mode": "sim_hybrid_ros1_slam_ros2_nav",
   "dynamic_filter_backend": "temporal_voxel_fallback",
   "dynamic_filter_ratio": 0.14286,

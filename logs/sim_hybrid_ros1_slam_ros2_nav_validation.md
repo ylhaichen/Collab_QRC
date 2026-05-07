@@ -7,3 +7,7 @@
 - blocker: `ROS1 hybrid Docker image build passed, but container catkin build could not be executed because the escalated Docker compose run was rejected by approval reviewer: Automatic approval review failed: usage limit hit; try again after 6:46 PM or with explicit user approval. Swarm-LIO2/Dynamic-LIO/ERASOR source-level build and runtime are not validated.`
 - docker_backend_build_blocker: `ROS1 hybrid Docker image build passed, but container catkin build could not be executed because the escalated Docker compose run was rejected by approval reviewer: Automatic approval review failed: usage limit hit; try again after 6:46 PM or with explicit user approval. Swarm-LIO2/Dynamic-LIO/ERASOR source-level build and runtime are not validated.`
 - claim: `Fast-LIO remains production backend; sim hybrid Swarm-LIO2 primary is not validated.`
+- implemented_scaffolding: `True`
+- docker_image_build_passed: `True`
+- docker_run_blocked: `True`
+- real_robot_available: `False`

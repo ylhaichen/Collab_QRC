@@ -1,5 +1,5 @@
 {
-  "blocker": "ERASOR source exists, but sim hybrid build requires Docker daemon access for ROS1/Noetic catkin",
+  "blocker": "docker_run_blocked_by_environment",
   "cleaned_map_published": false,
   "cleaned_map_removes_dynamic_trace": false,
   "control_loop_blocked": false,

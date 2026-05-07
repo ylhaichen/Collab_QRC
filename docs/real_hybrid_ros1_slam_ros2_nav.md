@@ -2,31 +2,52 @@
 
 `real_hybrid_ros1_slam_ros2_nav` keeps the ROS2/Humble high-level stack on the laptop or team computer while each robot runs the ROS1/Noetic SLAM layer onboard.
 
-ROS1 onboard side:
+## Implemented Scaffolding
 
-- Unitree / Go2 / Go2W sensor interfaces.
-- LiDAR and IMU drivers.
-- Swarm-LIO2 shadow first, primary only after validation.
-- Dynamic-LIO filtering wrapper or fallback.
-- ERASOR asynchronous cleanup, never in the realtime control loop.
+- Onboard ROS1 side is expected to provide LiDAR/IMU interfaces, Swarm-LIO2, Dynamic-LIO filtering outputs, and ERASOR async cleanup.
+- ROS2 side keeps Nav2, exploration, `team_loop_closure`, `robust_loop_selector`, `team_pose_graph_node`, `relative_transform_manager`, and `/merged_map` gating.
+- `swarm_lio2_shadow` must pass before `swarm_lio2_primary`.
+- In primary mode, the ROS2 adapter republishes Swarm-LIO2 outputs into the existing odom/cloud contract so downstream ROS2 nodes do not consume Swarm-LIO2 internals.
 
-ROS2 high-level side:
+## Mock / Synthetic Validation
 
-- Nav2 and exploration allocator.
-- `team_loop_closure`, `robust_loop_selector`, `team_pose_graph_node`.
-- `relative_transform_manager` and `/merged_map` safety gate.
-- Validation scripts and logs.
+- ROS2 adapter and safety-gate synthetic tests are available on the development host.
+- These tests validate message contracts and gate math only. They do not validate real LiDAR/IMU timing, Jetson load, DDS peer communication, Nav2 runtime, or Go2 motion safety.
 
-The real hybrid launch can include the existing `go2w_real_bringup` Nav2 stack with
-`onboard_slam:=true`. In `swarm_lio2_primary`, the adapter republishes Swarm-LIO2
-odometry to `/<ns>/odom/nav` so the existing real Nav2 contract does not need to
-understand Swarm-LIO2 internal topics.
+## Docker Runtime Validation
 
-Key entrypoints:
+Docker is only for simulation hybrid backend checks. It does not prove real robot readiness.
 
-- `scripts/real/real_autonomy.sh deployment_mode=real_hybrid_ros1_slam_ros2_nav slam_backend=swarm_lio2_shadow`
-- `scripts/real/onboard_ros1_slam.sh slam_backend=swarm_lio2_shadow`
-- `ros2 launch go2_gazebo_sim real_hybrid_ros1_slam_ros2_nav.launch.py`
-- `bash scripts/deploy/check_real_hybrid_ros1_slam_ros2_nav.sh`
+```bash
+bash scripts/manual/run_sim_hybrid_full_validation.sh
+```
 
-Current blocker on this host: ROS1 Noetic, `catkin_make`, and `rospack` are unavailable locally, and live real robot LiDAR/IMU/Unitree topics are not present. This is recorded as Status D, not a replacement pass.
+## Real Robot Validation
+
+Run preflight first on the robot/Jetson or validated field computer:
+
+```bash
+bash scripts/deploy/check_real_hybrid_ros1_slam_ros2_nav.sh --host
+```
+
+Run shadow before primary:
+
+```bash
+CONFIRM_REAL_ROBOT=1 bash scripts/manual/run_real_robot_shadow_validation.sh
+CONFIRM_REAL_ROBOT=1 bash scripts/manual/run_real_robot_primary_validation.sh
+```
+
+Direct bringup entrypoints remain:
+
+```bash
+scripts/real/real_autonomy.sh deployment_mode=real_hybrid_ros1_slam_ros2_nav slam_backend=swarm_lio2_shadow
+scripts/real/onboard_ros1_slam.sh slam_backend=swarm_lio2_shadow
+ros2 launch go2_gazebo_sim real_hybrid_ros1_slam_ros2_nav.launch.py
+```
+
+## Current Blockers
+
+- Current valid status is `Status D -- External Blocker`.
+- This host lacks native ROS1 Noetic/catkin/rospack for real backend build checks.
+- Live LiDAR/IMU/Unitree topics and peer robot network are unavailable here.
+- Real deployment cannot be marked passed without robot/Jetson/Go2 validation logs.

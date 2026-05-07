@@ -5,3 +5,4 @@
 - default_slam_backend: `fast_lio_scpgo`
 - final_status: `Status D — External Blocker`
 - claim: `Migration interface and hybrid deployment scaffolding are implemented; Fast-LIO remains production backend.`
+- origin_push_policy: `origin push intentionally skipped when origin points to HanshangZhu/Collab_QRC; fork-only push policy is active.`
