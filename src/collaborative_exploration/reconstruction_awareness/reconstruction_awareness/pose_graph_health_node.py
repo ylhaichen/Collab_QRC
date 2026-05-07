@@ -85,6 +85,9 @@ class PoseGraphHealthNode(Node):
         self.declare_parameter("drift_yaw_warn_deg", 8.0)
         self.declare_parameter("drift_trans_warn_m", 0.20)
         self.declare_parameter("max_keyframes_per_robot", 240)
+        self.declare_parameter("require_team_alignment_for_inter_robot", True)
+        self.declare_parameter("alignment_status_topic", "/team_slam/alignment_status")
+        self.declare_parameter("enable_gt_drift_metrics", False)
 
         raw_namespaces = self.get_parameter("namespaces").value
         self.namespaces = [str(ns).strip().strip("/") for ns in raw_namespaces if str(ns).strip()]
@@ -101,6 +104,16 @@ class PoseGraphHealthNode(Node):
         self.drift_yaw_warn_deg = float(self.get_parameter("drift_yaw_warn_deg").value)
         self.drift_trans_warn_m = float(self.get_parameter("drift_trans_warn_m").value)
         self.max_keyframes = int(self.get_parameter("max_keyframes_per_robot").value)
+        self.require_team_alignment = bool(
+            self.get_parameter("require_team_alignment_for_inter_robot").value
+        )
+        self.enable_gt_drift_metrics = bool(
+            self.get_parameter("enable_gt_drift_metrics").value
+        )
+        self._team_aligned = False
+        self._team_tf_parent = "robot_a/map"
+        self._team_tf_child = "robot_b/map"
+        self._team_tf = (0.0, 0.0, 0.0)
 
         self.states = {ns: RobotState(ns=ns) for ns in self.namespaces}
         self._pub = self.create_publisher(String, "/cfpa2/pose_graph_health", 10)
@@ -109,15 +122,24 @@ class PoseGraphHealthNode(Node):
         )
         for ns in self.namespaces:
             self.create_subscription(Odometry, f"/{ns}/odom/nav", lambda m, n=ns: self._on_odom(m, n), 20)
-            self.create_subscription(Odometry, f"/{ns}/odom/ground_truth", lambda m, n=ns: self._on_gt(m, n), 20)
+            if self.enable_gt_drift_metrics:
+                self.create_subscription(Odometry, f"/{ns}/odom/ground_truth", lambda m, n=ns: self._on_gt(m, n), 20)
             self.create_subscription(Odometry, f"/{ns}/corrected_odom", lambda m, n=ns: self._on_corrected(m, n), 10)
+        self.create_subscription(
+            String,
+            str(self.get_parameter("alignment_status_topic").value),
+            self._on_alignment_status,
+            10,
+        )
 
         rate = max(0.2, float(self.get_parameter("publish_rate_hz").value))
         self.create_timer(1.0 / rate, self._tick)
         self.get_logger().info(
             "pose_graph_health_node up: "
             f"robots={self.namespaces} keyframe={self.keyframe_distance_m:.2f}m/"
-            f"{math.degrees(self.keyframe_yaw_rad):.0f}deg output={self.output_path or '<none>'}"
+            f"{math.degrees(self.keyframe_yaw_rad):.0f}deg "
+            f"gt_drift_metrics={self.enable_gt_drift_metrics} "
+            f"output={self.output_path or '<none>'}"
         )
 
     def _pose_tuple(self, msg: Odometry) -> tuple[float, float, float]:
@@ -141,6 +163,24 @@ class PoseGraphHealthNode(Node):
         st.corrected_delta_trans_m = math.hypot(ox - cx, oy - cy)
         st.corrected_delta_yaw_deg = abs(math.degrees(wrap_pi(oyaw - cyaw)))
 
+    def _on_alignment_status(self, msg: String) -> None:
+        try:
+            payload = json.loads(msg.data)
+        except json.JSONDecodeError:
+            return
+        if not isinstance(payload, dict) or payload.get("schema") != "team_alignment_status/v1":
+            return
+        self._team_aligned = str(payload.get("status", "")) == "aligned"
+        self._team_tf_parent = str(payload.get("parent_frame", "robot_a/map")).strip().strip("/")
+        self._team_tf_child = str(payload.get("child_frame", "robot_b/map")).strip().strip("/")
+        tf = payload.get("transform", {})
+        if isinstance(tf, dict):
+            self._team_tf = (
+                float(tf.get("x", 0.0)),
+                float(tf.get("y", 0.0)),
+                float(tf.get("yaw", 0.0)),
+            )
+
     def _on_odom(self, msg: Odometry, ns: str) -> None:
         st = self.states[ns]
         now = now_sec_from_node(self)
@@ -160,6 +200,8 @@ class PoseGraphHealthNode(Node):
         self._maybe_add_keyframe(st, now, x, y, yaw)
 
     def _update_drift(self, st: RobotState) -> None:
+        if not self.enable_gt_drift_metrics:
+            return
         if st.raw_anchor is None or st.gt_anchor is None or st.latest_gt is None or st.current_xy is None:
             return
         rx0, ry0, ryaw0 = st.raw_anchor
@@ -219,6 +261,8 @@ class PoseGraphHealthNode(Node):
         st = self.states[ns]
         if st.current_xy is None:
             return 0
+        if self.require_team_alignment and not self._team_aligned:
+            return 0
         count = 0
         for other_ns, other in self.states.items():
             if other_ns == ns:
@@ -227,9 +271,26 @@ class PoseGraphHealthNode(Node):
                 time_gap = st.current_t_sec - kf.t_sec
                 if time_gap < self.candidate_time_gap_sec:
                     continue
-                if math.hypot(st.current_xy[0] - kf.x, st.current_xy[1] - kf.y) <= self.inter_robot_radius_m:
+                kx, ky = self._transform_between_robot_maps(kf.x, kf.y, other_ns, ns)
+                if math.hypot(st.current_xy[0] - kx, st.current_xy[1] - ky) <= self.inter_robot_radius_m:
                     count += 1
         return count
+
+    def _transform_between_robot_maps(self, x: float, y: float, source_ns: str, target_ns: str) -> tuple[float, float]:
+        if source_ns == target_ns:
+            return x, y
+        parent_robot = self._team_tf_parent.split("/")[0]
+        child_robot = self._team_tf_child.split("/")[0]
+        tx, ty, yaw = self._team_tf
+        c = math.cos(yaw)
+        s = math.sin(yaw)
+        if source_ns == child_robot and target_ns == parent_robot:
+            return c * x - s * y + tx, s * x + c * y + ty
+        if source_ns == parent_robot and target_ns == child_robot:
+            dx = x - tx
+            dy = y - ty
+            return c * dx + s * dy, -s * dx + c * dy
+        return x, y
 
     def _health_state(self, st: RobotState, self_crossings: int, inter_ops: int, distance_since: float) -> str:
         if st.drift_yaw_peak_deg >= self.drift_yaw_warn_deg or st.drift_trans_peak_m >= self.drift_trans_warn_m:

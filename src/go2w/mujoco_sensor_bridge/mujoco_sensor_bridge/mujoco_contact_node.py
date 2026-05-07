@@ -159,10 +159,12 @@ class MujocoContactNode(Node):
         # supposed to be airborne — the base z determines that. Sim gets
         # GT odom at /<ns>/odom/ground_truth; real robot would map to a
         # different topic but currently this node is sim-only anyway.
+        odom_topic = self.declare_parameter(
+            'odom_topic', 'odom/ground_truth').get_parameter_value().string_value
         self._latest_odom = None
         self._odom_lock = threading.Lock()
         self.odom_sub = self.create_subscription(
-            Odometry, 'odom/ground_truth', self._odom_cb, 10)
+            Odometry, odom_topic, self._odom_cb, 10)
 
         self._latest_js = None
         self._js_lock = threading.Lock()

@@ -112,6 +112,19 @@ void LidarSensor::update()
         std::fill(ray_dist_.begin(), ray_dist_.end(), range_max_);
         std::fill(ray_geomid_.begin(), ray_geomid_.end(), -1);
 
+        // MuJoCo 3.3 removed the optional normals output from mj_multiRay.
+#if mjVERSION_HEADER >= 330
+        mj_multiRay(model_, data_,
+                    origin_copy,              // single origin (3,)
+                    ray_dirs_world.data(),    // directions (n_rays*3,)
+                    nullptr,                  // geomgroup: all groups
+                    1,                        // flg_static: include static geoms
+                    body_id_,                 // bodyexclude: skip robot body
+                    ray_geomid_.data(),       // output geom IDs
+                    ray_dist_.data(),         // output distances
+                    n_rays_,
+                    range_max_);              // cutoff
+#else
         mj_multiRay(model_, data_,
                     origin_copy,              // single origin (3,)
                     ray_dirs_world.data(),    // directions (n_rays*3,)
@@ -123,6 +136,7 @@ void LidarSensor::update()
                     nullptr,                  // normals: not needed
                     n_rays_,
                     range_max_);              // cutoff
+#endif
     }  // mutex released — remaining work is read-only on local copies
 
     // 4. Build hit-point list in LiDAR-local frame.

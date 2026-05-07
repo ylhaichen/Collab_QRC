@@ -1,0 +1,6 @@
+team_comm_mode: dds
+ros_domain_id: 42
+dds_discovery_required: true
+udp_json_enabled: false
+alignment_symmetry_error_translation_max_m: 0.5
+alignment_symmetry_error_yaw_max_deg: 5.0

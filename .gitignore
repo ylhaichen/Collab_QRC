@@ -195,3 +195,41 @@ session_*.json
 /tmp_runtime_dumps/
 *.run.log
 realtek-r8126-dkms/
+
+# =============================================
+# SLAM runtime outputs and generated maps
+# =============================================
+# Keep compact summary logs (*.json/*.md) reviewable, but never track
+# high-volume per-topic traces, bag databases, or generated map products.
+/logs/**/robust_loop_inliers.jsonl
+/logs/**/*.jsonl
+/logs/**/*.jsonl.err
+/logs/**/*.bag
+/logs/**/*.db3
+/logs/**/*.mcap
+/logs/**/*.pcd
+/logs/**/pcds/
+/logs/**/dense_global_map.pcd
+/logs/**/initial_naive_map.pcd
+/logs/**/cleaned_static_map.pcd
+/logs/**/removed_dynamic_points.pcd
+*.bag
+*.db3
+*.mcap
+*.pcd
+
+# External SLAM backends may be submodules or local clones; never track
+# their datasets, generated maps, or build products.
+/external/*/build/
+/external/*/devel/
+/external/*/install/
+/external/*/log/
+/external/*/data/
+/external/*/dataset/
+/external/*/datasets/
+/external/*/maps/
+/external/*/pcds/
+/external/**/*.bag
+/external/**/*.db3
+/external/**/*.mcap
+/external/**/*.pcd

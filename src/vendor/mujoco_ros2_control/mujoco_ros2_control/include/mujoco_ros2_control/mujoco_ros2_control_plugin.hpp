@@ -251,6 +251,7 @@ namespace mujoco_ros2_control
         rclcpp::Time last_update_sim_time_ros_ = rclcpp::Time((int64_t)0, RCL_ROS_TIME); ///< Timestamp of the last update call
         double real_time_factor_; ///< Realtime factor of the simulation
         bool show_gui_; ///< Flag if the gui is loaded
+        bool enable_visualization_{true}; ///< Whether to create any GLFW/OpenGL visualization context
 
         // Controller Manager
         std::unique_ptr<hardware_interface::ResourceManager> resource_manager_; ///< Resource manager for hardware interfaces

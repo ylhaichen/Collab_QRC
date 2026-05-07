@@ -83,6 +83,102 @@ fi
 safe_source "${ROS2_SETUP_BASH}"
 safe_source "${WS_DIR}/install/setup.bash"
 
+prepend_path() {
+  local var_name="$1"
+  local value="$2"
+  if [[ -d "${value}" ]]; then
+    if [[ -n "${!var_name:-}" ]]; then
+      export "${var_name}=${value}:${!var_name}"
+    else
+      export "${var_name}=${value}"
+    fi
+  fi
+}
+
+if ! /usr/bin/python3 -c 'import xacro' >/dev/null 2>&1; then
+  cat >&2 <<'EOF'
+ERROR: Python module 'xacro' is not available in the current ROS 2 environment.
+
+Ubuntu 22.04 / ROS 2 Humble fix:
+  sudo apt-get update
+  sudo apt-get install -y ros-humble-xacro
+
+Then retry this launch command.
+EOF
+  exit 127
+fi
+
+if ! /usr/bin/python3 -c 'import nav2_common' >/dev/null 2>&1; then
+  cat >&2 <<'EOF'
+ERROR: Python module 'nav2_common' is not available in the current ROS 2 environment.
+
+Ubuntu 22.04 / ROS 2 Humble fix:
+  sudo apt-get update
+  sudo apt-get install -y ros-humble-navigation2
+
+Then retry this launch command.
+EOF
+  exit 127
+fi
+
+LOCAL_ROBOT_LOCALIZATION_PREFIX="${LOCAL_ROBOT_LOCALIZATION_PREFIX:-/tmp/collab_qrc_ros_overlay_robot_localization/opt/ros/humble}"
+LOCAL_ROBOT_LOCALIZATION_ROOT="${LOCAL_ROBOT_LOCALIZATION_PREFIX%/opt/ros/humble}"
+USING_LOCAL_ROBOT_LOCALIZATION=false
+if ! ros2 pkg prefix robot_localization >/dev/null 2>&1 && [[ -d "${LOCAL_ROBOT_LOCALIZATION_PREFIX}/share/robot_localization" ]]; then
+  prepend_path AMENT_PREFIX_PATH "${LOCAL_ROBOT_LOCALIZATION_PREFIX}"
+  prepend_path CMAKE_PREFIX_PATH "${LOCAL_ROBOT_LOCALIZATION_PREFIX}"
+  prepend_path LD_LIBRARY_PATH "${LOCAL_ROBOT_LOCALIZATION_PREFIX}/lib"
+  prepend_path LD_LIBRARY_PATH "${LOCAL_ROBOT_LOCALIZATION_ROOT}/usr/lib/x86_64-linux-gnu"
+  prepend_path PYTHONPATH "${LOCAL_ROBOT_LOCALIZATION_PREFIX}/local/lib/python3.10/dist-packages"
+  USING_LOCAL_ROBOT_LOCALIZATION=true
+fi
+
+if ! ros2 pkg prefix robot_localization >/dev/null 2>&1; then
+  cat >&2 <<'EOF'
+ERROR: ROS 2 package 'robot_localization' is not available in the current ROS 2 environment.
+
+Ubuntu 22.04 / ROS 2 Humble fix:
+  sudo apt-get update
+  sudo apt-get install -y ros-humble-robot-localization
+
+Non-root temporary fallback:
+  apt-get download ros-humble-robot-localization
+  apt-get download libgeographic19
+  mkdir -p /tmp/collab_qrc_ros_overlay_robot_localization
+  dpkg-deb -x ros-humble-robot-localization_*_amd64.deb /tmp/collab_qrc_ros_overlay_robot_localization
+  dpkg-deb -x libgeographic19_*_amd64.deb /tmp/collab_qrc_ros_overlay_robot_localization
+
+Then retry this launch command.
+EOF
+  exit 127
+fi
+
+if [[ "${USING_LOCAL_ROBOT_LOCALIZATION}" == "true" ]] \
+  && ! ldconfig -p 2>/dev/null | grep -q 'libGeographic\.so\.19' \
+  && [[ ! -e "${LOCAL_ROBOT_LOCALIZATION_ROOT}/usr/lib/x86_64-linux-gnu/libGeographic.so.19" ]]; then
+  cat >&2 <<'EOF'
+ERROR: local robot_localization overlay is present, but libGeographic.so.19 is missing.
+
+Ubuntu 22.04 system fix:
+  sudo apt-get install -y libgeographic19
+
+Non-root temporary fallback:
+  cd /tmp
+  apt-get download libgeographic19
+  dpkg-deb -x libgeographic19_*_amd64.deb /tmp/collab_qrc_ros_overlay_robot_localization
+
+Then retry this launch command.
+EOF
+  exit 127
+fi
+
+LOCAL_GTSAM_PREFIX="${LOCAL_GTSAM_PREFIX:-${WS_DIR}/.local_deps/gtsam_humble/extract/opt/ros/humble}"
+if [[ -f "${LOCAL_GTSAM_PREFIX}/include/gtsam/slam/BetweenFactor.h" ]]; then
+  prepend_path CMAKE_PREFIX_PATH "${LOCAL_GTSAM_PREFIX}"
+  prepend_path LD_LIBRARY_PATH "${LOCAL_GTSAM_PREFIX}/lib/x86_64-linux-gnu"
+  prepend_path LD_LIBRARY_PATH "${LOCAL_GTSAM_PREFIX}/lib"
+fi
+
 SC_PGO_PREFIX="${HOME}/COMP0225_LRC_stack/install/sc_pgo"
 if [[ -d "${SC_PGO_PREFIX}/share/sc_pgo" ]]; then
   export AMENT_PREFIX_PATH="${SC_PGO_PREFIX}:${AMENT_PREFIX_PATH:-}"

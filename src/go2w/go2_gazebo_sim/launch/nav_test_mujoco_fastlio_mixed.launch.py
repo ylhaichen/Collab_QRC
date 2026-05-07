@@ -309,7 +309,7 @@ def _build_cleanup_stale_cmd() -> str:
 
 def _build_sensor_bridges(ns: str, mjcf_path: str, base_body: str, imu_site: str,
                           pose_sensor: str, imu_sensor: str, links_config: str,
-                          use_sim_time: bool):
+                          use_sim_time: bool, contact_odom_topic: str = "odom/ground_truth"):
     """Per-robot MuJoCo sensor bridges (ground-truth odom + foot contacts).
 
     The mujoco plugin publishes raw sensor topics under its own namespace
@@ -360,6 +360,7 @@ def _build_sensor_bridges(ns: str, mjcf_path: str, base_body: str, imu_site: str
                 {"use_sim_time": use_sim_time},
                 {"mjcf_path": mjcf_path},
                 {"publish_rate": 50.0},
+                {"odom_topic": contact_odom_topic},
                 links_config,
             ],
             output="screen",
@@ -411,6 +412,8 @@ def _build_fastlio_nav_stack(
     has_wheels: bool = True,
     peer_namespaces: list | None = None,
     loop_closure: bool = False,
+    loop_closure_backend: str = "auto",
+    bootstrap_from_gt: bool = True,
     peer_obstacle_enabled: bool = False,
 ):
     """Per-robot Fast-LIO + octomap + FAR nav stack.
@@ -513,11 +516,17 @@ def _build_fastlio_nav_stack(
         # gets data without us building a no-op filter.
         actions.append(
             Node(
-                package="topic_tools",
-                executable="relay",
+                package="go2w_perception",
+                executable="qos_bridge.py",
                 namespace=ns,
                 name="cloud_passthrough",
-                arguments=["registered_scan_reliable", "registered_scan_octomap"],
+                parameters=[{
+                    "use_sim_time": use_sim_time,
+                    "input_topic": f"/{ns}/registered_scan_reliable",
+                    "output_topic": f"/{ns}/registered_scan_octomap",
+                    "input_reliability": "reliable",
+                    "output_reliability": "reliable",
+                }],
                 output="screen",
             )
         )
@@ -670,7 +679,7 @@ def _build_fastlio_nav_stack(
                 "-p", "output_frame_id:=odom",
                 "-p", f"output_child_frame_id:={base_frame}",
                 "-p", "publish_tf:=true",
-                "-p", "bootstrap_from_gt:=true",
+                "-p", f"bootstrap_from_gt:={'true' if bootstrap_from_gt else 'false'}",
                 "-p", "gt_topic:=odom/ground_truth",
                 "-p", "corrected_topic:=corrected_odom",
                 # TransformBroadcaster publishes to global /tf by default;
@@ -688,68 +697,110 @@ def _build_fastlio_nav_stack(
     actions.append(TimerAction(period=slam_delay, actions=slam_nodes))
 
     # ── Optional: SC-PGO loop-closure post-processor on top of Fast-LIO ──
-    # Toggle via `loop_closure:=true` launch arg. When enabled, attempts to
-    # spawn `sc_pgo_node` from the `sc_pgo` package; subscribes to the
-    # raw Fast-LIO outputs and publishes /{ns}/corrected_odom which
-    # slam_odom_relay prefers over the raw stream. If sc_pgo is not built
-    # (currently the case — vendored sources are ROS 1, see
-    # src/vendor/sc_pgo/COLCON_IGNORE), the toggle silently logs a warn
-    # and continues without correction. This keeps the toggle as a
-    # forward-compatible knob: once sc_pgo is ported and built, just flip
-    # `loop_closure:=true` to engage. Per-namespace because dual-robot
-    # configs need independent PGO graphs.
+    # Backend options:
+    #   auto          - prefer native ROS 2 sc_pgo if installed; otherwise
+    #                   expect Docker ROS1 SC-PGO + ros1_bridge and start the
+    #                   PoseStamped->Odometry adapter.
+    #   ros2_sc_pgo  - launch only native ROS 2 sc_pgo.
+    #   ros1_bridge  - Docker owns ROS 1 SC-PGO; this launch only converts
+    #                   bridged /<ns>/sc_pgo/pose_stamped into
+    #                   /<ns>/corrected_odom (nav_msgs/Odometry).
     if loop_closure:
-        try:
-            import ament_index_python.packages as _ament_pkg
-            _sc_pgo_share = _ament_pkg.get_package_share_directory("sc_pgo")
-            _sc_pgo_config_candidates = [
-                os.path.join(_sc_pgo_share, "config", "sc_pgo_params.yaml"),
-                os.path.join(_sc_pgo_share, "config", "params.yaml"),
-            ]
-            _sc_pgo_config = next(
-                (p for p in _sc_pgo_config_candidates if os.path.exists(p)),
-                None,
+        def _launch_ros1_bridge_adapter(reason: str) -> None:
+            adapter_path = os.path.join(
+                _ws_root, "scripts", "runtime", "scpgo_pose_to_odom_adapter.py"
             )
-            if _sc_pgo_config:
-                actions.append(
-                    TimerAction(
-                        period=slam_delay + 3.0,
-                        actions=[
-                            Node(
-                                package="sc_pgo",
-                                executable="sc_pgo_node",
-                                namespace=ns,
-                                name="sc_pgo",
-                                parameters=[
-                                    _sc_pgo_config,
-                                    {"use_sim_time": use_sim_time},
-                                ],
-                                remappings=[
-                                    ("/aft_mapped_to_init", f"/{ns}/Odometry"),
-                                    ("/cloud_registered", f"/{ns}/cloud_registered_body"),
-                                    ("/corrected_odom", f"/{ns}/corrected_odom"),
-                                    ("/corrected_path", f"/{ns}/corrected_path"),
-                                    ("/corrected_cloud", f"/{ns}/corrected_cloud"),
-                                    ("/corrected_map", f"/{ns}/corrected_map"),
-                                ] + tf_remaps,
-                                output="screen",
-                            ),
-                        ],
-                    )
-                )
-            else:
-                actions.append(LogInfo(msg=(
-                    f"[nav_test_mujoco_fastlio_mixed] loop_closure:=true for ns={ns} "
-                    f"but no sc_pgo_params.yaml found in {_sc_pgo_share}/config/. "
-                    f"Skipping SC-PGO; Fast-LIO2 runs open-loop."
-                )))
-        except Exception as _e:
             actions.append(LogInfo(msg=(
-                f"[nav_test_mujoco_fastlio_mixed] loop_closure:=true requested for "
-                f"ns={ns} but `sc_pgo` package is not built ({_e}). Skipping SC-PGO; "
-                f"Fast-LIO2 runs open-loop. To enable: port "
-                f"src/vendor/sc_pgo/ to ROS 2 humble (catkin → ament_cmake), "
-                f"remove its COLCON_IGNORE, and rebuild."
+                f"[nav_test_mujoco_fastlio_mixed] loop_closure:=true ns={ns}: "
+                f"using ROS1 bridge adapter ({reason}). Start Docker bridge with: "
+                f"bash scripts/launch/scpgo_ros1_bridge.sh"
+            )))
+            actions.append(
+                TimerAction(
+                    period=slam_delay + 3.0,
+                    actions=[
+                        ExecuteProcess(
+                            cmd=[
+                                "python3", "-u", adapter_path,
+                                "--ros-args",
+                                "-p", f"namespace:={ns}",
+                                "-p", f"use_sim_time:={'true' if use_sim_time else 'false'}",
+                                "-p", "pose_topic:=sc_pgo/pose_stamped",
+                                "-p", "raw_odom_topic:=Odometry",
+                                "-p", "output_topic:=corrected_odom",
+                                "-p", f"child_frame_id:={base_frame}",
+                            ],
+                            name=f"scpgo_pose_to_odom_adapter_{ns}",
+                            output="screen",
+                        ),
+                    ],
+                )
+            )
+
+        if loop_closure_backend in {"auto", "ros2_sc_pgo"}:
+            try:
+                import ament_index_python.packages as _ament_pkg
+                _sc_pgo_share = _ament_pkg.get_package_share_directory("sc_pgo")
+                _sc_pgo_config_candidates = [
+                    os.path.join(_sc_pgo_share, "config", "sc_pgo_params.yaml"),
+                    os.path.join(_sc_pgo_share, "config", "params.yaml"),
+                ]
+                _sc_pgo_config = next(
+                    (p for p in _sc_pgo_config_candidates if os.path.exists(p)),
+                    None,
+                )
+                if _sc_pgo_config:
+                    actions.append(
+                        TimerAction(
+                            period=slam_delay + 3.0,
+                            actions=[
+                                Node(
+                                    package="sc_pgo",
+                                    executable="sc_pgo_node",
+                                    namespace=ns,
+                                    name="sc_pgo",
+                                    parameters=[
+                                        _sc_pgo_config,
+                                        {"use_sim_time": use_sim_time},
+                                    ],
+                                    remappings=[
+                                        ("/aft_mapped_to_init", f"/{ns}/Odometry"),
+                                        ("/cloud_registered", f"/{ns}/cloud_registered_body"),
+                                        ("/corrected_odom", f"/{ns}/corrected_odom"),
+                                        ("/corrected_path", f"/{ns}/corrected_path"),
+                                        ("/corrected_cloud", f"/{ns}/corrected_cloud"),
+                                        ("/corrected_map", f"/{ns}/corrected_map"),
+                                    ] + tf_remaps,
+                                    output="screen",
+                                ),
+                            ],
+                        )
+                    )
+                elif loop_closure_backend == "ros2_sc_pgo":
+                    actions.append(LogInfo(msg=(
+                        f"[nav_test_mujoco_fastlio_mixed] loop_closure_backend:=ros2_sc_pgo "
+                        f"for ns={ns}, but no sc_pgo_params.yaml/params.yaml exists in "
+                        f"{_sc_pgo_share}/config; skipping loop closure."
+                    )))
+                else:
+                    _launch_ros1_bridge_adapter(
+                        f"native ROS2 sc_pgo has no config in {_sc_pgo_share}/config"
+                    )
+            except Exception as _e:
+                if loop_closure_backend == "ros2_sc_pgo":
+                    actions.append(LogInfo(msg=(
+                        f"[nav_test_mujoco_fastlio_mixed] loop_closure_backend:=ros2_sc_pgo "
+                        f"requested for ns={ns}, but `sc_pgo` is unavailable ({_e}); "
+                        f"skipping loop closure."
+                    )))
+                else:
+                    _launch_ros1_bridge_adapter(f"native ROS2 sc_pgo unavailable: {_e}")
+        elif loop_closure_backend == "ros1_bridge":
+            _launch_ros1_bridge_adapter("loop_closure_backend:=ros1_bridge")
+        else:
+            actions.append(LogInfo(msg=(
+                f"[nav_test_mujoco_fastlio_mixed] invalid loop_closure_backend="
+                f"{loop_closure_backend!r}; skipping loop closure for ns={ns}."
             )))
 
     # ── pointcloud_frame_bridge: body-frame Fast-LIO cloud → map frame for FAR ──
@@ -1793,9 +1844,73 @@ def _launch_setup(context):
     explore = _as_bool(_get(context, "explore"))
     slam_only = _as_bool(_get(context, "slam_only"))
     cleanup_stale = _as_bool(_get(context, "cleanup_stale"))
+    mujoco_cameras = _as_bool(_get(context, "mujoco_cameras"))
     debug = _as_bool(_get(context, "debug"))
     loop_closure_on = _as_bool(_get(context, "loop_closure"))
+    loop_closure_backend = (_get(context, "loop_closure_backend").strip().lower() or "auto")
     map_merge_enabled = _as_bool(_get(context, "map_merge"))
+    relative_pose_source = (_get(context, "relative_pose_source").strip().lower() or "none")
+    inter_robot_loop_closure = _as_bool(_get(context, "inter_robot_loop_closure"))
+    team_alignment_min_matches = int(_get(context, "team_alignment_min_matches").strip() or "2")
+    team_alignment_max_translation_disagreement = float(
+        _get(context, "team_alignment_max_translation_disagreement").strip() or "1.0"
+    )
+    team_alignment_max_yaw_disagreement_deg = float(
+        _get(context, "team_alignment_max_yaw_disagreement_deg").strip() or "10.0"
+    )
+    team_alignment_single_match_debug = _as_bool(_get(context, "team_alignment_single_match_debug"))
+    team_alignment_enable_map_merge = _as_bool(_get(context, "team_alignment_enable_map_merge"))
+    enable_gt_drift_metrics = _as_bool(_get(context, "enable_gt_drift_metrics"))
+    scan_context_num_rings = int(_get(context, "scan_context_num_rings").strip() or "20")
+    scan_context_num_sectors = int(_get(context, "scan_context_num_sectors").strip() or "60")
+    scan_context_max_radius = float(_get(context, "scan_context_max_radius").strip() or "80.0")
+    registration_backend = (_get(context, "registration_backend").strip().lower() or "icp_2d")
+    robust_min_inliers = int(_get(context, "robust_min_inliers").strip() or "7")
+    robust_min_inlier_ratio = float(_get(context, "robust_min_inlier_ratio").strip() or "0.25")
+    robust_max_median_rmse = float(_get(context, "robust_max_median_rmse").strip() or "0.45")
+    robust_max_translation_spread_m = float(
+        _get(context, "robust_max_translation_spread_m").strip() or "1.0"
+    )
+    robust_max_yaw_spread_deg = float(_get(context, "robust_max_yaw_spread_deg").strip() or "12.0")
+    robust_prefilter_max_rmse = float(_get(context, "robust_prefilter_max_rmse").strip() or "0.45")
+    robust_prefilter_min_inlier_ratio = float(
+        _get(context, "robust_prefilter_min_inlier_ratio").strip() or "0.35"
+    )
+    robust_prefilter_min_correspondences = int(
+        _get(context, "robust_prefilter_min_correspondences").strip() or "0"
+    )
+    robust_prefilter_max_descriptor_distance = float(
+        _get(context, "robust_prefilter_max_descriptor_distance").strip() or "0.45"
+    )
+    robust_deduplicate_by_query_keyframe = _as_bool(
+        _get(context, "robust_deduplicate_by_query_keyframe")
+    )
+    robust_deduplicate_by_match_keyframe = _as_bool(
+        _get(context, "robust_deduplicate_by_match_keyframe")
+    )
+    robust_deduplicate_transform_bin_translation_m = float(
+        _get(context, "robust_deduplicate_transform_bin_translation_m").strip() or "0.0"
+    )
+    robust_deduplicate_transform_bin_yaw_deg = float(
+        _get(context, "robust_deduplicate_transform_bin_yaw_deg").strip() or "0.0"
+    )
+    alignment_reject_timeout_sec = float(
+        _get(context, "alignment_reject_timeout_sec").strip() or "60.0"
+    )
+    alignment_reject_min_verified_matches = int(
+        _get(context, "alignment_reject_min_verified_matches").strip() or "7"
+    )
+    team_pose_graph_backend = (_get(context, "team_pose_graph_backend").strip().lower() or "auto")
+    team_alignment_allow_export_only_gate = _as_bool(
+        _get(context, "team_alignment_allow_export_only_gate")
+    )
+    use_dynamic_filter = _as_bool(_get(context, "use_dynamic_filter")) or _as_bool(
+        _get(context, "dynamic_filter_enabled")
+    )
+    decentralized_mode = _as_bool(_get(context, "decentralized_mode"))
+    robot_id = _get(context, "robot_id").strip().strip("/") or "robot_a"
+    peer_robot_id = _get(context, "peer_robot_id").strip().strip("/") or "robot_b"
+    team_comm_mode = (_get(context, "team_comm_mode").strip().lower() or "dds")
     mujoco_model_path = _get(context, "mujoco_model_path").strip()
     session_duration_sec = float(_get(context, "session_duration_sec"))
     session_output_dir = _get(context, "session_output_dir").strip()
@@ -1858,6 +1973,30 @@ def _launch_setup(context):
     if nav_backend_b not in _allowed:
         raise ValueError(
             f"nav_backend_b must be one of {_allowed}, got '{nav_backend_b}'")
+    if loop_closure_backend not in {"auto", "ros2_sc_pgo", "ros1_bridge"}:
+        raise ValueError(
+            "loop_closure_backend must be 'auto' | 'ros2_sc_pgo' | "
+            f"'ros1_bridge', got '{loop_closure_backend}'")
+    if team_pose_graph_backend not in {"auto", "gtsam", "gtsam_python", "gtsam_cpp", "g2o_export_only"}:
+        raise ValueError(
+            "team_pose_graph_backend must be 'auto' | 'gtsam' | 'gtsam_python' | 'gtsam_cpp' | "
+            f"'g2o_export_only', got '{team_pose_graph_backend}'")
+    cpp_pose_graph_owner = team_pose_graph_backend in {"auto", "gtsam_cpp"}
+    if team_comm_mode not in {"dds", "udp_json"}:
+        raise ValueError(f"team_comm_mode must be 'dds' | 'udp_json', got '{team_comm_mode}'")
+    if relative_pose_source not in {"none", "gt", "discovered"}:
+        raise ValueError(
+            "relative_pose_source must be 'none' | 'gt' | 'discovered', "
+            f"got '{relative_pose_source}'")
+    slam_bootstrap_from_gt = relative_pose_source == "gt"
+    if relative_pose_source == "none":
+        if map_merge_enabled:
+            map_merge_enabled = False
+    elif relative_pose_source == "discovered":
+        map_merge_enabled = map_merge_enabled and team_alignment_enable_map_merge
+    no_gt_runtime = relative_pose_source != "gt" and not enable_gt_drift_metrics
+    peer_filter_namespaces = relative_pose_source == "gt"
+    contact_odom_topic = "odom/nav" if no_gt_runtime else "odom/ground_truth"
     if slam_only:
         explore = False
 
@@ -1910,8 +2049,28 @@ def _launch_setup(context):
     sim_ns = "mujoco_sim"
 
     actions = [LogInfo(msg="[nav_test_mujoco_fastlio_mixed] starting heterogeneous dual-robot nav (Go2W + Go2)")]
+    actions.append(LogInfo(msg=(
+        f"[nav_test_mujoco_fastlio_mixed] relative_pose_source:={relative_pose_source} "
+        f"bootstrap_from_gt:={'true' if slam_bootstrap_from_gt else 'false'} "
+        f"map_merge:={'true' if map_merge_enabled else 'false'}"
+    )))
+    if relative_pose_source == "none":
+        actions.append(LogInfo(msg=(
+            "[nav_test_mujoco_fastlio_mixed] no initial inter-robot pose: "
+            "GT map_merge and shared-frame inter-robot candidates are disabled."
+        )))
+    elif relative_pose_source == "discovered":
+        actions.append(LogInfo(msg=(
+            "[nav_test_mujoco_fastlio_mixed] discovered inter-robot pose: "
+            "team_loop_closure will estimate robot_a/map -> robot_b/map from LiDAR keyframes."
+        )))
     if slam_only:
         actions.append(LogInfo(msg="[nav_test_mujoco_fastlio_mixed] slam_only:=true — starting MuJoCo, RSP, sensor bridges, Fast-LIO, octomap; skipping CHAMP/controller/nav/explore stacks"))
+    if use_dynamic_filter:
+        actions.append(LogInfo(msg=(
+            "[dynamic_scene_filter] enabled: raw Fast-LIO cloud remains unchanged; "
+            "team loop-closure keyframes use /robot_*/cloud_static."
+        )))
 
     # ── T=0: cleanup stale ──
     if cleanup_stale:
@@ -1932,6 +2091,7 @@ def _launch_setup(context):
             {"real_time_factor": 1.0},
             {"clock_publisher_frequency": 100.0},
             {"show_gui": gui},
+            {"enable_cameras": mujoco_cameras},
         ],
         remappings=[
             (f"/{sim_ns}/controller_manager/robot_description", f"/{sim_ns}/robot_description"),
@@ -1951,6 +2111,7 @@ def _launch_setup(context):
             imu_sensor="imu_imu_sensor",
             links_config=links_a,
             use_sim_time=use_sim_time,
+            contact_odom_topic=contact_odom_topic,
         )
     )
     sensor_actions.extend(
@@ -1961,6 +2122,7 @@ def _launch_setup(context):
             imu_sensor="b_imu_imu_sensor",
             links_config=links_b,
             use_sim_time=use_sim_time,
+            contact_odom_topic=contact_odom_topic,
         )
     )
     actions.append(TimerAction(period=5.0, actions=sensor_actions))
@@ -2062,8 +2224,10 @@ def _launch_setup(context):
             octomap_min_z=0.30,
             enable_nav=not slam_only,
             has_wheels=True,  # robot_a = Go2W
-            peer_namespaces=["robot_b"],
+            peer_namespaces=["robot_b"] if peer_filter_namespaces else [],
             loop_closure=loop_closure_on,
+            loop_closure_backend=loop_closure_backend,
+            bootstrap_from_gt=slam_bootstrap_from_gt,
             peer_obstacle_enabled=peer_obstacle_enabled,
         )
     )
@@ -2095,11 +2259,204 @@ def _launch_setup(context):
             octomap_min_z=0.30,
             enable_nav=not slam_only,
             has_wheels=False,  # robot_b = Go2 (no wheels)
-            peer_namespaces=["robot_a"],
+            peer_namespaces=["robot_a"] if peer_filter_namespaces else [],
             loop_closure=loop_closure_on,
+            loop_closure_backend=loop_closure_backend,
+            bootstrap_from_gt=slam_bootstrap_from_gt,
             peer_obstacle_enabled=peer_obstacle_enabled,
         )
     )
+
+    team_alignment_active = inter_robot_loop_closure or relative_pose_source == "discovered"
+    if team_alignment_active:
+        keyframe_cloud_topic = "/team_slam/static_keyframe_clouds" if use_dynamic_filter else "/team_slam/keyframe_clouds"
+        keyframe_input_cloud_topic = "cloud_static" if use_dynamic_filter else "cloud_registered_body"
+        team_alignment_nodes = []
+        if use_dynamic_filter:
+            team_alignment_nodes.extend([
+                Node(
+                    package="dynamic_scene_filter",
+                    executable="dynamic_obstacle_filter_node",
+                    name="dynamic_obstacle_filter_node",
+                    parameters=[{
+                        "use_sim_time": use_sim_time,
+                        "namespaces": ["robot_a", "robot_b"],
+                        "dynamic_filter_enabled": True,
+                    }],
+                    output="screen",
+                ),
+                Node(
+                    package="dynamic_scene_filter",
+                    executable="dynamic_voxel_decay_map_node",
+                    name="dynamic_voxel_decay_map_node",
+                    parameters=[{"use_sim_time": use_sim_time}],
+                    output="screen",
+                ),
+            ])
+        if decentralized_mode:
+            team_alignment_nodes.append(
+                Node(
+                    package="team_loop_closure",
+                    executable="team_slam_peer_node",
+                    name="team_slam_peer_node",
+                    parameters=[{
+                        "use_sim_time": use_sim_time,
+                        "robot_id": robot_id,
+                        "peer_robot_id": peer_robot_id,
+                        "team_comm_mode": team_comm_mode,
+                    }],
+                    output="screen",
+                )
+            )
+        team_pose_graph_export_dir = (
+            os.path.join(loop_risk_output_dir, "team_pose_graph")
+            if loop_risk_output_dir else os.path.join(str(workspace_root), "logs")
+        )
+        team_pose_graph_metrics_path = (
+            os.path.join(loop_risk_output_dir, "team_pose_graph_metrics.json")
+            if loop_risk_output_dir else os.path.join(str(workspace_root), "logs", "team_pose_graph_metrics.json")
+        )
+        team_pose_graph_export_metrics_path = (
+            os.path.join(loop_risk_output_dir, "team_pose_graph_export_metrics.json")
+            if loop_risk_output_dir else os.path.join(
+                str(workspace_root), "logs", "team_pose_graph_export_metrics.json")
+        )
+        team_alignment_nodes.extend([
+                    Node(
+                        package="team_loop_closure",
+                        executable="loop_keyframe_exporter_node",
+                        name="loop_keyframe_exporter_node",
+                        parameters=[{
+                            "use_sim_time": use_sim_time,
+                            "namespaces": ["robot_a", "robot_b"],
+                            "output_topic": "/team_slam/keyframes",
+                            "keyframe_cloud_topic": keyframe_cloud_topic,
+                            "cloud_topic": keyframe_input_cloud_topic,
+                            "scan_context_num_rings": scan_context_num_rings,
+                            "scan_context_num_sectors": scan_context_num_sectors,
+                            "scan_context_max_radius": scan_context_max_radius,
+                            "keyframe_min_translation": 1.0,
+                            "keyframe_min_yaw_deg": 10.0,
+                            "keyframe_min_time_sec": 1.0,
+                        }],
+                        output="screen",
+                    ),
+                    Node(
+                        package="team_loop_closure",
+                        executable="cross_robot_loop_matcher_node",
+                        name="cross_robot_loop_matcher_node",
+                        parameters=[{
+                            "use_sim_time": use_sim_time,
+                            "keyframe_topic": "/team_slam/keyframes",
+                            "keyframe_cloud_topic": keyframe_cloud_topic,
+                            "candidate_topic": "/team_slam/cross_robot_candidates",
+                            "match_topic": "/team_slam/cross_robot_matches",
+                            "reference_robot": "robot_a",
+                            "target_robot": "robot_b",
+                            "registration_backend": registration_backend,
+                        }],
+                        output="screen",
+                    ),
+                    Node(
+                        package="team_loop_closure",
+                        executable="robust_loop_selector_node",
+                        name="robust_loop_selector_node",
+                        parameters=[{
+                            "use_sim_time": use_sim_time,
+                            "match_topic": "/team_slam/cross_robot_matches",
+                            "robust_inliers_topic": "/team_slam/robust_loop_inliers",
+                            "reference_robot": "robot_a",
+                            "target_robot": "robot_b",
+                            "parent_frame": "robot_a/map",
+                            "child_frame": "robot_b/map",
+                            "team_alignment_min_matches": team_alignment_min_matches,
+                            "team_alignment_max_translation_disagreement": team_alignment_max_translation_disagreement,
+                            "team_alignment_max_yaw_disagreement_deg": team_alignment_max_yaw_disagreement_deg,
+                            "robust_min_inliers": robust_min_inliers,
+                            "robust_min_inlier_ratio": robust_min_inlier_ratio,
+                            "robust_max_median_rmse": robust_max_median_rmse,
+                            "robust_max_translation_spread_m": robust_max_translation_spread_m,
+                            "robust_max_yaw_spread_deg": robust_max_yaw_spread_deg,
+                            "robust_prefilter_max_rmse": robust_prefilter_max_rmse,
+                            "robust_prefilter_min_inlier_ratio": robust_prefilter_min_inlier_ratio,
+                            "robust_prefilter_min_correspondences": robust_prefilter_min_correspondences,
+                            "robust_prefilter_max_descriptor_distance": robust_prefilter_max_descriptor_distance,
+                            "robust_deduplicate_by_query_keyframe": robust_deduplicate_by_query_keyframe,
+                            "robust_deduplicate_by_match_keyframe": robust_deduplicate_by_match_keyframe,
+                            "robust_deduplicate_transform_bin_translation_m": (
+                                robust_deduplicate_transform_bin_translation_m
+                            ),
+                            "robust_deduplicate_transform_bin_yaw_deg": (
+                                robust_deduplicate_transform_bin_yaw_deg
+                            ),
+                        }],
+                        output="screen",
+                    ),
+                    Node(
+                        package="team_loop_closure",
+                        executable="team_pose_graph_node",
+                        name="team_pose_graph_node",
+                        parameters=[{
+                            "use_sim_time": use_sim_time,
+                            "robots": ["robot_a", "robot_b"],
+                            "keyframe_topic": "/team_slam/keyframes",
+                            "match_topic": "/team_slam/cross_robot_matches",
+                            "robust_inliers_topic": "/team_slam/robust_loop_inliers",
+                            "metrics_topic": "/team_slam/pose_graph_metrics",
+                            "factors_topic": "/team_slam/team_pose_graph_factors",
+                            "team_pose_graph_backend": team_pose_graph_backend,
+                            "export_dir": team_pose_graph_export_dir,
+                            "metrics_path": (
+                                team_pose_graph_export_metrics_path
+                                if cpp_pose_graph_owner else team_pose_graph_metrics_path
+                            ),
+                            "publish_backend_metrics": not cpp_pose_graph_owner,
+                            "allow_export_only_outputs": team_alignment_allow_export_only_gate,
+                        }],
+                        output="screen",
+                    ),
+                    *([
+                        Node(
+                            package="team_pose_graph_optimizer",
+                            executable="team_pose_graph_optimizer_node",
+                            name="team_pose_graph_optimizer_node",
+                            parameters=[{
+                                "use_sim_time": use_sim_time,
+                                "factors_topic": "/team_slam/team_pose_graph_factors",
+                                "metrics_topic": "/team_slam/pose_graph_metrics",
+                                "factors_json_path": os.path.join(
+                                    team_pose_graph_export_dir, "team_pose_graph_factors.json"),
+                                "metrics_path": team_pose_graph_metrics_path,
+                            }],
+                            output="screen",
+                        )
+                    ] if cpp_pose_graph_owner else []),
+                    Node(
+                        package="team_loop_closure",
+                        executable="relative_transform_manager_node",
+                        name="relative_transform_manager_node",
+                        parameters=[{
+                            "use_sim_time": use_sim_time,
+                            "robust_inliers_topic": "/team_slam/robust_loop_inliers",
+                            "pose_graph_metrics_topic": "/team_slam/pose_graph_metrics",
+                            "status_topic": "/team_slam/alignment_status",
+                            "relative_transform_topic": "/team_slam/relative_transform",
+                            "parent_frame": "robot_a/map",
+                            "child_frame": "robot_b/map",
+                            "team_alignment_allow_export_only_gate": team_alignment_allow_export_only_gate,
+                            "alignment_reject_timeout_sec": alignment_reject_timeout_sec,
+                            "alignment_reject_min_verified_matches": alignment_reject_min_verified_matches,
+                            "publish_tf": False,
+                        }],
+                        output="screen",
+                    ),
+        ])
+        actions.append(
+            TimerAction(
+                period=slam_delay + 4.0,
+                actions=team_alignment_nodes,
+            )
+        )
 
     def _loop_risk_artifact(name: str) -> str:
         if not loop_risk_output_dir:
@@ -2123,6 +2480,9 @@ def _launch_setup(context):
                     "use_sim_time": use_sim_time,
                     "namespaces": ["robot_a", "robot_b"],
                     "output_path": _loop_risk_artifact("pose_graph_health.json"),
+                    "require_team_alignment_for_inter_robot": relative_pose_source == "discovered",
+                    "alignment_status_topic": "/team_slam/alignment_status",
+                    "enable_gt_drift_metrics": enable_gt_drift_metrics,
                 }],
                 output="screen",
             )
@@ -2137,6 +2497,9 @@ def _launch_setup(context):
                     "use_sim_time": use_sim_time,
                     "output_path": _loop_risk_artifact("loop_candidates.json"),
                     "map_topic": "/merged_map",
+                    "inter_robot_enabled": inter_robot_loop_closure or relative_pose_source == "gt",
+                    "require_team_alignment_for_inter_robot": relative_pose_source == "discovered",
+                    "alignment_status_topic": "/team_slam/alignment_status",
                 }],
                 output="screen",
             )
@@ -2293,9 +2656,17 @@ def _launch_setup(context):
                                 # for the first ~30 s while map_merge
                                 # bootstraps GT init poses, then auto-
                                 # switches once the merged map arrives.
-                                "use_shared_map": True,
+                                "use_shared_map": map_merge_enabled,
                                 "shared_map_topic": "/merged_map",
-                                "shared_map_wait_sec": 35.0,
+                                # In discovered mode, alignment needs robots
+                                # to move first and produce multiple LiDAR
+                                # keyframes. Waiting for /merged_map here
+                                # deadlocks that process because /merged_map
+                                # itself is gated on robust alignment.
+                                # Fail open immediately to per-robot maps;
+                                # CFPA2 will still switch to /merged_map
+                                # automatically after map_merge appears.
+                                "shared_map_wait_sec": 0.0 if relative_pose_source == "discovered" else 35.0,
                             },
                         ],
                         output="screen",
@@ -2320,7 +2691,7 @@ def _launch_setup(context):
     ]
     if collision_output:
         collision_args += ["--output", collision_output]
-    if not slam_only:
+    if not slam_only and not no_gt_runtime:
         actions.append(
             TimerAction(
                 period=3.5,  # right after MuJoCo comes up (T=3)
@@ -2387,16 +2758,13 @@ def _launch_setup(context):
             )
         )
 
-    # ── multirobot_map_merge with GT-bootstrapped init poses ──
+    # ── multirobot_map_merge ──
     # robot_a and robot_b each publish `/robot_*/map` (OccupancyGrid,
     # frame_id=map). The map_merge node takes both + per-robot
     # `init_pose_{x,y,yaw}` in world_frame and emits a merged `/merged_map`.
-    #
-    # We could hardcode init poses from the MJCF spawn coords, but they drift
-    # out of sync whenever the scene is edited. Instead: a one-shot Python
-    # helper subscribes to `/robot_*/odom/ground_truth`, captures the first
-    # message from each, writes a params YAML, and exits. An OnProcessExit
-    # handler chains the map_merge node onto that exit.
+    # relative_pose_source:=gt uses the legacy map-origin helper with GT
+    # logging. relative_pose_source:=discovered waits for team_loop_closure
+    # to publish an aligned robot_a/map -> robot_b/map transform first.
     if map_merge_enabled:
         try:
             get_package_share_directory("multirobot_map_merge")
@@ -2411,24 +2779,45 @@ def _launch_setup(context):
                 )
             )
         else:
-            bootstrap_script = str(
-                workspace_root / "scripts" / "runtime" / "bootstrap_map_merge_poses.py"
+            merge_params_path = (
+                "/tmp/map_merge_params_discovered.yaml"
+                if relative_pose_source == "discovered"
+                else "/tmp/map_merge_params.yaml"
             )
-            merge_params_path = "/tmp/map_merge_params.yaml"
-            bootstrap_proc = ExecuteProcess(
-                cmd=[
-                    "python3", "-u", bootstrap_script,
-                    "--robots", "robot_a", "robot_b",
-                    "--gt-topic-suffix", "odom/ground_truth",
-                    "--output", merge_params_path,
-                    "--timeout-sec", "30",
-                    "--merged-map-topic", "merged_map",
-                    "--merging-rate", "2.0",
-                    "--discovery-rate", "0.5",
-                ],
-                name="bootstrap_map_merge_poses",
-                output="screen",
-            )
+            if relative_pose_source == "discovered":
+                bootstrap_proc = ExecuteProcess(
+                    cmd=[
+                        "ros2", "run", "team_loop_closure",
+                        "discovered_map_merge_bootstrap_node",
+                        "--robots", "robot_a", "robot_b",
+                        "--alignment-status-topic", "/team_slam/alignment_status",
+                        "--output", merge_params_path,
+                        "--timeout-sec", "180",
+                        "--merged-map-topic", "merged_map",
+                        "--merging-rate", "2.0",
+                        "--discovery-rate", "0.5",
+                    ],
+                    name="discovered_map_merge_bootstrap",
+                    output="screen",
+                )
+            else:
+                bootstrap_script = str(
+                    workspace_root / "scripts" / "runtime" / "bootstrap_map_merge_poses.py"
+                )
+                bootstrap_proc = ExecuteProcess(
+                    cmd=[
+                        "python3", "-u", bootstrap_script,
+                        "--robots", "robot_a", "robot_b",
+                        "--gt-topic-suffix", "odom/ground_truth",
+                        "--output", merge_params_path,
+                        "--timeout-sec", "30",
+                        "--merged-map-topic", "merged_map",
+                        "--merging-rate", "2.0",
+                        "--discovery-rate", "0.5",
+                    ],
+                    name="bootstrap_map_merge_poses",
+                    output="screen",
+                )
             map_merge_node = Node(
                 package="multirobot_map_merge",
                 executable="map_merge",
@@ -2436,7 +2825,11 @@ def _launch_setup(context):
                 parameters=[merge_params_path, {"use_sim_time": use_sim_time}],
                 output="screen",
             )
-            actions.append(TimerAction(period=slam_delay + 2.0, actions=[bootstrap_proc]))
+            # Start discovered map-merge bootstrap only after the team
+            # alignment front-end/back-end nodes exist. This avoids accepting
+            # a stale aligned status if a previous benchmark launch was not
+            # fully torn down yet.
+            actions.append(TimerAction(period=slam_delay + 6.0, actions=[bootstrap_proc]))
 
             def _on_bootstrap_exit(event, _context):
                 rc = getattr(event, "returncode", None)
@@ -2445,7 +2838,7 @@ def _launch_setup(context):
                 return [
                     LogInfo(
                         msg=(
-                            f"[map_merge] bootstrap_map_merge_poses exited with "
+                            f"[map_merge] map-merge bootstrap exited with "
                             f"code {rc}; skipping map_merge (no valid init poses)."
                         )
                     )
@@ -2469,15 +2862,23 @@ def _launch_setup(context):
             TimerAction(
                 period=slam_delay,
                 actions=[
-                    Node(
-                        package="go2w_perception",
-                        executable="multi_tf_relay",
-                        name="multi_tf_relay",
-                        parameters=[
-                            {"use_sim_time": use_sim_time},
-                            {"sources": ["robot_a", "robot_b"]},
-                        ],
-                        output="screen",
+                    (
+                        Node(
+                            package="go2w_perception",
+                            executable="multi_tf_relay",
+                            name="multi_tf_relay",
+                            parameters=[
+                                {"use_sim_time": use_sim_time},
+                                {"sources": ["robot_a", "robot_b"]},
+                            ],
+                            output="screen",
+                        )
+                        if relative_pose_source == "gt"
+                        else LogInfo(msg=(
+                            "[rviz] skipping global multi_tf_relay because "
+                            f"relative_pose_source:={relative_pose_source}; "
+                            "per-robot TF trees are not in one shared frame yet."
+                        ))
                     ),
                     # VSCode-snap shells inject XDG_DATA_HOME, GSETTINGS_SCHEMA_DIR,
                     # GTK_PATH, LOCPATH that point into /snap/code/*/. That path
@@ -2551,9 +2952,142 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument("cleanup_stale", default_value="true"),
         DeclareLaunchArgument(
-            "map_merge", default_value="true",
-            description="Run multirobot_map_merge with GT-bootstrapped initial poses.",
+            "mujoco_cameras", default_value="false",
+            description=(
+                "Start MJCF RGB-D camera publishers. Default false keeps this "
+                "LiDAR/odometry SLAM launch headless-safe; set true for "
+                "VLM/camera tests."
+            ),
         ),
+        DeclareLaunchArgument(
+            "map_merge", default_value="true",
+            description=(
+                "Run map merge when the selected relative_pose_source can provide "
+                "an inter-robot transform. Disabled automatically for "
+                "relative_pose_source:=none."
+            ),
+        ),
+        DeclareLaunchArgument(
+            "relative_pose_source", default_value="none",
+            description=(
+                "none | gt | discovered. none assumes robots do not know their "
+                "initial relative pose and disables GT bootstrap/map_merge; gt "
+                "keeps legacy MuJoCo/bootstrap behavior; discovered waits for "
+                "team_loop_closure to estimate robot_a/map -> robot_b/map."
+            ),
+        ),
+        DeclareLaunchArgument(
+            "inter_robot_loop_closure", default_value="false",
+            description=(
+                "Enable LiDAR-only cross-robot place recognition and "
+                "alignment status topics. Does not modify ROS1 SC-PGO graphs."
+            ),
+        ),
+        DeclareLaunchArgument(
+            "team_alignment_min_matches", default_value="2",
+            description="Consistent accepted cross-robot matches required before status:=aligned.",
+        ),
+        DeclareLaunchArgument(
+            "team_alignment_max_translation_disagreement", default_value="1.0",
+            description="Max translation disagreement among accepted cross-robot transforms before rejecting alignment.",
+        ),
+        DeclareLaunchArgument(
+            "team_alignment_max_yaw_disagreement_deg", default_value="10.0",
+            description="Max yaw disagreement among accepted cross-robot transforms before rejecting alignment.",
+        ),
+        DeclareLaunchArgument(
+            "team_alignment_single_match_debug", default_value="false",
+            description="Debug only: allow one high-confidence match to publish status:=aligned.",
+        ),
+        DeclareLaunchArgument(
+            "team_alignment_enable_map_merge", default_value="true",
+            description="When relative_pose_source:=discovered, start map_merge only after team alignment.",
+        ),
+        DeclareLaunchArgument(
+            "enable_gt_drift_metrics", default_value="false",
+            description="Subscribe to sim /odom/ground_truth only for eval-only drift metrics; keep false for no-GT runtime.",
+        ),
+        DeclareLaunchArgument("scan_context_num_rings", default_value="20"),
+        DeclareLaunchArgument("scan_context_num_sectors", default_value="60"),
+        DeclareLaunchArgument("scan_context_max_radius", default_value="80.0"),
+        DeclareLaunchArgument(
+            "registration_backend", default_value="icp_2d",
+            description="Cross-robot registration backend interface. v2 keeps self-contained icp_2d only.",
+        ),
+        DeclareLaunchArgument(
+            "robust_min_inliers", default_value="7",
+            description="Robust inter-robot loop inlier set size required before accepted alignment.",
+        ),
+        DeclareLaunchArgument(
+            "robust_min_inlier_ratio", default_value="0.25",
+            description="Minimum robust inlier ratio inside the eligible pairwise-consistent component.",
+        ),
+        DeclareLaunchArgument(
+            "robust_max_median_rmse", default_value="0.45",
+            description="Maximum median ICP RMSE for the robust inter-robot inlier set.",
+        ),
+        DeclareLaunchArgument(
+            "robust_max_translation_spread_m", default_value="1.0",
+            description="Maximum translation spread of the selected robust transform estimates.",
+        ),
+        DeclareLaunchArgument(
+            "robust_max_yaw_spread_deg", default_value="12.0",
+            description="Maximum yaw spread of the selected robust transform estimates.",
+        ),
+        DeclareLaunchArgument(
+            "robust_prefilter_max_rmse", default_value="0.45",
+            description="Maximum ICP RMSE before a verified match is eligible for robust consensus.",
+        ),
+        DeclareLaunchArgument(
+            "robust_prefilter_min_inlier_ratio", default_value="0.45",
+            description="Minimum ICP inlier ratio before a verified match is eligible for robust consensus.",
+        ),
+        DeclareLaunchArgument(
+            "robust_prefilter_min_correspondences", default_value="0",
+            description="Minimum ICP correspondence count before a verified match is eligible for robust consensus.",
+        ),
+        DeclareLaunchArgument(
+            "robust_prefilter_max_descriptor_distance", default_value="0.45",
+            description="Maximum Scan Context descriptor distance before a verified match is eligible.",
+        ),
+        DeclareLaunchArgument(
+            "robust_deduplicate_by_query_keyframe", default_value="false",
+            description="Optionally keep only the best verified match per query keyframe before robust PCM selection.",
+        ),
+        DeclareLaunchArgument(
+            "robust_deduplicate_by_match_keyframe", default_value="false",
+            description="Optionally keep only the best verified match per matched keyframe before robust PCM selection.",
+        ),
+        DeclareLaunchArgument(
+            "robust_deduplicate_transform_bin_translation_m", default_value="0.0",
+            description="Optional translation bin size for transform-cluster de-duplication; 0 disables.",
+        ),
+        DeclareLaunchArgument(
+            "robust_deduplicate_transform_bin_yaw_deg", default_value="0.0",
+            description="Optional yaw bin size for transform-cluster de-duplication; 0 disables.",
+        ),
+        DeclareLaunchArgument(
+            "team_pose_graph_backend", default_value="auto",
+            description="auto | gtsam_python | gtsam_cpp | g2o_export_only. auto uses available GTSAM, otherwise explicit export-only mode.",
+        ),
+        DeclareLaunchArgument(
+            "team_alignment_allow_export_only_gate", default_value="false",
+            description="Debug/eval only: allow map-merge alignment gate when pose graph is export-only rather than optimized.",
+        ),
+        DeclareLaunchArgument(
+            "alignment_reject_timeout_sec", default_value="60.0",
+            description="After this many seconds without robust acceptance, publish rejected status for no-overlap diagnostics.",
+        ),
+        DeclareLaunchArgument(
+            "alignment_reject_min_verified_matches", default_value="7",
+            description="Verified-match evidence threshold for publishing rejected status before robust acceptance.",
+        ),
+        DeclareLaunchArgument("use_dynamic_filter", default_value="false"),
+        DeclareLaunchArgument("dynamic_filter_enabled", default_value="false"),
+        DeclareLaunchArgument("decentralized_mode", default_value="false"),
+        DeclareLaunchArgument("robot_id", default_value="robot_a"),
+        DeclareLaunchArgument("peer_robot_id", default_value="robot_b"),
+        DeclareLaunchArgument("team_comm_mode", default_value="dds"),
         DeclareLaunchArgument(
             "mujoco_model_path", default_value="",
             description="Path to MJCF scene. Defaults to demo3_mixed.xml (Go2W robot_a + Go2 robot_b).",
@@ -2587,18 +3121,20 @@ def generate_launch_description():
             "loop_closure", default_value="false",
             description=(
                 "Enable Fast-LIO2 loop-closure post-processor (per-namespace). "
-                "When true, attempts to launch the `sc_pgo` package node which "
-                "subscribes to /<ns>/Odometry + /<ns>/cloud_registered_body, "
-                "runs ICP-verified loop detection, and publishes "
-                "/<ns>/corrected_odom — slam_odom_relay then prefers the "
-                "corrected source over raw Fast-LIO. When false (default), "
-                "Fast-LIO2 runs alone (open-loop, will accumulate drift over "
-                "long trajectories — see fastlio drift discussion 2026-04-29). "
-                "If the sc_pgo package is not built, the toggle warns and "
-                "skips silently — no crash; equivalent to `false`. "
-                "Note: sc_pgo is currently vendored as ROS 1 source "
-                "(src/vendor/sc_pgo/, COLCON_IGNORE in place) — needs ROS 2 "
-                "porting before this toggle has any effect."
+                "When true, backend selection is controlled by "
+                "loop_closure_backend. The ROS1 bridge backend expects "
+                "Docker to run native ROS1 fast_lio_sam_node and bridge "
+                "/<ns>/sc_pgo/pose_stamped back into ROS2; this launch then "
+                "converts it to /<ns>/corrected_odom for fast_lio_tf_adapter."
+            ),
+        ),
+        DeclareLaunchArgument(
+            "loop_closure_backend", default_value="auto",
+            description=(
+                "auto | ros2_sc_pgo | ros1_bridge. auto first tries a native "
+                "ROS2 sc_pgo package; if unavailable, starts the ROS2 "
+                "PoseStamped->Odometry adapter for the Docker ROS1 bridge. "
+                "Use ros1_bridge to force the Docker path."
             ),
         ),
         DeclareLaunchArgument(

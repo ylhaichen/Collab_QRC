@@ -82,6 +82,7 @@ private:
   std::string robot_namespace_;
   std::string world_frame_;
   bool have_initial_poses_;
+  bool track_map_origin_;
 
   // publishing
   rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr merged_map_publisher_;

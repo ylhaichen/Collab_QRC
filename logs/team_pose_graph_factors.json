@@ -1,0 +1,2080 @@
+{
+  "alignment_confidence": 0.6349,
+  "factors": [
+    {
+      "factor_type": "prior",
+      "key1": [
+        "robot_a",
+        0
+      ],
+      "key2": null,
+      "match_id": "",
+      "measurement": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "noise_scale": 0.1,
+      "source": "anchor"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_a",
+        0
+      ],
+      "key2": [
+        "robot_a",
+        1
+      ],
+      "match_id": "",
+      "measurement": [
+        0.03580852734351138,
+        0.007559720199121015,
+        -0.17931999999999998
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_a",
+        1
+      ],
+      "key2": [
+        "robot_a",
+        2
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.4659588370433673,
+        0.05010052076767911,
+        0.257235
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_a",
+        2
+      ],
+      "key2": [
+        "robot_a",
+        3
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.08392733558059151,
+        0.034634842894732204,
+        0.83737
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_a",
+        3
+      ],
+      "key2": [
+        "robot_a",
+        4
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.14420413442925753,
+        -0.024291101529337944,
+        1.5481690000000004
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_a",
+        4
+      ],
+      "key2": [
+        "robot_a",
+        5
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.10959309333981687,
+        -0.059345378018934025,
+        -0.23473399999999997
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_a",
+        5
+      ],
+      "key2": [
+        "robot_a",
+        6
+      ],
+      "match_id": "",
+      "measurement": [
+        0.23558570173061344,
+        0.035841695552727704,
+        0.22389999999999996
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_a",
+        6
+      ],
+      "key2": [
+        "robot_a",
+        7
+      ],
+      "match_id": "",
+      "measurement": [
+        0.002000385052481457,
+        0.11191871362574635,
+        -0.240701
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_a",
+        7
+      ],
+      "key2": [
+        "robot_a",
+        8
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.11202085891458996,
+        0.06443963972616185,
+        0.7307510000000002
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_a",
+        8
+      ],
+      "key2": [
+        "robot_a",
+        9
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.17851440193490858,
+        0.023579828282282916,
+        1.6198633071795863
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_a",
+        9
+      ],
+      "key2": [
+        "robot_a",
+        10
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.13090737461425442,
+        -0.011727713826797381,
+        -1.0540100000000001
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_a",
+        10
+      ],
+      "key2": [
+        "robot_a",
+        11
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.16783261360413038,
+        0.021421106666245027,
+        0.3722080000000001
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_a",
+        11
+      ],
+      "key2": [
+        "robot_a",
+        12
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.0663802157188014,
+        0.21126134753221046,
+        1.361232
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_a",
+        12
+      ],
+      "key2": [
+        "robot_a",
+        13
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.6150078991453733,
+        0.05667322109069002,
+        0.5550660000000001
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        0
+      ],
+      "key2": [
+        "robot_b",
+        1
+      ],
+      "match_id": "",
+      "measurement": [
+        0.11059337035143553,
+        0.021334395569366883,
+        0.2943950000000001
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        1
+      ],
+      "key2": [
+        "robot_b",
+        2
+      ],
+      "match_id": "",
+      "measurement": [
+        0.015914239395010965,
+        0.009076727630499996,
+        -0.28629899999999997
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        2
+      ],
+      "key2": [
+        "robot_b",
+        3
+      ],
+      "match_id": "",
+      "measurement": [
+        0.014061076637340575,
+        0.007790771707529051,
+        -0.504636
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        3
+      ],
+      "key2": [
+        "robot_b",
+        4
+      ],
+      "match_id": "",
+      "measurement": [
+        0.2350573472783767,
+        -0.05273379836928703,
+        -0.492801
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        4
+      ],
+      "key2": [
+        "robot_b",
+        5
+      ],
+      "match_id": "",
+      "measurement": [
+        0.23152434135508848,
+        -0.0628143244817014,
+        -0.37462600000000007
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        5
+      ],
+      "key2": [
+        "robot_b",
+        6
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.16648910877192374,
+        -0.07730347120492415,
+        0.7366020000000002
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        6
+      ],
+      "key2": [
+        "robot_b",
+        7
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.1732786414411611,
+        -0.16031803523092947,
+        1.244356
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        7
+      ],
+      "key2": [
+        "robot_b",
+        8
+      ],
+      "match_id": "",
+      "measurement": [
+        0.1318645157887593,
+        0.09332989593799002,
+        0.9494239999999999
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        8
+      ],
+      "key2": [
+        "robot_b",
+        9
+      ],
+      "match_id": "",
+      "measurement": [
+        0.19188532355785282,
+        0.04620089396427447,
+        0.44168900000000005
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        9
+      ],
+      "key2": [
+        "robot_b",
+        10
+      ],
+      "match_id": "",
+      "measurement": [
+        0.27163481100532955,
+        -0.039912021373252005,
+        -0.3226949999999999
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        10
+      ],
+      "key2": [
+        "robot_b",
+        11
+      ],
+      "match_id": "",
+      "measurement": [
+        0.26347336480704,
+        -0.01706124371950629,
+        -0.2067079999999999
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        11
+      ],
+      "key2": [
+        "robot_b",
+        12
+      ],
+      "match_id": "",
+      "measurement": [
+        0.48509033210625807,
+        -0.03056876996282675,
+        -0.17884800000000012
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        12
+      ],
+      "key2": [
+        "robot_b",
+        13
+      ],
+      "match_id": "",
+      "measurement": [
+        1.0118395431420368,
+        -0.03859894990948348,
+        -0.147003
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        13
+      ],
+      "key2": [
+        "robot_b",
+        14
+      ],
+      "match_id": "",
+      "measurement": [
+        0.5079892618291146,
+        -0.04308468250215147,
+        -0.1811260000000001
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        14
+      ],
+      "key2": [
+        "robot_b",
+        15
+      ],
+      "match_id": "",
+      "measurement": [
+        0.38623828529225346,
+        -0.014908956184110367,
+        -0.287608
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        15
+      ],
+      "key2": [
+        "robot_b",
+        16
+      ],
+      "match_id": "",
+      "measurement": [
+        1.0180652756401254,
+        -0.05116243285650168,
+        0.06768800000000007
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        16
+      ],
+      "key2": [
+        "robot_b",
+        17
+      ],
+      "match_id": "",
+      "measurement": [
+        0.9126191630186016,
+        -0.002015760706430836,
+        -0.2118960000000001
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        17
+      ],
+      "key2": [
+        "robot_b",
+        18
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.015914848977987006,
+        -0.021124572942614606,
+        -0.9055719999999999
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        18
+      ],
+      "key2": [
+        "robot_b",
+        19
+      ],
+      "match_id": "",
+      "measurement": [
+        0.4640227061139004,
+        -0.04888208476254441,
+        -0.207146
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        19
+      ],
+      "key2": [
+        "robot_b",
+        20
+      ],
+      "match_id": "",
+      "measurement": [
+        0.31574203888108343,
+        -0.11745439490805065,
+        -0.275201
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        20
+      ],
+      "key2": [
+        "robot_b",
+        21
+      ],
+      "match_id": "",
+      "measurement": [
+        0.30808655812631347,
+        0.11314734951328731,
+        0.500372
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        21
+      ],
+      "key2": [
+        "robot_b",
+        22
+      ],
+      "match_id": "",
+      "measurement": [
+        0.7373102553576321,
+        0.03042494608809676,
+        0.19398900000000005
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        22
+      ],
+      "key2": [
+        "robot_b",
+        23
+      ],
+      "match_id": "",
+      "measurement": [
+        0.40837088801095334,
+        0.030384499751451965,
+        0.231878
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        23
+      ],
+      "key2": [
+        "robot_b",
+        24
+      ],
+      "match_id": "",
+      "measurement": [
+        0.9203889024518492,
+        0.006377949786488646,
+        -0.180965
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        24
+      ],
+      "key2": [
+        "robot_b",
+        25
+      ],
+      "match_id": "",
+      "measurement": [
+        0.7627687619070862,
+        -0.06146328870740936,
+        -0.19593700000000003
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        25
+      ],
+      "key2": [
+        "robot_b",
+        26
+      ],
+      "match_id": "",
+      "measurement": [
+        0.3979827134826097,
+        -0.06799036526611246,
+        -0.24164199999999997
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        26
+      ],
+      "key2": [
+        "robot_b",
+        27
+      ],
+      "match_id": "",
+      "measurement": [
+        0.11540234560181473,
+        -0.004555066366052074,
+        -0.29507800000000006
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        27
+      ],
+      "key2": [
+        "robot_b",
+        28
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.16299343721494086,
+        0.12256145162676191,
+        -1.181325
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        28
+      ],
+      "key2": [
+        "robot_b",
+        29
+      ],
+      "match_id": "",
+      "measurement": [
+        0.24328863754540464,
+        -0.14311791935778206,
+        -0.8595669999999997
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        29
+      ],
+      "key2": [
+        "robot_b",
+        30
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.010403424369811454,
+        -0.06162644530866279,
+        0.3673780000000001
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        30
+      ],
+      "key2": [
+        "robot_b",
+        31
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.06328403122064152,
+        0.03595805045417011,
+        0.318778
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        31
+      ],
+      "key2": [
+        "robot_b",
+        32
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.03588405190439481,
+        -0.03579420091191654,
+        0.5821200000000001
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        32
+      ],
+      "key2": [
+        "robot_b",
+        33
+      ],
+      "match_id": "",
+      "measurement": [
+        0.10892395447423064,
+        0.017398624707022137,
+        0.489544
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        33
+      ],
+      "key2": [
+        "robot_b",
+        34
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.02433819797165615,
+        -0.01853057256245716,
+        0.22480499999999992
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        34
+      ],
+      "key2": [
+        "robot_b",
+        35
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.06718600136968034,
+        0.007542626860271184,
+        0.406381
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        35
+      ],
+      "key2": [
+        "robot_b",
+        36
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.09721712532259286,
+        -0.03695240917736431,
+        0.397825
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        36
+      ],
+      "key2": [
+        "robot_b",
+        37
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.029181043173073462,
+        -0.0015220773079001049,
+        0.333122
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        37
+      ],
+      "key2": [
+        "robot_b",
+        38
+      ],
+      "match_id": "",
+      "measurement": [
+        0.010778957385481291,
+        -0.006385458298507007,
+        0.383173
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        38
+      ],
+      "key2": [
+        "robot_b",
+        39
+      ],
+      "match_id": "",
+      "measurement": [
+        0.011356385360666188,
+        -0.002047562340942388,
+        0.24468199999999998
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        39
+      ],
+      "key2": [
+        "robot_b",
+        40
+      ],
+      "match_id": "",
+      "measurement": [
+        0.04727604524040885,
+        -0.011447949442008998,
+        0.20651400000000014
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        40
+      ],
+      "key2": [
+        "robot_b",
+        41
+      ],
+      "match_id": "",
+      "measurement": [
+        0.08171739391162358,
+        0.026654596832301536,
+        0.1769429999999999
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        41
+      ],
+      "key2": [
+        "robot_b",
+        42
+      ],
+      "match_id": "",
+      "measurement": [
+        0.1433999380263522,
+        0.0035577765582832654,
+        0.19531700000000016
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        42
+      ],
+      "key2": [
+        "robot_b",
+        43
+      ],
+      "match_id": "",
+      "measurement": [
+        0.29579240115533345,
+        0.032887922080331755,
+        0.17543699999999984
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        43
+      ],
+      "key2": [
+        "robot_b",
+        44
+      ],
+      "match_id": "",
+      "measurement": [
+        1.019959105456548,
+        -0.04876098026372855,
+        -0.11734599999999995
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        44
+      ],
+      "key2": [
+        "robot_b",
+        45
+      ],
+      "match_id": "",
+      "measurement": [
+        0.0763553803819077,
+        -0.014442502786361722,
+        0.18438100000000013
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        45
+      ],
+      "key2": [
+        "robot_b",
+        46
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.032218644754967496,
+        0.011696534963537175,
+        0.531139
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        46
+      ],
+      "key2": [
+        "robot_b",
+        47
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.024450639782995776,
+        -0.033294086775314646,
+        0.5484289999999999
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        47
+      ],
+      "key2": [
+        "robot_b",
+        48
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.05177229010997664,
+        -0.026918209018588435,
+        0.45892630717958643
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        48
+      ],
+      "key2": [
+        "robot_b",
+        49
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.17451882999627344,
+        0.015435607429957976,
+        -0.17894430717958643
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        49
+      ],
+      "key2": [
+        "robot_b",
+        50
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.6657080617837501,
+        0.0015480555943119256,
+        0.2389433071795864
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        50
+      ],
+      "key2": [
+        "robot_b",
+        51
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.018404566485853202,
+        0.020163133002284006,
+        0.3710469999999999
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        51
+      ],
+      "key2": [
+        "robot_b",
+        52
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.015063063278216049,
+        -0.023870151333338363,
+        0.25649299999999986
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        52
+      ],
+      "key2": [
+        "robot_b",
+        53
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.05436350955929292,
+        -0.010079128355007683,
+        0.5875000000000001
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "odom",
+      "key1": [
+        "robot_b",
+        53
+      ],
+      "key2": [
+        "robot_b",
+        54
+      ],
+      "match_id": "",
+      "measurement": [
+        -0.019316956023283538,
+        -0.021924078315736395,
+        0.24158200000000019
+      ],
+      "noise_scale": 1.0,
+      "source": "keyframe_odom"
+    },
+    {
+      "factor_type": "inter_robot",
+      "key1": [
+        "robot_b",
+        25
+      ],
+      "key2": [
+        "robot_a",
+        12
+      ],
+      "match_id": "robot_b|robot_b_kf_000025|robot_a|robot_a_kf_000012|82.786",
+      "measurement": [
+        0.24704,
+        0.6693,
+        -0.851531
+      ],
+      "noise_scale": 0.26051,
+      "source": "robust"
+    },
+    {
+      "factor_type": "inter_robot",
+      "key1": [
+        "robot_b",
+        28
+      ],
+      "key2": [
+        "robot_a",
+        2
+      ],
+      "match_id": "robot_b|robot_b_kf_000028|robot_a|robot_a_kf_000002|86.746",
+      "measurement": [
+        0.75787,
+        -0.32809,
+        2.601734
+      ],
+      "noise_scale": 0.31077,
+      "source": "robust"
+    },
+    {
+      "factor_type": "inter_robot",
+      "key1": [
+        "robot_b",
+        28
+      ],
+      "key2": [
+        "robot_a",
+        0
+      ],
+      "match_id": "robot_b|robot_b_kf_000028|robot_a|robot_a_kf_000000|86.746",
+      "measurement": [
+        0.7703,
+        -0.1873,
+        2.726715
+      ],
+      "noise_scale": 0.30321,
+      "source": "robust"
+    },
+    {
+      "factor_type": "inter_robot",
+      "key1": [
+        "robot_b",
+        31
+      ],
+      "key2": [
+        "robot_a",
+        2
+      ],
+      "match_id": "robot_b|robot_b_kf_000031|robot_a|robot_a_kf_000002|89.17",
+      "measurement": [
+        0.60316,
+        -0.41024,
+        2.434033
+      ],
+      "noise_scale": 0.29857,
+      "source": "robust"
+    },
+    {
+      "factor_type": "inter_robot",
+      "key1": [
+        "robot_b",
+        36
+      ],
+      "key2": [
+        "robot_a",
+        12
+      ],
+      "match_id": "robot_b|robot_b_kf_000036|robot_a|robot_a_kf_000012|93.948",
+      "measurement": [
+        0.32646,
+        0.52314,
+        -0.581317
+      ],
+      "noise_scale": 0.23986,
+      "source": "robust"
+    },
+    {
+      "factor_type": "inter_robot",
+      "key1": [
+        "robot_b",
+        37
+      ],
+      "key2": [
+        "robot_a",
+        13
+      ],
+      "match_id": "robot_b|robot_b_kf_000037|robot_a|robot_a_kf_000013|94.22",
+      "measurement": [
+        0.8314,
+        -0.45248,
+        -1.002741
+      ],
+      "noise_scale": 0.21807,
+      "source": "robust"
+    },
+    {
+      "factor_type": "inter_robot",
+      "key1": [
+        "robot_b",
+        38
+      ],
+      "key2": [
+        "robot_a",
+        13
+      ],
+      "match_id": "robot_b|robot_b_kf_000038|robot_a|robot_a_kf_000013|94.898",
+      "measurement": [
+        0.831,
+        -0.32827,
+        -0.426612
+      ],
+      "noise_scale": 0.2,
+      "source": "robust"
+    },
+    {
+      "factor_type": "inter_robot",
+      "key1": [
+        "robot_b",
+        38
+      ],
+      "key2": [
+        "robot_a",
+        2
+      ],
+      "match_id": "robot_b|robot_b_kf_000038|robot_a|robot_a_kf_000002|94.898",
+      "measurement": [
+        0.67474,
+        -0.37789,
+        -0.976248
+      ],
+      "noise_scale": 0.2,
+      "source": "robust"
+    },
+    {
+      "factor_type": "inter_robot",
+      "key1": [
+        "robot_b",
+        38
+      ],
+      "key2": [
+        "robot_a",
+        1
+      ],
+      "match_id": "robot_b|robot_b_kf_000038|robot_a|robot_a_kf_000001|94.898",
+      "measurement": [
+        0.81493,
+        -0.01115,
+        -0.629148
+      ],
+      "noise_scale": 0.2,
+      "source": "robust"
+    },
+    {
+      "factor_type": "inter_robot",
+      "key1": [
+        "robot_b",
+        39
+      ],
+      "key2": [
+        "robot_a",
+        2
+      ],
+      "match_id": "robot_b|robot_b_kf_000039|robot_a|robot_a_kf_000002|95.198",
+      "measurement": [
+        0.70647,
+        -0.35444,
+        -0.681292
+      ],
+      "noise_scale": 0.20514,
+      "source": "robust"
+    },
+    {
+      "factor_type": "inter_robot",
+      "key1": [
+        "robot_b",
+        39
+      ],
+      "key2": [
+        "robot_a",
+        1
+      ],
+      "match_id": "robot_b|robot_b_kf_000039|robot_a|robot_a_kf_000001|95.198",
+      "measurement": [
+        0.66029,
+        -0.03881,
+        -0.407835
+      ],
+      "noise_scale": 0.22121,
+      "source": "robust"
+    },
+    {
+      "factor_type": "inter_robot",
+      "key1": [
+        "robot_b",
+        40
+      ],
+      "key2": [
+        "robot_a",
+        1
+      ],
+      "match_id": "robot_b|robot_b_kf_000040|robot_a|robot_a_kf_000001|95.566",
+      "measurement": [
+        0.84907,
+        -0.01982,
+        -0.326752
+      ],
+      "noise_scale": 0.22601,
+      "source": "robust"
+    }
+  ],
+  "gt_used_runtime": false,
+  "poses": [
+    {
+      "keyframe_id": 0,
+      "robot_id": "robot_a",
+      "stamp_sec": 18.563972,
+      "x": 0.0272,
+      "y": -0.0007,
+      "yaw": 0.001125
+    },
+    {
+      "keyframe_id": 1,
+      "robot_id": "robot_a",
+      "stamp_sec": 21.361972,
+      "x": 0.063,
+      "y": 0.0069,
+      "yaw": -0.178195
+    },
+    {
+      "keyframe_id": 2,
+      "robot_id": "robot_a",
+      "stamp_sec": 36.929972,
+      "x": -0.3867,
+      "y": 0.1388,
+      "yaw": 0.07904
+    },
+    {
+      "keyframe_id": 3,
+      "robot_id": "robot_a",
+      "stamp_sec": 37.885972,
+      "x": -0.4731,
+      "y": 0.1667,
+      "yaw": 0.91641
+    },
+    {
+      "keyframe_id": 4,
+      "robot_id": "robot_a",
+      "stamp_sec": 39.607972,
+      "x": -0.5416,
+      "y": 0.0375,
+      "yaw": 2.464579
+    },
+    {
+      "keyframe_id": 5,
+      "robot_id": "robot_a",
+      "stamp_sec": 41.091972,
+      "x": -0.419,
+      "y": 0.0151,
+      "yaw": 2.229845
+    },
+    {
+      "keyframe_id": 6,
+      "robot_id": "robot_a",
+      "stamp_sec": 43.233972,
+      "x": -0.5916,
+      "y": 0.1794,
+      "yaw": 2.453745
+    },
+    {
+      "keyframe_id": 7,
+      "robot_id": "robot_a",
+      "stamp_sec": 55.613972,
+      "x": -0.6642,
+      "y": 0.0942,
+      "yaw": 2.213044
+    },
+    {
+      "keyframe_id": 8,
+      "robot_id": "robot_a",
+      "stamp_sec": 56.563972,
+      "x": -0.6487,
+      "y": -0.0341,
+      "yaw": 2.943795
+    },
+    {
+      "keyframe_id": 9,
+      "robot_id": "robot_a",
+      "stamp_sec": 58.125972,
+      "x": -0.4783,
+      "y": -0.0923,
+      "yaw": -1.719527
+    },
+    {
+      "keyframe_id": 10,
+      "robot_id": "robot_a",
+      "stamp_sec": 59.247972,
+      "x": -0.4705,
+      "y": 0.0389,
+      "yaw": -2.773537
+    },
+    {
+      "keyframe_id": 11,
+      "robot_id": "robot_a",
+      "stamp_sec": 60.355972,
+      "x": -0.3062,
+      "y": 0.0793,
+      "yaw": -2.401329
+    },
+    {
+      "keyframe_id": 12,
+      "robot_id": "robot_a",
+      "stamp_sec": 62.373972,
+      "x": -0.1147,
+      "y": -0.0319,
+      "yaw": -1.040097
+    },
+    {
+      "keyframe_id": 13,
+      "robot_id": "robot_a",
+      "stamp_sec": 88.087972,
+      "x": -0.3771,
+      "y": 0.5272,
+      "yaw": -0.485031
+    },
+    {
+      "keyframe_id": 0,
+      "robot_id": "robot_b",
+      "stamp_sec": 18.56399,
+      "x": 0.0042,
+      "y": 0.0018,
+      "yaw": -0.000311
+    },
+    {
+      "keyframe_id": 1,
+      "robot_id": "robot_b",
+      "stamp_sec": 35.20199,
+      "x": 0.1148,
+      "y": 0.0231,
+      "yaw": 0.294084
+    },
+    {
+      "keyframe_id": 2,
+      "robot_id": "robot_b",
+      "stamp_sec": 36.32799,
+      "x": 0.1274,
+      "y": 0.0364,
+      "yaw": 0.007785
+    },
+    {
+      "keyframe_id": 3,
+      "robot_id": "robot_b",
+      "stamp_sec": 37.06199,
+      "x": 0.1414,
+      "y": 0.0443,
+      "yaw": -0.496851
+    },
+    {
+      "keyframe_id": 4,
+      "robot_id": "robot_b",
+      "stamp_sec": 38.78799,
+      "x": 0.3229,
+      "y": -0.1141,
+      "yaw": -0.989652
+    },
+    {
+      "keyframe_id": 5,
+      "robot_id": "robot_b",
+      "stamp_sec": 40.14799,
+      "x": 0.3975,
+      "y": -0.3421,
+      "yaw": -1.364278
+    },
+    {
+      "keyframe_id": 6,
+      "robot_id": "robot_b",
+      "stamp_sec": 41.75199,
+      "x": 0.2877,
+      "y": -0.195,
+      "yaw": -0.627676
+    },
+    {
+      "keyframe_id": 7,
+      "robot_id": "robot_b",
+      "stamp_sec": 43.56599,
+      "x": 0.0533,
+      "y": -0.223,
+      "yaw": 0.61668
+    },
+    {
+      "keyframe_id": 8,
+      "robot_id": "robot_b",
+      "stamp_sec": 44.77599,
+      "x": 0.1069,
+      "y": -0.0706,
+      "yaw": 1.566104
+    },
+    {
+      "keyframe_id": 9,
+      "robot_id": "robot_b",
+      "stamp_sec": 45.83599,
+      "x": 0.0616,
+      "y": 0.1215,
+      "yaw": 2.007793
+    },
+    {
+      "keyframe_id": 10,
+      "robot_id": "robot_b",
+      "stamp_sec": 46.63599,
+      "x": -0.0172,
+      "y": 0.3845,
+      "yaw": 1.685098
+    },
+    {
+      "keyframe_id": 11,
+      "robot_id": "robot_b",
+      "stamp_sec": 47.62599,
+      "x": -0.0303,
+      "y": 0.6482,
+      "yaw": 1.47839
+    },
+    {
+      "keyframe_id": 12,
+      "robot_id": "robot_b",
+      "stamp_sec": 49.58599,
+      "x": 0.0449,
+      "y": 1.1284,
+      "yaw": 1.299542
+    },
+    {
+      "keyframe_id": 13,
+      "robot_id": "robot_b",
+      "stamp_sec": 53.94579,
+      "x": 0.3532,
+      "y": 2.0929,
+      "yaw": 1.152539
+    },
+    {
+      "keyframe_id": 14,
+      "robot_id": "robot_b",
+      "stamp_sec": 56.19779,
+      "x": 0.5989,
+      "y": 2.5396,
+      "yaw": 0.971413
+    },
+    {
+      "keyframe_id": 15,
+      "robot_id": "robot_b",
+      "stamp_sec": 57.87399,
+      "x": 0.8291,
+      "y": 2.8501,
+      "yaw": 0.683805
+    },
+    {
+      "keyframe_id": 16,
+      "robot_id": "robot_b",
+      "stamp_sec": 61.77794,
+      "x": 1.6506,
+      "y": 3.4536,
+      "yaw": 0.751493
+    },
+    {
+      "keyframe_id": 17,
+      "robot_id": "robot_b",
+      "stamp_sec": 65.45599,
+      "x": 2.3188,
+      "y": 4.0752,
+      "yaw": 0.539597
+    },
+    {
+      "keyframe_id": 18,
+      "robot_id": "robot_b",
+      "stamp_sec": 67.02799,
+      "x": 2.316,
+      "y": 4.0489,
+      "yaw": -0.365975
+    },
+    {
+      "keyframe_id": 19,
+      "robot_id": "robot_b",
+      "stamp_sec": 68.72199,
+      "x": 2.7318,
+      "y": 3.8372,
+      "yaw": -0.573121
+    },
+    {
+      "keyframe_id": 20,
+      "robot_id": "robot_b",
+      "stamp_sec": 70.26999,
+      "x": 2.9334,
+      "y": 3.5673,
+      "yaw": -0.848322
+    },
+    {
+      "keyframe_id": 21,
+      "robot_id": "robot_b",
+      "stamp_sec": 71.73573,
+      "x": 3.222,
+      "y": 3.411,
+      "yaw": -0.34795
+    },
+    {
+      "keyframe_id": 22,
+      "robot_id": "robot_b",
+      "stamp_sec": 74.56351,
+      "x": 3.9255,
+      "y": 3.1882,
+      "yaw": -0.153961
+    },
+    {
+      "keyframe_id": 23,
+      "robot_id": "robot_b",
+      "stamp_sec": 76.13941,
+      "x": 4.3337,
+      "y": 3.1556,
+      "yaw": 0.077917
+    },
+    {
+      "keyframe_id": 24,
+      "robot_id": "robot_b",
+      "stamp_sec": 79.80565,
+      "x": 5.2508,
+      "y": 3.2336,
+      "yaw": -0.103048
+    },
+    {
+      "keyframe_id": 25,
+      "robot_id": "robot_b",
+      "stamp_sec": 82.68779,
+      "x": 6.0032,
+      "y": 3.094,
+      "yaw": -0.298985
+    },
+    {
+      "keyframe_id": 26,
+      "robot_id": "robot_b",
+      "stamp_sec": 84.14799,
+      "x": 6.3635,
+      "y": 2.9118,
+      "yaw": -0.540627
+    },
+    {
+      "keyframe_id": 27,
+      "robot_id": "robot_b",
+      "stamp_sec": 85.07399,
+      "x": 6.4601,
+      "y": 2.8485,
+      "yaw": -0.835705
+    },
+    {
+      "keyframe_id": 28,
+      "robot_id": "robot_b",
+      "stamp_sec": 86.63556,
+      "x": 6.4417,
+      "y": 3.0516,
+      "yaw": -2.01703
+    },
+    {
+      "keyframe_id": 29,
+      "robot_id": "robot_b",
+      "stamp_sec": 88.00399,
+      "x": 6.2076,
+      "y": 2.8939,
+      "yaw": -2.876597
+    },
+    {
+      "keyframe_id": 30,
+      "robot_id": "robot_b",
+      "stamp_sec": 88.56799,
+      "x": 6.2015,
+      "y": 2.9561,
+      "yaw": -2.509219
+    },
+    {
+      "keyframe_id": 31,
+      "robot_id": "robot_b",
+      "stamp_sec": 89.09551,
+      "x": 6.2738,
+      "y": 2.9645,
+      "yaw": -2.190441
+    },
+    {
+      "keyframe_id": 32,
+      "robot_id": "robot_b",
+      "stamp_sec": 89.99957,
+      "x": 6.2655,
+      "y": 3.0145,
+      "yaw": -1.608321
+    },
+    {
+      "keyframe_id": 33,
+      "robot_id": "robot_b",
+      "stamp_sec": 90.45799,
+      "x": 6.2788,
+      "y": 2.905,
+      "yaw": -1.118777
+    },
+    {
+      "keyframe_id": 34,
+      "robot_id": "robot_b",
+      "stamp_sec": 92.71399,
+      "x": 6.2515,
+      "y": 2.9188,
+      "yaw": -0.893972
+    },
+    {
+      "keyframe_id": 35,
+      "robot_id": "robot_b",
+      "stamp_sec": 93.31985,
+      "x": 6.2153,
+      "y": 2.9759,
+      "yaw": -0.487591
+    },
+    {
+      "keyframe_id": 36,
+      "robot_id": "robot_b",
+      "stamp_sec": 93.88346,
+      "x": 6.1121,
+      "y": 2.9888,
+      "yaw": -0.089766
+    },
+    {
+      "keyframe_id": 37,
+      "robot_id": "robot_b",
+      "stamp_sec": 94.16999,
+      "x": 6.0829,
+      "y": 2.9899,
+      "yaw": 0.243356
+    },
+    {
+      "keyframe_id": 38,
+      "robot_id": "robot_b",
+      "stamp_sec": 94.79999,
+      "x": 6.0949,
+      "y": 2.9863,
+      "yaw": 0.626529
+    },
+    {
+      "keyframe_id": 39,
+      "robot_id": "robot_b",
+      "stamp_sec": 95.18399,
+      "x": 6.1053,
+      "y": 2.9913,
+      "yaw": 0.871211
+    },
+    {
+      "keyframe_id": 40,
+      "robot_id": "robot_b",
+      "stamp_sec": 95.44799,
+      "x": 6.1445,
+      "y": 3.0201,
+      "yaw": 1.077725
+    },
+    {
+      "keyframe_id": 41,
+      "robot_id": "robot_b",
+      "stamp_sec": 95.68399,
+      "x": 6.1597,
+      "y": 3.1047,
+      "yaw": 1.254668
+    },
+    {
+      "keyframe_id": 42,
+      "robot_id": "robot_b",
+      "stamp_sec": 96.22599,
+      "x": 6.2009,
+      "y": 3.2421,
+      "yaw": 1.449985
+    },
+    {
+      "keyframe_id": 43,
+      "robot_id": "robot_b",
+      "stamp_sec": 97.40599,
+      "x": 6.2039,
+      "y": 3.5397,
+      "yaw": 1.625422
+    },
+    {
+      "keyframe_id": 44,
+      "robot_id": "robot_b",
+      "stamp_sec": 101.72799,
+      "x": 6.1969,
+      "y": 4.5608,
+      "yaw": 1.508076
+    },
+    {
+      "keyframe_id": 45,
+      "robot_id": "robot_b",
+      "stamp_sec": 104.65199,
+      "x": 6.2161,
+      "y": 4.6361,
+      "yaw": 1.692457
+    },
+    {
+      "keyframe_id": 46,
+      "robot_id": "robot_b",
+      "stamp_sec": 105.30199,
+      "x": 6.2084,
+      "y": 4.6027,
+      "yaw": 2.223596
+    },
+    {
+      "keyframe_id": 47,
+      "robot_id": "robot_b",
+      "stamp_sec": 105.83199,
+      "x": 6.2497,
+      "y": 4.6035,
+      "yaw": 2.772025
+    },
+    {
+      "keyframe_id": 48,
+      "robot_id": "robot_b",
+      "stamp_sec": 106.68163,
+      "x": 6.3077,
+      "y": 4.6099,
+      "yaw": -3.052234
+    },
+    {
+      "keyframe_id": 49,
+      "robot_id": "robot_b",
+      "stamp_sec": 109.70585,
+      "x": 6.4829,
+      "y": 4.6101,
+      "yaw": 3.052007
+    },
+    {
+      "keyframe_id": 50,
+      "robot_id": "robot_b",
+      "stamp_sec": 121.65399,
+      "x": 7.1458,
+      "y": 4.549,
+      "yaw": -2.992235
+    },
+    {
+      "keyframe_id": 51,
+      "robot_id": "robot_b",
+      "stamp_sec": 122.02596,
+      "x": 7.167,
+      "y": 4.5318,
+      "yaw": -2.621188
+    },
+    {
+      "keyframe_id": 52,
+      "robot_id": "robot_b",
+      "stamp_sec": 122.45541,
+      "x": 7.1682,
+      "y": 4.56,
+      "yaw": -2.364695
+    },
+    {
+      "keyframe_id": 53,
+      "robot_id": "robot_b",
+      "stamp_sec": 123.07183,
+      "x": 7.1999,
+      "y": 4.6053,
+      "yaw": -1.777195
+    },
+    {
+      "keyframe_id": 54,
+      "robot_id": "robot_b",
+      "stamp_sec": 124.03179,
+      "x": 7.1824,
+      "y": 4.6287,
+      "yaw": -1.535613
+    }
+  ],
+  "raw_inter_robot_matches": 299,
+  "rejected_inter_robot_matches": 287,
+  "schema": "team_pose_graph_factors/v1"
+}

@@ -1,0 +1,18 @@
+{
+  "alignment_symmetry_error_translation": null,
+  "alignment_symmetry_error_yaw": null,
+  "central_node_required": false,
+  "envelopes": [
+    "team_slam_peer_envelope/v1",
+    "team_slam_peer_envelope/v1"
+  ],
+  "gt_used_runtime": false,
+  "note": "Static DDS envelope simulation passed; full two-Jetson DDS runtime requires host network/Jetson access.",
+  "peer_compact_clouds_on_candidate_only": true,
+  "peer_descriptors_received": 2,
+  "robot_a_local_keyframes": 1,
+  "robot_b_local_keyframes": 1,
+  "runtime_valid": true,
+  "schema": "decentralized_validation/v1",
+  "team_comm_mode": "dds"
+}

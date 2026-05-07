@@ -1,0 +1,9 @@
+robot_id: robot_a
+peer_robot_id: robot_b
+ros_domain_id: 42
+peer_keyframe_rate_hz: 0.5
+peer_cloud_voxel_size: 0.4
+peer_cloud_max_points: 2000
+peer_descriptor_only_until_candidate: true
+send_cloud_only_on_candidate: true
+team_comm_mode: dds

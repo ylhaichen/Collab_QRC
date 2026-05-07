@@ -32,6 +32,9 @@ class LoopClosureCandidateNode(Node):
         self.declare_parameter("reachability_clearance_m", 0.22)
         self.declare_parameter("travel_cost_scale_m", 12.0)
         self.declare_parameter("map_topic", "/merged_map")
+        self.declare_parameter("inter_robot_enabled", True)
+        self.declare_parameter("require_team_alignment_for_inter_robot", True)
+        self.declare_parameter("alignment_status_topic", "/team_slam/alignment_status")
 
         self.output_path = str(self.get_parameter("output_path").value)
         self.max_candidates = int(self.get_parameter("max_candidates").value)
@@ -42,6 +45,14 @@ class LoopClosureCandidateNode(Node):
         self.inter_robot_radius_m = float(self.get_parameter("inter_robot_radius_m").value)
         self.reachability_clearance_m = float(self.get_parameter("reachability_clearance_m").value)
         self.travel_cost_scale_m = float(self.get_parameter("travel_cost_scale_m").value)
+        self.inter_robot_enabled = bool(self.get_parameter("inter_robot_enabled").value)
+        self.require_team_alignment = bool(
+            self.get_parameter("require_team_alignment_for_inter_robot").value
+        )
+        self._team_aligned = False
+        self._team_tf_parent = "robot_a/map"
+        self._team_tf_child = "robot_b/map"
+        self._team_tf = (0.0, 0.0, 0.0)
 
         self.health: dict[str, Any] = {}
         self.map_msg: OccupancyGrid | None = None
@@ -50,6 +61,12 @@ class LoopClosureCandidateNode(Node):
             MarkerArray, "/cfpa2/loop_candidate_markers", 10
         )
         self.create_subscription(String, "/cfpa2/pose_graph_health", self._on_health, 10)
+        self.create_subscription(
+            String,
+            str(self.get_parameter("alignment_status_topic").value),
+            self._on_alignment_status,
+            10,
+        )
         map_qos = QoSProfile(
             history=QoSHistoryPolicy.KEEP_LAST,
             depth=1,
@@ -75,6 +92,24 @@ class LoopClosureCandidateNode(Node):
             return
         if isinstance(payload, dict):
             self.health = payload
+
+    def _on_alignment_status(self, msg: String) -> None:
+        try:
+            payload = json.loads(msg.data)
+        except json.JSONDecodeError:
+            return
+        if not isinstance(payload, dict) or payload.get("schema") != "team_alignment_status/v1":
+            return
+        self._team_aligned = str(payload.get("status", "")) == "aligned"
+        self._team_tf_parent = str(payload.get("parent_frame", "robot_a/map")).strip().strip("/")
+        self._team_tf_child = str(payload.get("child_frame", "robot_b/map")).strip().strip("/")
+        tf = payload.get("transform", {})
+        if isinstance(tf, dict):
+            self._team_tf = (
+                float(tf.get("x", 0.0)),
+                float(tf.get("y", 0.0)),
+                float(tf.get("yaw", 0.0)),
+            )
 
     def _on_map(self, msg: OccupancyGrid) -> None:
         self.map_msg = msg
@@ -102,6 +137,7 @@ class LoopClosureCandidateNode(Node):
         keyframe: dict[str, Any],
         robot_state: dict[str, Any],
         evidence_extra: list[str] | None = None,
+        require_path_gap: bool = True,
     ) -> dict[str, Any] | None:
         cx = float(current["x"])
         cy = float(current["y"])
@@ -118,7 +154,9 @@ class LoopClosureCandidateNode(Node):
         now = float(self.health.get("stamp_sec", now_sec_from_node(self)))
         age = max(0.0, now - float(keyframe.get("t_sec", now)))
         path_gap = max(0.0, float(robot_state.get("path_len_m", 0.0)) - float(keyframe.get("path_len_m", 0.0)))
-        if age < self.candidate_time_gap_sec or path_gap < self.candidate_path_gap_m:
+        if age < self.candidate_time_gap_sec:
+            return None
+        if require_path_gap and path_gap < self.candidate_path_gap_m:
             return None
 
         proximity_score = clamp01(1.0 - min(travel, self.travel_cost_scale_m) / self.travel_cost_scale_m)
@@ -205,6 +243,10 @@ class LoopClosureCandidateNode(Node):
                     out.append(cand)
 
             for other_ns, other_state in robots.items():
+                if not self.inter_robot_enabled:
+                    continue
+                if self.require_team_alignment and not self._team_aligned:
+                    continue
                 if other_ns == ns or not isinstance(other_state, dict):
                     continue
                 other_keyframes = other_state.get("keyframes", [])
@@ -213,16 +255,28 @@ class LoopClosureCandidateNode(Node):
                 for keyframe in other_keyframes[:-1]:
                     if not isinstance(keyframe, dict):
                         continue
-                    travel = math.hypot(float(current["x"]) - float(keyframe["x"]), float(current["y"]) - float(keyframe["y"]))
+                    kx, ky, kyaw = self._transform_between_robot_maps(
+                        float(keyframe["x"]),
+                        float(keyframe["y"]),
+                        float(keyframe.get("yaw", 0.0)),
+                        str(other_ns),
+                        str(ns),
+                    )
+                    transformed_keyframe = dict(keyframe)
+                    transformed_keyframe["x"] = kx
+                    transformed_keyframe["y"] = ky
+                    transformed_keyframe["yaw"] = kyaw
+                    travel = math.hypot(float(current["x"]) - kx, float(current["y"]) - ky)
                     if travel > self.inter_robot_radius_m:
                         continue
                     cand = self._score_candidate(
                         target_robot=ns,
                         source="inter_robot_rendezvous",
                         current=current,
-                        keyframe=keyframe,
+                        keyframe=transformed_keyframe,
                         robot_state=robot_state,
                         evidence_extra=[f"source_robot={other_ns}"],
+                        require_path_gap=False,
                     )
                     if cand is not None:
                         out.append(cand)
@@ -238,6 +292,32 @@ class LoopClosureCandidateNode(Node):
             if old is None or float(cand["loop_gain"]) > float(old["loop_gain"]):
                 dedup[key] = cand
         return sorted(dedup.values(), key=lambda c: float(c["loop_gain"]), reverse=True)[: self.max_candidates]
+
+    def _transform_between_robot_maps(
+        self, x: float, y: float, yaw_in: float, source_ns: str, target_ns: str
+    ) -> tuple[float, float, float]:
+        if source_ns == target_ns:
+            return x, y, yaw_in
+        parent_robot = self._team_tf_parent.split("/")[0]
+        child_robot = self._team_tf_child.split("/")[0]
+        tx, ty, yaw = self._team_tf
+        c = math.cos(yaw)
+        s = math.sin(yaw)
+        if source_ns == child_robot and target_ns == parent_robot:
+            return (
+                c * x - s * y + tx,
+                s * x + c * y + ty,
+                wrap_pi(yaw_in + yaw),
+            )
+        if source_ns == parent_robot and target_ns == child_robot:
+            dx = x - tx
+            dy = y - ty
+            return (
+                c * dx + s * dy,
+                -s * dx + c * dy,
+                wrap_pi(yaw_in - yaw),
+            )
+        return x, y, yaw_in
 
     def _payload(self) -> dict[str, Any]:
         candidates = self._build_candidates()

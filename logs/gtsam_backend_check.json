@@ -1,0 +1,7 @@
+{
+  "schema": "gtsam_backend_check/v1",
+  "python_gtsam": "missing",
+  "cpp_gtsam_ldconfig": "missing",
+  "cpp_gtsam_cmake": "missing",
+  "dependency_blocker": "python_gtsam_not_found;gtsam_cpp_not_found"
+}

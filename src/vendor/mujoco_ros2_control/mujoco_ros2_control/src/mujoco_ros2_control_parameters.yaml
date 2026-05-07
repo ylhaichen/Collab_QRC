@@ -20,6 +20,13 @@ mujoco_ros2_control:
     description: "Show the MuJoCo Simulation in a window"
   }
 
+  enable_cameras: {
+    type: bool,
+    default_value: true,
+    read_only: true,
+    description: "Start MJCF camera sensor publishers. Disable for LiDAR-only/headless runs."
+  }
+
   simulation_frequency: {
     type: double,
     default_value: 1000.0,

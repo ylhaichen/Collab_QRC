@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
 project(mujoco_ros2_control)
 
+get_filename_component(_COLLAB_QRC_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../.." ABSOLUTE)
+set(_COLLAB_QRC_LOCAL_DEPS "${_COLLAB_QRC_ROOT}/.local_deps/usr")
+
 # Set default C standards
 if(NOT CMAKE_C_STANDARD)
     set(CMAKE_C_STANDARD 99)
@@ -98,18 +101,23 @@ include_directories(
     ${PCL_INCLUDE_DIRS}
     ${pcl_conversions_INCLUDE_DIRS}
     ${MUJOCO_PIP_DIR}/include
+    ${_COLLAB_QRC_LOCAL_DEPS}/include
     ${CMAKE_BINARY_DIR}
 )
 
 # Use system GLFW 3.3+ (not the old one from ~/.mujoco/mujoco210)
-find_library(GLFW_LIBRARY glfw PATHS /usr/lib/x86_64-linux-gnu NO_DEFAULT_PATH)
+find_library(GLFW_LIBRARY glfw
+  PATHS
+    /usr/lib/x86_64-linux-gnu
+    ${_COLLAB_QRC_LOCAL_DEPS}/lib/x86_64-linux-gnu
+  NO_DEFAULT_PATH)
 if(NOT GLFW_LIBRARY)
   find_library(GLFW_LIBRARY glfw)
 endif()
 
 # Force RPATH so the executable finds the correct GLFW at runtime
 # (LD_LIBRARY_PATH may contain ~/.mujoco/mujoco210/bin with an old GLFW 3.2)
-set(CMAKE_INSTALL_RPATH "/usr/lib/x86_64-linux-gnu;${MUJOCO_PIP_DIR}/lib")
+set(CMAKE_INSTALL_RPATH "/usr/lib/x86_64-linux-gnu;${_COLLAB_QRC_LOCAL_DEPS}/lib/x86_64-linux-gnu;${MUJOCO_PIP_DIR}/lib")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 # Use RPATH (not RUNPATH) so it takes priority over LD_LIBRARY_PATH

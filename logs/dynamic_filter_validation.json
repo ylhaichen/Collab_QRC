@@ -1,0 +1,12 @@
+{
+  "dynamic_filter_ratio": 0.14286,
+  "dynamic_object_cleared": true,
+  "dynamic_points_filtered": 1,
+  "dynamic_voxel_count_after_ttl": 0,
+  "gt_used_runtime": false,
+  "runtime_valid": true,
+  "schema": "dynamic_filter_validation/v1",
+  "stale_obstacle_decay_time_sec": 1.5,
+  "static_points_kept": 6,
+  "static_walls_remain_stable": true
+}

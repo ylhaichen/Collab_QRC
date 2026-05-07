@@ -65,6 +65,7 @@ logger_(this->get_logger())
   if (!this->has_parameter("robot_namespace")) this->declare_parameter<std::string>("robot_namespace", "");
   if (!this->has_parameter("merged_map_topic")) this->declare_parameter<std::string>("merged_map_topic", "map");
   if (!this->has_parameter("world_frame")) this->declare_parameter<std::string>("world_frame", "world");
+  if (!this->has_parameter("track_map_origin")) this->declare_parameter<bool>("track_map_origin", true);
 
   this->get_parameter("merging_rate", merging_rate_);
   this->get_parameter("discovery_rate", discovery_rate_);
@@ -76,6 +77,7 @@ logger_(this->get_logger())
   this->get_parameter("robot_namespace", robot_namespace_);
   this->get_parameter("merged_map_topic", merged_map_topic);
   this->get_parameter("world_frame", world_frame_);
+  this->get_parameter("track_map_origin", track_map_origin_);
 
 
   /* publishing */
@@ -232,7 +234,7 @@ void MapMerge::mapMerging()
         // info.origin when setting the translation. dst_roi.tl() then
         // naturally lands at the world-pixel lower-left corner.
         geometry_msgs::msg::Transform t = subscription.initial_pose;
-        if (subscription.readonly_map && subscription.readonly_map->info.resolution > 0.f) {
+        if (track_map_origin_ && subscription.readonly_map && subscription.readonly_map->info.resolution > 0.f) {
           const auto & info = subscription.readonly_map->info;
           const double res = static_cast<double>(info.resolution);
           t.translation.x = -info.origin.position.x / res;

@@ -47,9 +47,11 @@
 */
 
 #include "mujoco_ros2_control/mujoco_ros2_control_plugin.hpp"
+#include <chrono>
 #include <sstream>
 #include <cstdlib>    // getenv
 #include <cstring>    // strtol
+#include <thread>
 
 // Reference: https://man7.org/linux/man-pages/man2/sched_setparam.2.html
 // This value is used when configuring the main loop to use SCHED_FIFO scheduling
@@ -86,6 +88,7 @@ MujocoRos2Control::MujocoRos2Control(rclcpp::Node::SharedPtr &node) : nh_(node) 
 
   // mujoco related parameters
   show_gui_ = params_.show_gui;
+  enable_visualization_ = show_gui_ || params_.enable_cameras;
   real_time_factor_ = params_.real_time_factor;
   pub_clock_frequency_ = params_.clock_publisher_frequency;
 
@@ -109,11 +112,17 @@ MujocoRos2Control::MujocoRos2Control(rclcpp::Node::SharedPtr &node) : nh_(node) 
 
   // setup visualization
   mjdata_to_render_ = *mujoco_data_;
+  if (enable_visualization_) {
 #ifdef USE_LIBSIMULATE
-  mj_vis_.init(mujoco_model_, &mjdata_to_render_);
+    mj_vis_.init(mujoco_model_, &mjdata_to_render_);
 #else
-  mj_vis_.init(mujoco_model_, &mjdata_to_render_, show_gui_);
+    mj_vis_.init(mujoco_model_, &mjdata_to_render_, show_gui_);
 #endif
+  } else {
+    RCLCPP_INFO(
+      nh_->get_logger(),
+      "Skipping MuJoCo visualization context: show_gui=false and enable_cameras=false");
+  }
 
   thread_sim_ = std::thread(&MujocoRos2Control::update, this);
   RCLCPP_INFO(nh_->get_logger(), "Sim environment setup complete");
@@ -143,13 +152,19 @@ MujocoRos2Control::~MujocoRos2Control()
   mj_deleteData(mujoco_data_);
 
   // stop rendering
-  mj_vis_.terminate();
+  if (enable_visualization_) {
+    mj_vis_.terminate();
+  }
 
   // join simulation thread
   thread_sim_.join();
 }
 
 void MujocoRos2Control::render() {
+  if (!enable_visualization_) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    return;
+  }
 #ifdef USE_LIBSIMULATE
   if (!mj_vis_.sim->run) return;
 #else
@@ -498,8 +513,13 @@ void MujocoRos2Control::registerSensors() {
       executor_, mujoco_model_, mujoco_data_, sensors, nh_->get_namespace(), &sim_step_mtx_);
   }
 
-  // Add cameras
-  if (mujoco_model_->ncam > 0) {
+  // Add cameras. LiDAR-only/headless SLAM runs can disable these because
+  // the RGB-D camera path requires a working OpenGL/GLFW context.
+  if (!params_.enable_cameras && mujoco_model_->ncam > 0) {
+    RCLCPP_INFO(
+      nh_->get_logger(), "Skipping %d MuJoCo camera(s): enable_cameras=false",
+      mujoco_model_->ncam);
+  } else if (mujoco_model_->ncam > 0) {
     cameras_.resize(mujoco_model_->ncam);
     for (int id = 0; id < mujoco_model_->ncam; id++) {
       std::string name = mj_id2name(mujoco_model_, mjOBJ_CAMERA, id);
