@@ -18,7 +18,15 @@
 
 ## Docker Runtime Validation
 
-Run on a host with Docker daemon permission:
+The latest recovery pass on this branch produced this result:
+
+- Swarm-LIO2 Docker image build passed.
+- ROS1 catkin workspace build passed, including Swarm-LIO2, `udp_bridge`, Livox driver, Dynamic-LIO `sr_lio`, and ERASOR targets.
+- Swarm-LIO2 ROS1 launch smoke passed: `roslaunch swarm_lio simulation.launch` stayed alive for the 30 s smoke window after writable workspace staging.
+- Dynamic-LIO and ERASOR Docker/catkin wrapper builds passed.
+- Full ROS1/ROS2 bridge runtime, ROS2 shadow odometry reception, Swarm-LIO2 primary Nav2/tf ownership, Dynamic-LIO cloud output, and ERASOR cleanup output are not validated.
+
+Manual rerun commands:
 
 ```bash
 bash scripts/manual/run_swarm_lio2_docker_build_and_test.sh
@@ -42,6 +50,9 @@ This mode is simulation-only. Real robot validation must use `real_hybrid_ros1_s
 ## Current Blockers
 
 - Current valid status is `Status D -- External Blocker`.
-- Docker image build was previously recorded as passed, but Docker run/catkin runtime is still blocked in this host session.
+- Backend Docker/catkin recovery passed, but full `sim_hybrid_ros1_slam_ros2_nav` did not pass.
+- Fresh `START_BRIDGE=true bash scripts/bench/run_cross_loop_runtime_validation.sh` with the corrected GTSAM-capable default was blocked by the execution environment approval/usage limit, so the required baseline regression cannot be freshly claimed.
+- ROS2 reception of `/<ns>/swarm_lio2/Odometry`, Swarm-LIO2 primary `/<ns>/Odometry` / `/<ns>/corrected_odom`, Nav2 odom/tf, and `team_loop_closure` keyframes remain runtime-unvalidated.
+- Dynamic-LIO runtime static/dynamic cloud separation and ERASOR cleaned map output remain unvalidated; fallbacks stay active.
 - Fast-LIO remains the production backend until sim and real primary validations pass.
 - Do not claim Swarm-LIO2 replacement from this runbook alone.

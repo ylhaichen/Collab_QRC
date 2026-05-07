@@ -7,16 +7,27 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     cmake \
     git \
+    libceres-dev \
+    libfmt-dev \
+    libopencv-dev \
+    python3-dev \
     python3-catkin-tools \
     python3-rosdep \
     python3-vcstool \
     ros-noetic-cv-bridge \
     ros-noetic-eigen-conversions \
+    ros-noetic-gtsam \
+    ros-noetic-image-transport \
+    ros-noetic-jsk-recognition-msgs \
+    ros-noetic-laser-geometry \
+    ros-noetic-mavros-msgs \
     ros-noetic-nav-msgs \
     ros-noetic-pcl-conversions \
     ros-noetic-pcl-ros \
+    ros-noetic-rosbag \
     ros-noetic-roscpp \
     ros-noetic-rospy \
+    ros-noetic-rosfmt \
     ros-noetic-sensor-msgs \
     ros-noetic-std-msgs \
     ros-noetic-tf \

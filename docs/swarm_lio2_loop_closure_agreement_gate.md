@@ -32,10 +32,11 @@ Synthetic tests validate:
 
 ## Docker Runtime Validation
 
-Run after Swarm-LIO2 Docker/catkin runtime is available:
+Swarm-LIO2 Docker/catkin and ROS1 launch smoke are now available, but agreement-gated map merge still requires full hybrid runtime evidence:
 
 ```bash
 bash scripts/manual/run_sim_hybrid_full_validation.sh
+START_BRIDGE=true bash scripts/bench/run_cross_loop_runtime_validation.sh
 ```
 
 ## Real Robot Validation
@@ -49,5 +50,7 @@ CONFIRM_REAL_ROBOT=1 bash scripts/manual/run_real_robot_primary_validation.sh
 ## Current Blockers
 
 - Current valid status is `Status D -- External Blocker`.
+- Swarm-LIO2 ROS1 launch smoke passed, but ROS2 shadow odometry and primary keyframe/transform flow have not passed.
+- Fresh overlap/no-overlap runtime regression with the corrected GTSAM-capable default was blocked by the execution environment approval/usage limit.
 - Swarm-LIO2 runtime transform and team robust transform agreement have not been validated in sim or real runtime.
 - Descriptor-only matches, weak single matches, ERASOR-only cleanup, Swarm-only mutual state, and runtime GT remain forbidden merge triggers.

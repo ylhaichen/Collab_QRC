@@ -19,7 +19,14 @@ Synthetic tests validate wrapper static/dynamic cloud forwarding and metrics con
 
 ## Docker Runtime Validation
 
-Run on a Docker-enabled simulation host:
+Current recovery result:
+
+- Dynamic-LIO source is present.
+- The shared ROS1 hybrid Docker image builds.
+- The ROS1 catkin workspace builds the Dynamic-LIO wrapper source.
+- Runtime static/dynamic cloud separation is not validated yet.
+
+Manual commands:
 
 ```bash
 bash scripts/manual/run_dynamic_lio_docker_build_and_test.sh
@@ -38,6 +45,6 @@ CONFIRM_REAL_ROBOT=1 bash scripts/manual/run_real_robot_shadow_validation.sh
 ## Current Blockers
 
 - Current valid status is `Status D -- External Blocker`.
-- Docker run/catkin runtime is blocked on this host.
+- Docker/catkin wrapper build passed, but no completed runtime pass proved `/<ns>/cloud_static`, `/<ns>/cloud_dynamic`, moving-object separation, or Nav2 TTL clearing.
 - Real onboard ROS1 Noetic/catkin/rospack and live LiDAR/IMU topics are unavailable here.
-- Until Dynamic-LIO runtime is built, only `temporal_voxel_fallback` can be used as validated fallback.
+- Until Dynamic-LIO runtime output is validated, only `temporal_voxel_fallback` can be used as validated fallback.

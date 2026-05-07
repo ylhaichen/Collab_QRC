@@ -58,6 +58,7 @@ backend_check_emit() {
   local available=false
   local buildable=false
   local runtime_ready=false
+  local runtime_artifact_exists=false
   local package_xml_exists=false
   local launch_file_exists=false
   local ros1_noetic_available=false
@@ -108,7 +109,7 @@ backend_check_emit() {
   fi
 
   if [[ -f "${workspace_path}/devel/setup.bash" || -f "${workspace_path}/install/setup.bash" ]]; then
-    runtime_ready=true
+    runtime_artifact_exists=true
   fi
 
   if [[ "${available}" != true ]]; then
@@ -134,9 +135,11 @@ backend_check_emit() {
           recommended_next_action="install ros-noetic-rospack and source /opt/ros/noetic/setup.bash"
         else
           buildable=true
-          if [[ "${runtime_ready}" != true ]]; then
+          if [[ "${runtime_artifact_exists}" != true ]]; then
             blocker="${backend_key}_host_catkin_runtime_artifact_not_found"
             recommended_next_action="build the ROS1 catkin workspace on the onboard host"
+          else
+            runtime_ready=true
           fi
         fi
         ;;
@@ -161,9 +164,11 @@ backend_check_emit() {
           elif [[ "${docker_run_ready}" != true ]]; then
             blocker="docker_run_blocked_by_environment"
             recommended_next_action="run on host where Docker containers are permitted"
-          elif [[ "${runtime_ready}" != true ]]; then
+          elif [[ "${runtime_artifact_exists}" != true ]]; then
             blocker="${backend_key}_docker_catkin_runtime_artifact_not_found"
             recommended_next_action="run scripts/manual backend Docker build/test command"
+          else
+            runtime_ready=true
           fi
         fi
         ;;
@@ -190,6 +195,7 @@ backend_check_emit() {
   "available": ${available},
   "buildable": ${buildable},
   "runtime_ready": ${runtime_ready},
+  "runtime_artifact_exists": ${runtime_artifact_exists},
   "ros1_noetic_available": ${ros1_noetic_available},
   "catkin_make_available": ${catkin_make_available},
   "catkin_tools_available": ${catkin_tools_available},

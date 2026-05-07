@@ -1,6 +1,6 @@
 {
   "adapter_contract_configured": true,
-  "blocker": "docker_run_blocked_by_environment",
+  "blocker": "Primary mode was not promoted: ROS2 /<ns>/Odometry, /<ns>/corrected_odom, Nav2 tf/odom, keyframes, robust overlap/no-overlap, Dynamic-LIO output, and ERASOR cleanup were not validated in runtime.",
   "cloud_static_or_registered_valid": false,
   "corrected_odom_valid": false,
   "deployment_mode": "sim_hybrid_ros1_slam_ros2_nav",
@@ -13,11 +13,13 @@
   "no_overlap_pass": false,
   "odometry_valid": false,
   "overlap_pass": false,
+  "pass": false,
   "real_nav2_odom_contract_configured": true,
-  "schema": "swarm_lio2_primary_validation/v2",
+  "schema": "swarm_lio2_primary_validation/v3",
   "slam_backend": "swarm_lio2_primary",
-  "swarm_lio2_buildable": false,
-  "swarm_lio2_runtime_ready": false,
+  "swarm_lio2_buildable": true,
+  "swarm_lio2_runtime_ready": true,
   "swarm_lio2_source_available": true,
-  "team_loop_closure_keyframes_valid": false
+  "team_loop_closure_keyframes_valid": false,
+  "updated_utc": "2026-05-07T19:10:19Z"
 }

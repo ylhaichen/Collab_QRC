@@ -1,11 +1,24 @@
 {
-  "schema": "baseline_regression_rerun_status/v1",
-  "command": "START_BRIDGE=true bash scripts/bench/run_cross_loop_runtime_validation.sh",
   "attempted": true,
+  "blocker": "Required fresh baseline rerun with START_BRIDGE=true was not completed after the script default was corrected to TEAM_POSE_GRAPH_BACKEND=auto and TEAM_ALIGNMENT_ALLOW_EXPORT_ONLY_GATE=false. The escalated Docker/bridge rerun was rejected by the approval reviewer due usage limit; retry was deferred by the environment until 8:06 PM or explicit approval. The last completed rerun used g2o_export_only, so optimized overlap_pass is false and the required Fast-LIO baseline regression cannot be claimed fresh-passing in this pass.",
+  "command": "START_BRIDGE=true bash scripts/bench/run_cross_loop_runtime_validation.sh",
+  "completed_rerun_before_default_fix": {
+    "no_overlap_pass": true,
+    "optimized_overlap": false,
+    "overlap_pass": false,
+    "pose_graph_backend": "g2o_export_only"
+  },
+  "fresh_corrected_rerun_blocked": true,
   "passed": false,
-  "existing_baseline_log_used": true,
-  "existing_baseline_overlap_pass": true,
-  "existing_baseline_no_overlap_pass": true,
-  "existing_baseline_gt_used_runtime": false,
-  "blocker": "Baseline rerun requires Docker bridge access. Non-escalated run failed with Docker socket permission denied: connect /var/run/docker.sock operation not permitted. Escalated rerun was rejected by approval reviewer: Automatic approval review failed: usage limit hit; try again after 6:46 PM or with explicit user approval."
+  "previous_baseline_gt_used_runtime": false,
+  "previous_baseline_log_used": true,
+  "previous_baseline_no_overlap_pass": true,
+  "previous_baseline_overlap_pass": true,
+  "schema": "baseline_regression_rerun_status/v2",
+  "script_fix_for_next_rerun": {
+    "reason": "Local GTSAM check reports cpp_gtsam=true and recommended_backend=gtsam_cpp.",
+    "team_alignment_allow_export_only_gate_default": false,
+    "team_pose_graph_backend_default": "auto"
+  },
+  "updated_utc": "2026-05-07T19:10:19Z"
 }

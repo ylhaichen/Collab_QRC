@@ -213,6 +213,9 @@ realtek-r8126-dkms/
 /logs/**/initial_naive_map.pcd
 /logs/**/cleaned_static_map.pcd
 /logs/**/removed_dynamic_points.pcd
+/logs/cross_loop_*_runtime_final/
+/logs/cross_loop_closure_summary.json
+/logs/cross_loop_closure_summary.md
 *.bag
 *.db3
 *.mcap
@@ -223,6 +226,7 @@ realtek-r8126-dkms/
 /external/Swarm-LIO2/
 /external/dynamic_lio/
 /external/ERASOR/
+/external/Livox-SDK/
 /external/*/build/
 /external/*/devel/
 /external/*/install/

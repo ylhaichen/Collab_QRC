@@ -6,27 +6,81 @@ source /opt/ros/noetic/setup.bash
 MODE="${1:-idle}"
 SRC_ROOT="/external"
 WS="/catkin_ws"
+GTSAM_LIB_DIR="/opt/ros/noetic/lib/x86_64-linux-gnu"
+
+export LIBRARY_PATH="${GTSAM_LIB_DIR}${LIBRARY_PATH:+:${LIBRARY_PATH}}"
+export LD_LIBRARY_PATH="${GTSAM_LIB_DIR}:/opt/ros/noetic/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+export CATKIN_JOBS="${CATKIN_JOBS:-1}"
+export MAKEFLAGS="${MAKEFLAGS:--j${CATKIN_JOBS}}"
+
 mkdir -p "${WS}/src" /logs
 
-link_backend() {
+stage_backend() {
   local src="$1"
   local dst="$2"
-  if [[ -d "${src}" && ! -e "${dst}" ]]; then
-    ln -s "${src}" "${dst}"
+  if [[ ! -d "${src}" ]]; then
+    return 0
+  fi
+  if [[ -L "${dst}" ]]; then
+    rm -f "${dst}"
+  fi
+  if [[ ! -e "${dst}" ]]; then
+    mkdir -p "$(dirname "${dst}")"
+    cp -a "${src}" "${dst}"
   fi
 }
 
-link_backend "${SRC_ROOT}/Swarm-LIO2/swarm_msgs" "${WS}/src/swarm_msgs"
-link_backend "${SRC_ROOT}/Swarm-LIO2/udp_bridge" "${WS}/src/udp_bridge"
-link_backend "${SRC_ROOT}/Swarm-LIO2/livox_ros_driver_mars" "${WS}/src/livox_ros_driver_mars"
-link_backend "${SRC_ROOT}/Swarm-LIO2/swarm_lio" "${WS}/src/swarm_lio"
-link_backend "${SRC_ROOT}/dynamic_lio/sr_lio" "${WS}/src/sr_lio"
-link_backend "${SRC_ROOT}/dynamic_lio/SC-PGO" "${WS}/src/sc_pgo_dynamic_lio"
-link_backend "${SRC_ROOT}/ERASOR" "${WS}/src/erasor"
+install_livox_sdk_if_needed() {
+  if [[ -f /usr/local/lib/liblivox_sdk_static.a ]]; then
+    return 0
+  fi
+
+  local sdk_src="${SRC_ROOT}/Livox-SDK"
+  local sdk_work="/tmp/livox_sdk_src"
+  if [[ ! -f "${sdk_src}/CMakeLists.txt" ]]; then
+    sdk_src="${SRC_ROOT}/Swarm-LIO2/livox_ros_driver_mars/Livox-SDK"
+  fi
+  if [[ ! -d "${sdk_src}" ]]; then
+    echo "ERROR: Livox-SDK source not found at ${sdk_src}" >&2
+    return 6
+  fi
+  if [[ ! -f "${sdk_src}/CMakeLists.txt" ]]; then
+    echo "ERROR: Livox-SDK source at ${sdk_src} has no CMakeLists.txt; fetch https://github.com/Livox-SDK/Livox-SDK into external/Livox-SDK." >&2
+    return 7
+  fi
+
+  echo "Installing Livox-SDK from ${sdk_src} into /usr/local"
+  rm -rf "${sdk_work}"
+  mkdir -p "${sdk_work}"
+  cp -a "${sdk_src}/." "${sdk_work}/"
+  chmod -R u+w "${sdk_work}"
+  rm -rf "${sdk_work}/build"
+  mkdir -p "${sdk_work}/build"
+  (
+    cd "${sdk_work}/build"
+    cmake ..
+    make -j"$(nproc)"
+    make install
+  )
+  ldconfig || true
+}
+
+stage_backend "${SRC_ROOT}/Swarm-LIO2/swarm_msgs" "${WS}/src/swarm_msgs"
+stage_backend "${SRC_ROOT}/Swarm-LIO2/udp_bridge" "${WS}/src/udp_bridge"
+stage_backend "${SRC_ROOT}/Swarm-LIO2/livox_ros_driver_mars" "${WS}/src/livox_ros_driver_mars"
+stage_backend "${SRC_ROOT}/Swarm-LIO2/swarm_lio" "${WS}/src/swarm_lio"
+stage_backend "${SRC_ROOT}/dynamic_lio/sr_lio" "${WS}/src/sr_lio"
+stage_backend "${SRC_ROOT}/ERASOR" "${WS}/src/erasor"
+if [[ "${INCLUDE_DYNAMIC_LIO_SCPGO:-false}" == "true" ]]; then
+  stage_backend "${SRC_ROOT}/dynamic_lio/SC-PGO" "${WS}/src/sc_pgo_dynamic_lio"
+elif [[ -L "${WS}/src/sc_pgo_dynamic_lio" ]]; then
+  rm -f "${WS}/src/sc_pgo_dynamic_lio"
+fi
 
 if [[ "${MODE}" == "build" ]]; then
+  install_livox_sdk_if_needed
   cd "${WS}"
-  catkin_make
+  catkin_make -j"${CATKIN_JOBS}"
   exit 0
 fi
 

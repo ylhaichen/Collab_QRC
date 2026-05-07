@@ -49,5 +49,6 @@ ros2 launch go2_gazebo_sim real_hybrid_ros1_slam_ros2_nav.launch.py
 
 - Current valid status is `Status D -- External Blocker`.
 - This host lacks native ROS1 Noetic/catkin/rospack for real backend build checks.
-- Live LiDAR/IMU/Unitree topics and peer robot network are unavailable here.
+- Live `/livox/lidar`, `/livox/imu`, `/sportmodestate`, DDS/bridge observation, and peer robot network are unavailable here.
+- Docker/catkin simulation recovery does not satisfy real robot validation; real shadow and primary scripts must run on the robot/Jetson or validated field computer.
 - Real deployment cannot be marked passed without robot/Jetson/Go2 validation logs.

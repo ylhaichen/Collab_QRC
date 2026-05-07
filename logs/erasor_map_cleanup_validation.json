@@ -1,16 +1,28 @@
 {
-  "blocker": "docker_run_blocked_by_environment",
+  "accumulated_map_export_valid": false,
+  "blocker": "ERASOR Docker/catkin wrapper builds, but no completed benchmark/manual cleanup pass generated cleaned_static_map or removed_dynamic_points and republished cleaned map to ROS2. Fallback remains active.",
   "cleaned_map_published": false,
-  "cleaned_map_removes_dynamic_trace": false,
+  "cleaned_static_map_generated": false,
   "control_loop_blocked": false,
   "deployment_mode": "sim_hybrid_ros1_slam_ros2_nav",
-  "erasor_buildable": false,
+  "dynamic_traces_reduced": false,
+  "erasor_docker_catkin_build_passed": true,
+  "erasor_docker_container_run_ready": true,
   "erasor_runtime_ready": false,
   "erasor_source_available": true,
   "fallback_used": true,
   "gt_used_runtime": false,
-  "naive_map_contains_dynamic_trace": false,
-  "schema": "erasor_map_cleanup_validation/v2",
+  "manual_logs": {
+    "catkin_build": "logs/manual/erasor_catkin_build_20260507T185444Z.log",
+    "docker_build": "logs/manual/ros1_hybrid_docker_build_20260507T185443Z.log",
+    "postcheck": "logs/manual/erasor_docker_postcheck_20260507T185452Z.log",
+    "precheck": "logs/manual/erasor_docker_precheck_20260507T185442Z.log"
+  },
+  "removed_dynamic_points_generated": false,
+  "requested_backend": "erasor_wrapper",
+  "schema": "erasor_map_cleanup_validation/v3",
   "static_map_cleanup_backend": "temporal_voxel_fallback",
-  "static_walls_preserved": false
+  "static_walls_preserved": false,
+  "synthetic_contract_passed": true,
+  "updated_utc": "2026-05-07T19:10:19Z"
 }

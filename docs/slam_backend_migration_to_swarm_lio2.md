@@ -36,7 +36,15 @@ Synthetic tests validate the ROS2-side adapter contract, Dynamic-LIO cloud forwa
 
 ## Docker Runtime Validation
 
-Run on a Docker-enabled simulation host:
+Current Docker/catkin recovery state:
+
+- `ros1_hybrid_slam` Docker image builds with the required ROS1 dependencies.
+- ROS1 catkin workspace builds from writable staged backend copies.
+- Livox-SDK is built/installed into the container from `external/Livox-SDK` when needed.
+- Swarm-LIO2 ROS1 launch smoke starts and stays alive for the smoke window.
+- Dynamic-LIO and ERASOR source targets build in the ROS1 catkin workspace.
+
+Manual rerun command:
 
 ```bash
 bash scripts/manual/run_sim_hybrid_full_validation.sh
@@ -57,7 +65,11 @@ CONFIRM_REAL_ROBOT=1 bash scripts/manual/run_real_robot_primary_validation.sh
 ## Current Blockers
 
 - Current valid status is `Status D -- External Blocker`.
-- Docker run/catkin runtime is blocked in this host session.
+- Backend Docker/catkin recovery is complete, but full hybrid runtime validation is not complete.
+- Swarm-LIO2 shadow mode has not passed ROS2 odometry reception.
+- Swarm-LIO2 primary mode has not passed ROS2 odometry/corrected odom/cloud/Nav2/tf/keyframe runtime validation.
+- Fresh Fast-LIO baseline regression rerun with corrected GTSAM-capable defaults was blocked by environment approval/usage limit.
+- Dynamic-LIO and ERASOR are buildable wrappers, but their runtime outputs are not validated.
 - Real robot LiDAR/IMU/Unitree topics and peer network are unavailable here.
 - Fast-LIO remains production backend.
 

@@ -28,7 +28,14 @@ Synthetic tests validate PCD export paths, metrics JSON, cleaned map topic, remo
 
 ## Docker Runtime Validation
 
-Run on a Docker-enabled simulation host:
+Current recovery result:
+
+- ERASOR source is present.
+- The shared ROS1 hybrid Docker image builds.
+- The ROS1 catkin workspace builds ERASOR targets.
+- Runtime cleanup output is not validated yet.
+
+Manual commands:
 
 ```bash
 bash scripts/manual/run_erasor_docker_build_and_test.sh
@@ -47,5 +54,5 @@ CONFIRM_REAL_ROBOT=1 bash scripts/manual/run_real_robot_shadow_validation.sh
 ## Current Blockers
 
 - Current valid status is `Status D -- External Blocker`.
-- Docker run/catkin runtime is blocked on this host.
+- Docker/catkin wrapper build passed, but no completed benchmark/manual cleanup pass generated `cleaned_static_map`, `removed_dynamic_points`, and ROS2 republished cleaned map evidence.
 - Real robot map cleanup cannot be marked passed without naive map, cleaned map, static wall preservation, and non-blocking runtime evidence.
