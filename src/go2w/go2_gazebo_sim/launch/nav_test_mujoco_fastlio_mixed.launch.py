@@ -708,6 +708,11 @@ def _build_fastlio_nav_stack(
             "base_frame": base_frame,
             "dynamic_filter_backend": dynamic_filter_backend,
             "publish_tf": True,
+            "output_odom_frame_id": "odom" if slam_backend == "swarm_lio2_primary" else f"{ns}/odom",
+            "output_child_frame_id": base_frame if slam_backend == "swarm_lio2_primary" else f"{ns}/base_link",
+            "output_map_frame_id": "map" if slam_backend == "swarm_lio2_primary" else f"{ns}/map",
+            "output_static_cloud_frame_id": base_frame if slam_backend == "swarm_lio2_primary" else f"{ns}/base_link",
+            "output_map_cloud_frame_id": "map" if slam_backend == "swarm_lio2_primary" else f"{ns}/map",
         }],
         remappings=[
             ("/tf", f"/{ns}/tf"),

@@ -108,6 +108,9 @@ write_swarm_lio2_collab_wrapper_launch() {
   <node pkg="topic_tools" type="relay" name="swarm_lio2_robot_b_odom_raw" args="/quad2/lidar_slam/odom /robot_b/swarm_lio2_raw/Odometry" output="log" />
   <node pkg="topic_tools" type="relay" name="swarm_lio2_robot_b_static_raw" args="/quad2/cloud_registered_body /robot_b/swarm_lio2_raw/cloud_static" output="log" />
   <node pkg="topic_tools" type="relay" name="swarm_lio2_robot_b_map_raw" args="/quad2/cloud_registered /robot_b/swarm_lio2_raw/cloud_map" output="log" />
+
+  <!-- Convert Swarm-LIO2 native global extrinsic status into the adapter's TransformStamped contract. -->
+  <node pkg="swarm_msgs" type="swarm_lio2_global_extrinsic_to_tf.py" name="swarm_lio2_global_extrinsic_to_tf" output="log" />
 </launch>
 EOF
   printf '%s\n' "${wrapper}"
@@ -142,6 +145,9 @@ if [[ ! -f "${WS}/devel/setup.bash" ]]; then
 fi
 
 source "${WS}/devel/setup.bash"
+mkdir -p "${WS}/src/swarm_msgs/scripts"
+cp /swarm_lio2_global_extrinsic_to_tf.py "${WS}/src/swarm_msgs/scripts/swarm_lio2_global_extrinsic_to_tf.py"
+chmod +x "${WS}/src/swarm_msgs/scripts/swarm_lio2_global_extrinsic_to_tf.py"
 
 SLAM_BACKEND="${SLAM_BACKEND:-swarm_lio2_shadow}"
 DYNAMIC_FILTER_BACKEND="${DYNAMIC_FILTER_BACKEND:-temporal_voxel_fallback}"

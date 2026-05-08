@@ -1,12 +1,12 @@
 # ROS1 / ROS2 SLAM Bridge Topic Contract
 
 - deployment_mode: `sim_hybrid_ros1_slam_ros2_nav`
-- slam_backend: `swarm_lio2_shadow`
+- slam_backend: `swarm_lio2_primary`
 - source: `sim_bridge`
 - pass: `True`
 - bridge_contract_passed: `True`
 - native_swarm_lio2_output_passed: `True`
-- swarm_lio2_shadow_slam_passed: `True`
+- swarm_lio2_shadow_slam_passed: `False`
 - native_swarm_lio2_odom_nonzero_rate: `True`
 - native_swarm_lio2_cloud_registered_nonzero_rate: `True`
 - native_swarm_lio2_cloud_body_nonzero_rate: `True`
@@ -16,6 +16,7 @@
 - ros2_missing_topics: ``
 - message_rates_nonzero: `True`
 - frames_valid: `True`
+- primary_adapter_ownership_passed: `True`
 - gt_used_runtime: `False`
 - blocker: ``
 - recommended_next_action: ``

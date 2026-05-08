@@ -18,6 +18,11 @@ def _adapter(ns: str, base_frame: str, use_sim_time, dynamic_filter_backend):
             "base_frame": base_frame,
             "use_sim_time": use_sim_time,
             "publish_tf": True,
+            "output_odom_frame_id": "odom",
+            "output_child_frame_id": base_frame,
+            "output_map_frame_id": "map",
+            "output_static_cloud_frame_id": base_frame,
+            "output_map_cloud_frame_id": "map",
         }],
         remappings=[
             ("/tf", f"/{ns}/tf"),

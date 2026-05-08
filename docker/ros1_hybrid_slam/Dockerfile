@@ -39,7 +39,8 @@ WORKDIR /catkin_ws
 
 COPY docker/ros1_hybrid_slam/ros1_hybrid_entrypoint.sh /ros1_hybrid_entrypoint.sh
 COPY docker/ros1_hybrid_slam/swarm_lio2_synthetic_contract_feeder.py /swarm_lio2_synthetic_contract_feeder.py
-RUN chmod +x /ros1_hybrid_entrypoint.sh /swarm_lio2_synthetic_contract_feeder.py
+COPY docker/ros1_hybrid_slam/swarm_lio2_global_extrinsic_to_tf.py /swarm_lio2_global_extrinsic_to_tf.py
+RUN chmod +x /ros1_hybrid_entrypoint.sh /swarm_lio2_synthetic_contract_feeder.py /swarm_lio2_global_extrinsic_to_tf.py
 
 ENTRYPOINT ["/ros1_hybrid_entrypoint.sh"]
 CMD ["idle"]

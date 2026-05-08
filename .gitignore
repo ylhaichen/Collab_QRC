@@ -201,6 +201,7 @@ realtek-r8126-dkms/
 # =============================================
 # Keep compact summary logs (*.json/*.md) reviewable, but never track
 # high-volume per-topic traces, bag databases, or generated map products.
+/logs/manual/
 /logs/**/robust_loop_inliers.jsonl
 /logs/**/*.jsonl
 /logs/**/*.jsonl.err

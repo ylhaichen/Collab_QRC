@@ -179,6 +179,7 @@ def expected_ros1_topics() -> list[str]:
         "/robot_b/swarm_lio2_raw/cloud_static",
         "/robot_a/swarm_lio2_raw/cloud_map",
         "/robot_b/swarm_lio2_raw/cloud_map",
+        "/robot_a/swarm_lio2_raw/relative_transform",
     ]
     return topics
 
@@ -214,11 +215,32 @@ def expected_ros2_topics() -> list[str]:
         "/robot_b/cloud_registered_body",
         "/robot_a/cloud_static",
         "/robot_b/cloud_static",
-        "/robot_a/cloud_dynamic",
-        "/robot_b/cloud_dynamic",
+        "/robot_a/tf",
+        "/robot_b/tf",
         "/team_slam/swarm_lio2_metrics",
         "/team_slam/swarm_lio2_relative_transform",
-        "/team_slam/dynamic_filter_metrics",
+        "/team_slam/keyframes",
+        "/team_slam/alignment_status",
+    ]
+
+
+def required_rate_topics() -> list[str]:
+    if MODE == "shadow":
+        return [topic for topic in expected_ros2_topics() if not topic.endswith("metrics")]
+    return [
+        "/robot_a/Odometry",
+        "/robot_b/Odometry",
+        "/robot_a/corrected_odom",
+        "/robot_b/corrected_odom",
+        "/robot_a/odom/nav",
+        "/robot_b/odom/nav",
+        "/robot_a/cloud_registered_body",
+        "/robot_b/cloud_registered_body",
+        "/robot_a/cloud_static",
+        "/robot_b/cloud_static",
+        "/robot_a/tf",
+        "/robot_b/tf",
+        "/team_slam/swarm_lio2_relative_transform",
     ]
 
 
@@ -255,6 +277,25 @@ def ros2_field(topic: str, field: str) -> dict:
     }
 
 
+def ros2_publisher_info(topic: str) -> dict:
+    command = (
+        f"{ros2_prefix()} timeout {TOPIC_TIMEOUT_SEC:g}s "
+        f"ros2 topic info --verbose {shlex.quote(topic)}"
+    )
+    rc, out, err = run_shell(command, TOPIC_TIMEOUT_SEC + 2)
+    text = "\n".join(x for x in (out, err) if x)
+    match = re.search(r"Publisher count:\s*([0-9]+)", text)
+    count = int(match.group(1)) if match else 0
+    adapter_owned = "swarm_lio2_ros2_adapter_node" in text
+    return {
+        "topic": topic,
+        "ok": rc == 0 and count == 1 and adapter_owned,
+        "publisher_count": count,
+        "adapter_owned": adapter_owned,
+        "raw": text[-1200:],
+    }
+
+
 ros1_ok, ros1_topics, ros1_error = topic_list_ros1()
 ros2_ok, ros2_topics, ros2_error = topic_list_ros2()
 discovery = read_json(DISCOVERY_JSON)
@@ -266,8 +307,8 @@ ros2_missing = [t for t in ros2_expected if t not in ros2_topics]
 rate_checks: list[dict] = []
 frame_checks: list[dict] = []
 if CHECK_RATES:
-    for topic in ros2_expected:
-        if topic in ros2_topics and not topic.endswith("metrics"):
+    for topic in required_rate_topics():
+        if topic in ros2_topics:
             rate_checks.append(ros2_rate(topic))
     if MODE == "shadow":
         odom_topics = ["/robot_a/swarm_lio2/Odometry", "/robot_b/swarm_lio2/Odometry"]
@@ -278,8 +319,26 @@ if CHECK_RATES:
             frame_checks.append(ros2_field(topic, "header.frame_id"))
             frame_checks.append(ros2_field(topic, "child_frame_id"))
 
+publisher_checks: list[dict] = []
+if MODE == "primary" and ros2_ok:
+    for topic in [
+        "/robot_a/Odometry",
+        "/robot_b/Odometry",
+        "/robot_a/corrected_odom",
+        "/robot_b/corrected_odom",
+        "/robot_a/odom/nav",
+        "/robot_b/odom/nav",
+    ]:
+        if topic in ros2_topics:
+            publisher_checks.append(ros2_publisher_info(topic))
+
 rate_blockers = [f"{item['topic']}:rate<{MIN_TOPIC_RATE_HZ}" for item in rate_checks if not item["ok"]]
 frame_blockers = [f"{item['topic']}:{item['field']}_empty" for item in frame_checks if not item["ok"]]
+publisher_blockers = [
+    f"{item['topic']}:not_single_swarm_lio2_adapter_publisher"
+    for item in publisher_checks
+    if not item["ok"]
+]
 blockers: list[str] = []
 if CHECK_ROS1_TOPICS and not ros1_ok:
     blockers.append(f"ros1_topic_list_failed:{ros1_error}")
@@ -291,6 +350,7 @@ if ros2_missing:
     blockers.append("missing_ros2_topics:" + ",".join(ros2_missing))
 blockers.extend(rate_blockers)
 blockers.extend(frame_blockers)
+blockers.extend(publisher_blockers)
 
 bridge_blockers = list(blockers)
 native_source = SOURCE in {"real_swarm_lio2", "real_sensor", "bag_replay", "sim_bridge"}
@@ -338,6 +398,11 @@ payload = {
     "ros2_missing_topics": ros2_missing,
     "ros2_rate_checks": rate_checks,
     "ros2_frame_checks": frame_checks,
+    "ros2_publisher_checks": publisher_checks,
+    "primary_adapter_ownership_passed": (
+        bool(publisher_checks) and all(item["ok"] for item in publisher_checks)
+        if MODE == "primary" else None
+    ),
     "native_topic_discovery": {
         "path": str(DISCOVERY_JSON),
         "available": bool(discovery),
@@ -374,6 +439,7 @@ LOG_MD.write_text(
         f"- ros2_missing_topics: `{','.join(ros2_missing)}`",
         f"- message_rates_nonzero: `{payload['message_rates_nonzero']}`",
         f"- frames_valid: `{payload['frames_valid']}`",
+        f"- primary_adapter_ownership_passed: `{payload['primary_adapter_ownership_passed']}`",
         "- gt_used_runtime: `False`",
         f"- blocker: `{payload['blocker']}`",
         f"- recommended_next_action: `{payload['recommended_next_action']}`",

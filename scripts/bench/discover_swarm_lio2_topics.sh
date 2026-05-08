@@ -124,6 +124,8 @@ TOPICS = os.environ["TOPICS_JOINED"].split()
 def run(command: str, timeout: float) -> tuple[int, str]:
     if MODE == "docker":
         full = [
+            "timeout",
+            f"{timeout:g}s",
             "docker",
             "compose",
             "-f",
@@ -143,7 +145,7 @@ def run(command: str, timeout: float) -> tuple[int, str]:
             cwd=ROOT,
             text=True,
             capture_output=True,
-            timeout=timeout,
+            timeout=timeout + 2,
         )
         return proc.returncode, "\n".join(x for x in (proc.stdout, proc.stderr) if x).strip()
     except subprocess.TimeoutExpired as exc:
@@ -177,9 +179,6 @@ listed_topics = sorted({line.strip() for line in topic_list_raw.splitlines() if 
 results = []
 for topic in TOPICS:
     info_rc, info_raw = run(f"rostopic info {topic}", TOPIC_TIMEOUT_SEC + 2)
-    echo_rc, echo_raw = run(f"timeout {TOPIC_TIMEOUT_SEC:g}s rostopic echo -n 1 {topic}", TOPIC_TIMEOUT_SEC + 3)
-    hz_rc, hz_raw = run(f"timeout {RATE_TIMEOUT_SEC:g}s rostopic hz {topic}", RATE_TIMEOUT_SEC + 3)
-    rate_match = re.search(r"average rate:\s*([0-9.]+)", hz_raw)
     type_match = re.search(r"^Type:\s*(.+)$", info_raw, re.MULTILINE)
     publishers = []
     subscribers = []
@@ -192,6 +191,20 @@ for topic in TOPICS:
             bucket = subscribers
         elif stripped.startswith("*") and bucket is not None:
             bucket.append(stripped[1:].strip())
+    has_publishers = bool(publishers) and "Publishers: None" not in info_raw
+    if info_rc == 0 and has_publishers:
+        echo_rc, echo_raw = run(
+            f"timeout {TOPIC_TIMEOUT_SEC:g}s rostopic echo -n 1 {topic}",
+            TOPIC_TIMEOUT_SEC + 3,
+        )
+        hz_rc, hz_raw = run(
+            f"timeout {RATE_TIMEOUT_SEC:g}s rostopic hz {topic}",
+            RATE_TIMEOUT_SEC + 3,
+        )
+    else:
+        echo_raw = "skipped_no_publishers"
+        hz_raw = "skipped_no_publishers"
+    rate_match = re.search(r"average rate:\s*([0-9.]+)", hz_raw)
     echo_has_message = (
         bool(echo_raw.strip())
         and "does not appear to be published yet" not in echo_raw
