@@ -1,20 +1,171 @@
 {
-  "blocker": "docker_runtime_blocked:unable to get image 'ros:noetic-ros-core': permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get \"http://%2Fvar%2Frun%2Fdocker.sock/v1.51/images/ros:noetic-ros-core/json\": dial unix /var/run/docker.sock: connect: operation not permitted ",
-  "bridge_contract_passed": false,
+  "blocker": "",
+  "bridge_contract_passed": true,
   "deployment_mode": "sim_hybrid_ros1_slam_ros2_nav",
-  "frames_valid": false,
+  "frames_valid": true,
   "gt_used_runtime": false,
-  "message_rates_nonzero": false,
+  "message_rates_nonzero": true,
   "mode": "shadow",
-  "native_swarm_lio2_cloud_body_nonzero_rate": false,
-  "native_swarm_lio2_cloud_registered_nonzero_rate": false,
-  "native_swarm_lio2_odom_nonzero_rate": false,
-  "native_swarm_lio2_output_passed": false,
-  "pass": false,
-  "recommended_next_action": "Run on a host with Docker daemon access and ROS2 DDS socket permissions.",
+  "native_swarm_lio2_cloud_body_nonzero_rate": true,
+  "native_swarm_lio2_cloud_registered_nonzero_rate": true,
+  "native_swarm_lio2_nonzero_rate_topics": [
+    "/quad1/lidar_slam/odom",
+    "/quad2/lidar_slam/odom",
+    "/quad1/cloud_registered_body",
+    "/quad2/cloud_registered_body",
+    "/quad1/cloud_registered",
+    "/quad2/cloud_registered",
+    "/quad1/path",
+    "/quad2/path",
+    "/quadstate_to_teammate",
+    "/global_extrinsic_to_teammate"
+  ],
+  "native_swarm_lio2_odom_nonzero_rate": true,
+  "native_swarm_lio2_output_passed": true,
+  "native_topic_discovery": {
+    "available": true,
+    "blocker": "",
+    "path": "/home/ylhc/Desktop/Collab_QRC/logs/swarm_lio2_topic_discovery.json"
+  },
+  "pass": true,
+  "recommended_next_action": "",
+  "ros1_expected_topics": [
+    "/robot_a/velodyne_points",
+    "/robot_b/velodyne_points",
+    "/robot_a/imu/data",
+    "/robot_b/imu/data",
+    "/quad1_pcl_render_node/sensor_cloud",
+    "/quad2_pcl_render_node/sensor_cloud",
+    "/quad_1/imu",
+    "/quad_2/imu",
+    "/quad1/lidar_slam/odom",
+    "/quad2/lidar_slam/odom",
+    "/quad1/cloud_registered_body",
+    "/quad2/cloud_registered_body",
+    "/quad1/cloud_registered",
+    "/quad2/cloud_registered",
+    "/robot_a/swarm_lio2_raw/Odometry",
+    "/robot_b/swarm_lio2_raw/Odometry",
+    "/robot_a/swarm_lio2_raw/cloud_static",
+    "/robot_b/swarm_lio2_raw/cloud_static",
+    "/robot_a/swarm_lio2_raw/cloud_map",
+    "/robot_b/swarm_lio2_raw/cloud_map"
+  ],
+  "ros1_missing_topics": [],
+  "ros1_present_topics": [
+    "/robot_a/velodyne_points",
+    "/robot_b/velodyne_points",
+    "/robot_a/imu/data",
+    "/robot_b/imu/data",
+    "/quad1_pcl_render_node/sensor_cloud",
+    "/quad2_pcl_render_node/sensor_cloud",
+    "/quad_1/imu",
+    "/quad_2/imu",
+    "/quad1/lidar_slam/odom",
+    "/quad2/lidar_slam/odom",
+    "/quad1/cloud_registered_body",
+    "/quad2/cloud_registered_body",
+    "/quad1/cloud_registered",
+    "/quad2/cloud_registered",
+    "/robot_a/swarm_lio2_raw/Odometry",
+    "/robot_b/swarm_lio2_raw/Odometry",
+    "/robot_a/swarm_lio2_raw/cloud_static",
+    "/robot_b/swarm_lio2_raw/cloud_static",
+    "/robot_a/swarm_lio2_raw/cloud_map",
+    "/robot_b/swarm_lio2_raw/cloud_map"
+  ],
+  "ros1_topic_list_available": true,
+  "ros2_expected_topics": [
+    "/robot_a/swarm_lio2/Odometry",
+    "/robot_b/swarm_lio2/Odometry",
+    "/robot_a/swarm_lio2/cloud_static",
+    "/robot_b/swarm_lio2/cloud_static",
+    "/robot_a/swarm_lio2/cloud_map",
+    "/robot_b/swarm_lio2/cloud_map",
+    "/team_slam/swarm_lio2_metrics"
+  ],
+  "ros2_frame_checks": [
+    {
+      "field": "header.frame_id",
+      "ok": true,
+      "raw": "robot_a/odom\n---",
+      "topic": "/robot_a/swarm_lio2/Odometry",
+      "value": "robot_a/odom"
+    },
+    {
+      "field": "child_frame_id",
+      "ok": true,
+      "raw": "robot_a/base_link\n---",
+      "topic": "/robot_a/swarm_lio2/Odometry",
+      "value": "robot_a/base_link"
+    },
+    {
+      "field": "header.frame_id",
+      "ok": true,
+      "raw": "robot_b/odom\n---",
+      "topic": "/robot_b/swarm_lio2/Odometry",
+      "value": "robot_b/odom"
+    },
+    {
+      "field": "child_frame_id",
+      "ok": true,
+      "raw": "robot_b/base_link\n---",
+      "topic": "/robot_b/swarm_lio2/Odometry",
+      "value": "robot_b/base_link"
+    }
+  ],
+  "ros2_missing_topics": [],
+  "ros2_present_topics": [
+    "/robot_a/swarm_lio2/Odometry",
+    "/robot_b/swarm_lio2/Odometry",
+    "/robot_a/swarm_lio2/cloud_static",
+    "/robot_b/swarm_lio2/cloud_static",
+    "/robot_a/swarm_lio2/cloud_map",
+    "/robot_b/swarm_lio2/cloud_map",
+    "/team_slam/swarm_lio2_metrics"
+  ],
+  "ros2_rate_checks": [
+    {
+      "ok": true,
+      "rate_hz": 10.67,
+      "raw": "average rate: 10.670\n\tmin: 0.092s max: 0.096s std dev: 0.00145s window: 3\naverage rate: 11.350\n\tmin: 0.077s max: 0.097s std dev: 0.00826s window: 3\naverage rate: 10.706\n\tmin: 0.081s max: 0.106s std dev: 0.01021s window: 3\naverage rate: 11.166\n\tmin: 0.087s max: 0.092s std dev: 0.00201s window: 3\naverage rate: 10.716\n\tmin: 0.083s max: 0.107s std dev: 0.00989s window: 3\naverage rate: 10.880\n\tmin: 0.085s max: 0.099s std dev: 0.00592s window: 3",
+      "topic": "/robot_a/swarm_lio2/Odometry"
+    },
+    {
+      "ok": true,
+      "rate_hz": 11.412,
+      "raw": "average rate: 11.412\n\tmin: 0.083s max: 0.093s std dev: 0.00400s window: 3\naverage rate: 11.092\n\tmin: 0.084s max: 0.097s std dev: 0.00526s window: 3\naverage rate: 10.498\n\tmin: 0.091s max: 0.100s std dev: 0.00376s window: 3\naverage rate: 10.589\n\tmin: 0.093s max: 0.097s std dev: 0.00182s window: 3\naverage rate: 11.237\n\tmin: 0.083s max: 0.095s std dev: 0.00487s window: 3\naverage rate: 10.726\n\tmin: 0.090s max: 0.099s std dev: 0.00399s window: 3",
+      "topic": "/robot_b/swarm_lio2/Odometry"
+    },
+    {
+      "ok": true,
+      "rate_hz": 11.088,
+      "raw": "average rate: 11.088\n\tmin: 0.087s max: 0.092s std dev: 0.00226s window: 3\naverage rate: 10.476\n\tmin: 0.091s max: 0.103s std dev: 0.00517s window: 3\naverage rate: 10.435\n\tmin: 0.092s max: 0.101s std dev: 0.00402s window: 3\naverage rate: 10.432\n\tmin: 0.090s max: 0.101s std dev: 0.00419s window: 3\naverage rate: 11.093\n\tmin: 0.087s max: 0.093s std dev: 0.00231s window: 3\naverage rate: 11.002\n\tmin: 0.080s max: 0.100s std dev: 0.00840s window: 3",
+      "topic": "/robot_a/swarm_lio2/cloud_static"
+    },
+    {
+      "ok": true,
+      "rate_hz": 10.738,
+      "raw": "average rate: 10.738\n\tmin: 0.079s max: 0.108s std dev: 0.01197s window: 3\naverage rate: 10.648\n\tmin: 0.082s max: 0.102s std dev: 0.00861s window: 3\naverage rate: 10.677\n\tmin: 0.089s max: 0.099s std dev: 0.00388s window: 3\naverage rate: 10.372\n\tmin: 0.085s max: 0.105s std dev: 0.00855s window: 3\naverage rate: 11.293\n\tmin: 0.086s max: 0.091s std dev: 0.00222s window: 3\naverage rate: 11.000\n\tmin: 0.080s max: 0.102s std dev: 0.00927s window: 3",
+      "topic": "/robot_b/swarm_lio2/cloud_static"
+    },
+    {
+      "ok": true,
+      "rate_hz": 10.946,
+      "raw": "average rate: 10.946\n\tmin: 0.077s max: 0.112s std dev: 0.01497s window: 3\naverage rate: 10.507\n\tmin: 0.083s max: 0.105s std dev: 0.00903s window: 3\naverage rate: 10.746\n\tmin: 0.085s max: 0.104s std dev: 0.00771s window: 3\naverage rate: 10.708\n\tmin: 0.090s max: 0.098s std dev: 0.00358s window: 3\naverage rate: 11.360\n\tmin: 0.081s max: 0.096s std dev: 0.00598s window: 3\naverage rate: 11.516\n\tmin: 0.079s max: 0.101s std dev: 0.01031s window: 3",
+      "topic": "/robot_a/swarm_lio2/cloud_map"
+    },
+    {
+      "ok": true,
+      "rate_hz": 10.426,
+      "raw": "average rate: 10.426\n\tmin: 0.091s max: 0.101s std dev: 0.00383s window: 3\naverage rate: 8.216\n\tmin: 0.094s max: 0.164s std dev: 0.03035s window: 3\naverage rate: 8.294\n\tmin: 0.096s max: 0.165s std dev: 0.03128s window: 3\naverage rate: 8.626\n\tmin: 0.096s max: 0.152s std dev: 0.02524s window: 3\naverage rate: 8.555\n\tmin: 0.079s max: 0.172s std dev: 0.04016s window: 3\naverage rate: 8.285\n\tmin: 0.075s max: 0.167s std dev: 0.03779s window: 3",
+      "topic": "/robot_b/swarm_lio2/cloud_map"
+    }
+  ],
+  "ros2_topic_list_available": true,
   "schema": "ros1_ros2_slam_bridge_validation/v1",
   "slam_backend": "swarm_lio2_shadow",
   "source": "sim_bridge",
-  "swarm_lio2_shadow_slam_passed": false,
-  "updated_utc": "2026-05-07T22:14:17Z"
+  "swarm_lio2_shadow_slam_passed": true,
+  "updated_utc": "2026-05-08T14:29:56Z"
 }

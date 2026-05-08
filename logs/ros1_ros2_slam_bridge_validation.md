@@ -1,6 +1,21 @@
 # ROS1 / ROS2 SLAM Bridge Topic Contract
 
+- deployment_mode: `sim_hybrid_ros1_slam_ros2_nav`
+- slam_backend: `swarm_lio2_shadow`
 - source: `sim_bridge`
-- bridge_contract_passed: `False`
-- swarm_lio2_shadow_slam_passed: `False`
-- blocker: `docker_runtime_blocked:unable to get image 'ros:noetic-ros-core': permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get "http://%2Fvar%2Frun%2Fdocker.sock/v1.51/images/ros:noetic-ros-core/json": dial unix /var/run/docker.sock: connect: operation not permitted `
+- pass: `True`
+- bridge_contract_passed: `True`
+- native_swarm_lio2_output_passed: `True`
+- swarm_lio2_shadow_slam_passed: `True`
+- native_swarm_lio2_odom_nonzero_rate: `True`
+- native_swarm_lio2_cloud_registered_nonzero_rate: `True`
+- native_swarm_lio2_cloud_body_nonzero_rate: `True`
+- ros1_topic_list_available: `True`
+- ros2_topic_list_available: `True`
+- ros1_missing_topics: ``
+- ros2_missing_topics: ``
+- message_rates_nonzero: `True`
+- frames_valid: `True`
+- gt_used_runtime: `False`
+- blocker: ``
+- recommended_next_action: ``

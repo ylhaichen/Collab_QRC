@@ -1,9 +1,9 @@
 {
-  "blocker": "rosnode list:exit=127;rosnode info /laserMapping_quad1:exit=127;rosnode info /laserMapping_quad2:exit=127;rostopic info /quad1_pcl_render_node/sensor_cloud:exit=127;rostopic info /quad2_pcl_render_node/sensor_cloud:exit=127;rostopic info /quad_1/imu:exit=127;rostopic info /quad_2/imu:exit=127",
+  "blocker": "",
   "config_file": "external/Swarm-LIO2/swarm_lio/config/simulation.yaml",
   "launch_file": "external/Swarm-LIO2/swarm_lio/launch/single_drone_sim.xml",
   "lidar_type": "SIM=6",
-  "mode": "host",
+  "mode": "docker",
   "mutual_or_relative_topics": [
     "/quadstate_to_teammate",
     "/quadstate_from_teammate",
@@ -25,7 +25,7 @@
       "z"
     ]
   },
-  "recommended_next_action": "Start ros1_hybrid_slam runtime and rerun with --docker.",
+  "recommended_next_action": "",
   "robots": {
     "robot_a": {
       "native_cloud_body_output": "/quad1/cloud_registered_body",
@@ -54,49 +54,49 @@
       "swarm_lio2_drone_id": 2
     }
   },
-  "runtime_inspection_available": false,
+  "runtime_inspection_available": true,
   "runtime_inspection_results": [
     {
       "command": "rosnode list",
-      "returncode": 127,
-      "stderr_tail": "bash: line 1: rosnode: command not found\n",
-      "stdout_tail": ""
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "/laserMapping_quad1\n/laserMapping_quad2\n/robot_a_imu_to_swarm_lio2\n/robot_a_lidar_to_swarm_lio2\n/robot_b_imu_to_swarm_lio2\n/robot_b_lidar_to_swarm_lio2\n/ros_bridge\n/rosout\n/swarm_lio2_robot_a_map_raw\n/swarm_lio2_robot_a_odom_raw\n/swarm_lio2_robot_a_static_raw\n/swarm_lio2_robot_b_map_raw\n/swarm_lio2_robot_b_odom_raw\n/swarm_lio2_robot_b_static_raw\n"
     },
     {
       "command": "rosnode info /laserMapping_quad1",
-      "returncode": 127,
-      "stderr_tail": "bash: line 1: rosnode: command not found\n",
-      "stdout_tail": ""
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "ection: outbound (50421 - 127.0.0.1:55816) [33]\n    * transport: TCPROS\n * topic: /quad1/drone_id\n    * to: /ros_bridge\n    * direction: outbound (50421 - 127.0.0.1:55772) [28]\n    * transport: TCPROS\n * topic: /quad1/target_rectangle\n    * to: /ros_bridge\n    * direction: outbound (50421 - 127.0.0.1:55824) [35]\n    * transport: TCPROS\n * topic: /quad1/traj\n    * to: /ros_bridge\n    * direction: outbound (50421 - 127.0.0.1:56618) [183]\n    * transport: TCPROS\n * topic: /quad1/lidar_slam/imu_propagate\n    * to: /ros_bridge\n    * direction: outbound (50421 - 127.0.0.1:55806) [31]\n    * transport: TCPROS\n * topic: /quad1/imu/data_filtered\n    * to: /ros_bridge\n    * direction: outbound (50421 - 127.0.0.1:55794) [30]\n    * transport: TCPROS\n * topic: /mavros/vision_pose/pose\n    * to: /ros_bridge\n    * direction: outbound (50421 - 127.0.0.1:55708) [127]\n    * transport: TCPROS\n * topic: /tf\n    * to: /ros_bridge\n    * direction: outbound (50421 - 127.0.0.1:56756) [67]\n    * transport: TCPROS\n * topic: /quadstate_to_teammate\n    * to: /laserMapping_quad1 (http://127.0.0.1:36333/)\n    * direction: inbound\n    * transport: INTRAPROCESS\n * topic: /quadstate_to_teammate\n    * to: /laserMapping_quad2 (http://127.0.0.1:45107/)\n    * direction: inbound (40580 - 127.0.0.1:54255) [12]\n    * transport: TCPROS\n * topic: /global_extrinsic_to_teammate\n    * to: /laserMapping_quad1 (http://127.0.0.1:36333/)\n    * direction: inbound\n    * transport: INTRAPROCESS\n * topic: /global_extrinsic_to_teammate\n    * to: /laserMapping_quad2 (http://127.0.0.1:45107/)\n    * direction: inbound (40596 - 127.0.0.1:54255) [20]\n    * transport: TCPROS\n * topic: /quad1_pcl_render_node/sensor_cloud\n    * to: /robot_a_lidar_to_swarm_lio2 (http://127.0.0.1:42889/)\n    * direction: inbound (46418 - 127.0.0.1:42899) [68]\n    * transport: TCPROS\n * topic: /quad_1/imu\n    * to: /robot_a_imu_to_swarm_lio2 (http://127.0.0.1:34803/)\n    * direction: inbound (34714 - 127.0.0.1:59191) [69]\n    * transport: TCPROS\n\n"
     },
     {
       "command": "rosnode info /laserMapping_quad2",
-      "returncode": 127,
-      "stderr_tail": "bash: line 1: rosnode: command not found\n",
-      "stdout_tail": ""
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "irection: outbound (54255 - 127.0.0.1:40750) [29]\n    * transport: TCPROS\n * topic: /quad2/drone_id\n    * to: /ros_bridge\n    * direction: outbound (54255 - 127.0.0.1:40710) [22]\n    * transport: TCPROS\n * topic: /quad2/target_rectangle\n    * to: /ros_bridge\n    * direction: outbound (54255 - 127.0.0.1:40762) [34]\n    * transport: TCPROS\n * topic: /quad2/traj\n    * to: /ros_bridge\n    * direction: outbound (54255 - 127.0.0.1:41604) [40]\n    * transport: TCPROS\n * topic: /quad2/lidar_slam/imu_propagate\n    * to: /ros_bridge\n    * direction: outbound (54255 - 127.0.0.1:40732) [27]\n    * transport: TCPROS\n * topic: /quad2/imu/data_filtered\n    * to: /ros_bridge\n    * direction: outbound (54255 - 127.0.0.1:40726) [26]\n    * transport: TCPROS\n * topic: /mavros/vision_pose/pose\n    * to: /ros_bridge\n    * direction: outbound (54255 - 127.0.0.1:40662) [32]\n    * transport: TCPROS\n * topic: /tf\n    * to: /ros_bridge\n    * direction: outbound (54255 - 127.0.0.1:41706) [33]\n    * transport: TCPROS\n * topic: /quadstate_to_teammate\n    * to: /laserMapping_quad2 (http://127.0.0.1:45107/)\n    * direction: inbound\n    * transport: INTRAPROCESS\n * topic: /quadstate_to_teammate\n    * to: /laserMapping_quad1 (http://127.0.0.1:36333/)\n    * direction: inbound (55628 - 127.0.0.1:50421) [10]\n    * transport: TCPROS\n * topic: /global_extrinsic_to_teammate\n    * to: /laserMapping_quad2 (http://127.0.0.1:45107/)\n    * direction: inbound\n    * transport: INTRAPROCESS\n * topic: /global_extrinsic_to_teammate\n    * to: /laserMapping_quad1 (http://127.0.0.1:36333/)\n    * direction: inbound (55630 - 127.0.0.1:50421) [24]\n    * transport: TCPROS\n * topic: /quad2_pcl_render_node/sensor_cloud\n    * to: /robot_b_lidar_to_swarm_lio2 (http://127.0.0.1:39007/)\n    * direction: inbound (44212 - 127.0.0.1:33829) [42]\n    * transport: TCPROS\n * topic: /quad_2/imu\n    * to: /robot_b_imu_to_swarm_lio2 (http://127.0.0.1:45995/)\n    * direction: inbound (46932 - 127.0.0.1:38419) [41]\n    * transport: TCPROS\n\n"
     },
     {
       "command": "rostopic info /quad1_pcl_render_node/sensor_cloud",
-      "returncode": 127,
-      "stderr_tail": "bash: line 1: rostopic: command not found\n",
-      "stdout_tail": ""
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /robot_a_lidar_to_swarm_lio2 (http://127.0.0.1:42889/)\n\nSubscribers: \n * /laserMapping_quad1 (http://127.0.0.1:36333/)\n * /ros_bridge (http://127.0.0.1:35169/)\n\n\n"
     },
     {
       "command": "rostopic info /quad2_pcl_render_node/sensor_cloud",
-      "returncode": 127,
-      "stderr_tail": "bash: line 1: rostopic: command not found\n",
-      "stdout_tail": ""
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /robot_b_lidar_to_swarm_lio2 (http://127.0.0.1:39007/)\n\nSubscribers: \n * /laserMapping_quad2 (http://127.0.0.1:45107/)\n * /ros_bridge (http://127.0.0.1:35169/)\n\n\n"
     },
     {
       "command": "rostopic info /quad_1/imu",
-      "returncode": 127,
-      "stderr_tail": "bash: line 1: rostopic: command not found\n",
-      "stdout_tail": ""
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "Type: sensor_msgs/Imu\n\nPublishers: \n * /robot_a_imu_to_swarm_lio2 (http://127.0.0.1:34803/)\n\nSubscribers: \n * /laserMapping_quad1 (http://127.0.0.1:36333/)\n * /ros_bridge (http://127.0.0.1:35169/)\n\n\n"
     },
     {
       "command": "rostopic info /quad_2/imu",
-      "returncode": 127,
-      "stderr_tail": "bash: line 1: rostopic: command not found\n",
-      "stdout_tail": ""
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "Type: sensor_msgs/Imu\n\nPublishers: \n * /robot_b_imu_to_swarm_lio2 (http://127.0.0.1:45995/)\n\nSubscribers: \n * /laserMapping_quad2 (http://127.0.0.1:45107/)\n * /ros_bridge (http://127.0.0.1:35169/)\n\n\n"
     }
   ],
   "schema": "swarm_lio2_required_inputs/v1",
@@ -106,5 +106,5 @@
     "sim_per_point_time_required": false,
     "time_offset_lidar_imu_sec": 0.0
   },
-  "updated_utc": "2026-05-07T22:12:51Z"
+  "updated_utc": "2026-05-08T14:23:52Z"
 }

@@ -3,11 +3,17 @@
 - schema: `sim_hybrid_ros1_slam_ros2_nav_validation/v1`
 - deployment_mode: `sim_hybrid_ros1_slam_ros2_nav`
 - pass: `False`
-- final_status: `Status D — External Blocker`
-- blocker: `missing_ros1_topics:/robot_a/swarm_lio2_raw/Odometry,/robot_b/swarm_lio2_raw/Odometry,/robot_a/swarm_lio2_raw/cloud_static,/robot_b/swarm_lio2_raw/cloud_static,/robot_a/swarm_lio2_raw/cloud_map,/robot_b/swarm_lio2_raw/cloud_map;/robot_a/swarm_lio2/Odometry:rate<0.1;/robot_b/swarm_lio2/Odometry:rate<0.1;/robot_a/swarm_lio2/cloud_static:rate<0.1;/robot_b/swarm_lio2/cloud_static:rate<0.1;/robot_a/swarm_lio2/cloud_map:rate<0.1;/robot_b/swarm_lio2/cloud_map:rate<0.1;/robot_a/swarm_lio2/Odometry:header.frame_id_empty;/robot_a/swarm_lio2/Odometry:child_frame_id_empty;/robot_b/swarm_lio2/Odometry:header.frame_id_empty;/robot_b/swarm_lio2/Odometry:child_frame_id_empty`
-- docker_backend_build_blocker: ``
-- claim: `Fast-LIO remains production backend; sim hybrid Swarm-LIO2 primary is not validated.`
-- implemented_scaffolding: `True`
-- docker_image_build_passed: `True`
-- docker_run_blocked: `False`
-- real_robot_available: `False`
+- final_status: `Status C — Shadow Passed, Primary Blocked`
+- blocker: `swarm_lio2_primary_not_attempted_by_instruction`
+- claim: `Swarm-LIO2 shadow mode passed with sim_bridge native output; Fast-LIO remains production because primary mode was not attempted.`
+- shadow_source: `sim_bridge`
+- swarm_lio2_shadow_slam_passed: `True`
+- bridge_contract_passed: `True`
+- native_swarm_lio2_odom_nonzero_rate: `True`
+- native_swarm_lio2_cloud_registered_nonzero_rate: `True`
+- native_swarm_lio2_cloud_body_nonzero_rate: `True`
+- ros2_receives_shadow_odometry: `True`
+- primary_attempted: `False`
+- gt_used_runtime: `False`
+- fast_lio_baseline_still_runs: `True`
+- updated_utc: `2026-05-08T14:32:08Z`
