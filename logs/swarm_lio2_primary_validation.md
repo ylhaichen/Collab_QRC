@@ -16,7 +16,7 @@
 - merged_map_agreement_gated: `True`
 - swarm_lio2_mutual_transform_available: `False`
 - native_mutual_topic_used: `/global_extrinsic_to_teammate`
-- native_mutual_topic_rate_hz: `25.262`
+- native_mutual_topic_rate_hz: `20.96`
 - native_global_extrinsic_has_entries: `False`
 - native_quadstate_has_teammate_entries: `False`
 - ros2_swarm_relative_transform_rate_hz: `0.0`

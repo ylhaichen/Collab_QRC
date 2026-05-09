@@ -13,6 +13,7 @@
 #include <string>
 #include <cmath>
 #include <mutex>
+#include <unordered_set>
 
 #include "mujoco/mujoco.h"
 #include "rclcpp/rclcpp.hpp"
@@ -34,6 +35,9 @@ struct LidarSensorConfig {
     double range_min       = 0.05;            ///< Minimum range (m)
     double range_max       = 20.0;            ///< Maximum range (m)
     double publish_rate    = 10.0;            ///< Publish rate (Hz)
+    bool   publish_intensity = true;          ///< Publish x/y/z/intensity instead of xyz-only
+    float  default_intensity = 0.0f;          ///< Return intensity for non-peer hits
+    float  peer_intensity    = 255.0f;        ///< Return intensity for peer robot hits
 };
 
 class LidarSensor {
@@ -51,6 +55,8 @@ public:
 
 private:
     void update();
+    bool is_peer_geom(int geom_id) const;
+    bool body_is_descendant_of(int body_id, int root_body_id) const;
 
     rclcpp::Node::SharedPtr       nh_;
     rclcpp::TimerBase::SharedPtr  timer_;
@@ -62,12 +68,16 @@ private:
     // MuJoCo IDs
     int site_id_ = -1;
     int body_id_ = -1;
+    std::vector<int> peer_root_body_ids_;
 
     // Ray configuration
     int    n_rays_;
     double range_min_;
     double range_max_;
     std::string frame_id_;
+    bool publish_intensity_;
+    float default_intensity_;
+    float peer_intensity_;
 
     // Pre-computed ray directions in LiDAR-local frame  (n_rays_ x 3, row-major)
     std::vector<double> ray_dirs_local_;

@@ -154,7 +154,10 @@ namespace mujoco_ros2_sensors {
     void MujocoRos2Sensors::register_lidar_sensors() {
         // Auto-discover lidar sites: look for known site names.
         // For dual-robot MJCF, also look for b_-prefixed variants.
-        // Order of preference per robot: unitree_l1, livox_mid360.
+        // Order of preference per robot: livox_mid360, unitree_l1. The hybrid
+        // SLAM launch config and Swarm-LIO2 simulation.yaml both expect the
+        // mounted MID-360 profile; Unitree L1 remains available for explicit
+        // sensing-asymmetry ablations only.
         // Real hardware specs — see Livox MID-360 datasheet.
         // range_min=0.1 matches the real sensor (point cloud starts at
         // 0.1 m; accuracy not guaranteed below 0.2 m). Do NOT lower to
@@ -176,10 +179,10 @@ namespace mujoco_ros2_sensors {
         const int mid360_hz = env_int("MUJOCO_LIDAR_HZ_SAMPLES", 1000);
         const int mid360_vt = env_int("MUJOCO_LIDAR_VT_SAMPLES", 20);
         const std::vector<std::pair<std::string, LidarSensorConfig>> known_lidars = {
-            {"unitree_l1", {"unitree_l1", "base_link", "unitree_l1",
-                            360, 60, 360.0, 0.0, 90.0, 0.1, 20.0, 11.0}},
             {"livox_mid360", {"livox_mid360", "base_link", "livox_mid360",
                               mid360_hz, mid360_vt, 360.0, -7.0, 52.0, 0.1, 40.0, 10.0}},
+            {"unitree_l1", {"unitree_l1", "base_link", "unitree_l1",
+                            360, 60, 360.0, 0.0, 90.0, 0.1, 20.0, 11.0}},
         };
 
         // Prefixes to try: "" for Robot A, "b_" for Robot B.
@@ -225,13 +228,13 @@ namespace mujoco_ros2_sensors {
                             cfg.site_name.c_str(), cfg.frame_id.c_str(), node_name.c_str());
                 ++registered;
                 found_for_prefix = true;
-                break;  // one lidar per prefix (prefer unitree_l1 over livox_mid360)
+                break;  // one lidar per prefix (prefer livox_mid360 over unitree_l1)
             }
         }
 
         if (registered == 0) {
             RCLCPP_WARN(rclcpp::get_logger("lidar_sensor_registration"),
-                        "No LiDAR site found (tried: unitree_l1, livox_mid360, b_unitree_l1, b_livox_mid360)");
+                        "No LiDAR site found (tried: livox_mid360, unitree_l1, b_livox_mid360, b_unitree_l1)");
         }
     }
 

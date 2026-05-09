@@ -1,5 +1,5 @@
 {
-  "alignment_confidence": 0.74785,
+  "alignment_confidence": 0.79716,
   "dependency_blocker": "gtsam_cpp_external_optimizer_required",
   "export_paths": {
     "factors_json": "/home/ylhc/Desktop/Collab_QRC/logs/team_pose_graph_factors.json",
@@ -8,17 +8,17 @@
   "gt_used_runtime": false,
   "latest_optimization_error": null,
   "num_inter_robot_factors_inlier": 0,
-  "num_inter_robot_factors_raw": 5650,
-  "num_inter_robot_factors_rejected": 1064,
-  "num_keyframes_robot_a": 533,
-  "num_keyframes_robot_b": 682,
-  "num_odom_factors": 1213,
+  "num_inter_robot_factors_raw": 4458,
+  "num_inter_robot_factors_rejected": 1604,
+  "num_keyframes_robot_a": 678,
+  "num_keyframes_robot_b": 695,
+  "num_odom_factors": 1371,
   "num_prior_factors": 1,
   "optimization_backend": "g2o_export_only",
   "optimization_success": false,
   "pose_graph_error_after": null,
   "pose_graph_error_before": null,
-  "pose_graph_num_factors": 1214,
+  "pose_graph_num_factors": 1372,
   "schema": "team_pose_graph_metrics/v1",
   "self_loop_events_available": false
 }

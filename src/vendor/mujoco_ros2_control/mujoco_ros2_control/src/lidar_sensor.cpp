@@ -9,6 +9,7 @@
 #include "mujoco_ros2_sensors/lidar_sensor.hpp"
 
 #include <cstring>  // memcpy
+#include <algorithm>
 
 namespace mujoco_ros2_sensors {
 
@@ -18,7 +19,11 @@ LidarSensor::LidarSensor(rclcpp::Node::SharedPtr &node,
                            std::mutex *sim_step_mtx)
     : nh_(node), model_(model), data_(data),
       range_min_(cfg.range_min), range_max_(cfg.range_max),
-      frame_id_(cfg.frame_id), sim_step_mtx_(sim_step_mtx)
+      frame_id_(cfg.frame_id),
+      publish_intensity_(cfg.publish_intensity),
+      default_intensity_(cfg.default_intensity),
+      peer_intensity_(cfg.peer_intensity),
+      sim_step_mtx_(sim_step_mtx)
 {
     // --- Resolve MuJoCo IDs ---
     site_id_ = mj_name2id(model_, mjOBJ_SITE, cfg.site_name.c_str());
@@ -33,6 +38,23 @@ LidarSensor::LidarSensor(rclcpp::Node::SharedPtr &node,
         RCLCPP_FATAL(nh_->get_logger(),
                      "LiDAR body '%s' not found in MuJoCo model", cfg.body_name.c_str());
         throw std::runtime_error("LiDAR body not found: " + cfg.body_name);
+    }
+
+    // Dual-robot sim convention: robot A root is base_link, robot B root is
+    // b_base_link.  Mark only ray hits on the other robot as high intensity;
+    // static walls/ground remain low intensity.  This models a reflective
+    // teammate body/marker without using any ground-truth relative transform.
+    const std::string peer_body_name = cfg.body_name == "base_link" ? "b_base_link"
+        : (cfg.body_name == "b_base_link" ? "base_link" : "");
+    if (!peer_body_name.empty()) {
+        const int peer_body_id = mj_name2id(model_, mjOBJ_BODY, peer_body_name.c_str());
+        if (peer_body_id >= 0) {
+            peer_root_body_ids_.push_back(peer_body_id);
+        } else {
+            RCLCPP_WARN(nh_->get_logger(),
+                        "Peer body '%s' not found; LiDAR intensity will not mark teammate hits",
+                        peer_body_name.c_str());
+        }
     }
 
     // --- Pre-compute ray directions in LiDAR-local frame ---
@@ -72,11 +94,36 @@ LidarSensor::LidarSensor(rclcpp::Node::SharedPtr &node,
 
     RCLCPP_INFO(nh_->get_logger(),
                 "LiDAR sensor started: site=%s, body=%s, %dx%d=%d rays, %.0f Hz, "
-                "range [%.2f, %.1f]m, frame=%s",
+                "range [%.2f, %.1f]m, frame=%s, intensity=%s, peer_roots=%zu",
                 cfg.site_name.c_str(), cfg.body_name.c_str(),
                 cfg.hz_samples, cfg.vt_samples, n_rays_,
                 cfg.publish_rate, cfg.range_min, cfg.range_max,
-                cfg.frame_id.c_str());
+                cfg.frame_id.c_str(), publish_intensity_ ? "on" : "off",
+                peer_root_body_ids_.size());
+}
+
+// ---------------------------------------------------------------------------
+bool LidarSensor::body_is_descendant_of(int body_id, int root_body_id) const
+{
+    for (int current = body_id; current > 0; current = model_->body_parentid[current]) {
+        if (current == root_body_id) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// ---------------------------------------------------------------------------
+bool LidarSensor::is_peer_geom(int geom_id) const
+{
+    if (geom_id < 0 || geom_id >= model_->ngeom || peer_root_body_ids_.empty()) {
+        return false;
+    }
+    const int geom_body_id = model_->geom_bodyid[geom_id];
+    return std::any_of(peer_root_body_ids_.begin(), peer_root_body_ids_.end(),
+                       [this, geom_body_id](int peer_root) {
+                           return body_is_descendant_of(geom_body_id, peer_root);
+                       });
 }
 
 // ---------------------------------------------------------------------------
@@ -86,8 +133,9 @@ void LidarSensor::update()
     double origin_copy[3];
     double xmat_copy[9];
     std::vector<double> ray_dirs_world(n_rays_ * 3);
+    const int fields_per_point = publish_intensity_ ? 4 : 3;
     std::vector<float> points;
-    points.reserve(n_rays_ * 3);
+    points.reserve(n_rays_ * fields_per_point);
 
     {
         // Lock to prevent concurrent mj_step from modifying mjData
@@ -156,9 +204,12 @@ void LidarSensor::update()
         points.push_back(lx);
         points.push_back(ly);
         points.push_back(lz);
+        if (publish_intensity_) {
+            points.push_back(is_peer_geom(ray_geomid_[i]) ? peer_intensity_ : default_intensity_);
+        }
     }
 
-    int n_valid = static_cast<int>(points.size() / 3);
+    int n_valid = static_cast<int>(points.size() / fields_per_point);
     if (n_valid == 0) return;
 
     // 5. Build PointCloud2 message.
@@ -168,20 +219,24 @@ void LidarSensor::update()
     msg.height          = 1;
     msg.width           = n_valid;
     msg.is_bigendian    = false;
-    msg.point_step      = 12;  // 3 x float32
+    msg.point_step      = fields_per_point * static_cast<int>(sizeof(float));
     msg.row_step        = msg.point_step * msg.width;
     msg.is_dense        = true;
 
-    msg.fields.resize(3);
+    msg.fields.resize(publish_intensity_ ? 4 : 3);
     msg.fields[0].name = "x"; msg.fields[0].offset = 0;
     msg.fields[0].datatype = sensor_msgs::msg::PointField::FLOAT32; msg.fields[0].count = 1;
     msg.fields[1].name = "y"; msg.fields[1].offset = 4;
     msg.fields[1].datatype = sensor_msgs::msg::PointField::FLOAT32; msg.fields[1].count = 1;
     msg.fields[2].name = "z"; msg.fields[2].offset = 8;
     msg.fields[2].datatype = sensor_msgs::msg::PointField::FLOAT32; msg.fields[2].count = 1;
+    if (publish_intensity_) {
+        msg.fields[3].name = "intensity"; msg.fields[3].offset = 12;
+        msg.fields[3].datatype = sensor_msgs::msg::PointField::FLOAT32; msg.fields[3].count = 1;
+    }
 
-    msg.data.resize(n_valid * 12);
-    std::memcpy(msg.data.data(), points.data(), n_valid * 12);
+    msg.data.resize(n_valid * msg.point_step);
+    std::memcpy(msg.data.data(), points.data(), msg.data.size());
 
     pub_->publish(msg);
 }
