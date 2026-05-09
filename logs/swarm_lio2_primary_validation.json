@@ -3,45 +3,40 @@
   "adapter_owns_odom_nav": true,
   "adapter_owns_odometry": true,
   "alignment_status": {
-    "accepted_count": 240,
+    "accepted_count": 0,
     "child_frame": "robot_b/map",
     "confidence": 0.0,
-    "deduplicated_matches": 223,
-    "eligible_matches": 16,
+    "deduplicated_matches": 0,
+    "eligible_matches": 0,
     "gt_used_runtime": false,
-    "inlier_count": 7,
+    "inlier_count": 0,
     "parent_frame": "robot_a/map",
     "pose_graph_backend": "gtsam_cpp",
-    "pose_graph_optimization_success": true,
-    "reason": "waiting_for_swarm_lio2_relative_transform",
-    "reject_reason": "",
-    "rejected_count": 233,
-    "robust_inlier_ratio": 0.4375,
-    "robust_inlier_ratio_eligible": 0.4375,
-    "robust_inlier_ratio_raw": 0.02917,
-    "robust_status": "accepted",
+    "pose_graph_optimization_success": false,
+    "reason": "no_verified_matches",
+    "reject_reason": "no_verified_matches",
+    "rejected_count": 0,
+    "robust_inlier_ratio": 0.0,
+    "robust_inlier_ratio_eligible": 0.0,
+    "robust_inlier_ratio_raw": 0.0,
+    "robust_status": "unaligned",
     "schema": "team_alignment_status/v1",
-    "stamp_sec": 232.002,
-    "status": "tentative",
+    "stamp_sec": 321.5,
+    "status": "rejected",
     "swarm_loop_agreement_accepted": false,
     "swarm_loop_agreement_reason": "",
     "swarm_loop_agreement_required": true,
     "swarm_loop_translation_error_m": null,
-    "swarm_loop_yaw_error_deg": null,
-    "transform": {
-      "x": -42.14649,
-      "y": -12.50165,
-      "yaw": -3.127241
-    }
+    "swarm_loop_yaw_error_deg": null
   },
-  "blocker": "swarm_lio2_mutual_transform_unavailable;overlap_alignment_not_accepted_with_swarm_agreement;no_overlap_scene_not_run_after_primary_blocker;docker_runtime_escalation_rejected_usage_limit_after_relative_transform_adapter",
+  "blocker": "/team_slam/swarm_lio2_relative_transform:rate<0.1;swarm_lio2_global_extrinsic_status_empty;swarm_lio2_quadstate_teammate_empty;overlap_alignment_not_accepted_with_swarm_agreement;no_overlap_scene_not_run_after_primary_blocker",
   "bridge_contract": {
-    "blocker": "",
-    "bridge_contract_passed": true,
+    "blocker": "/team_slam/swarm_lio2_relative_transform:rate<0.1",
+    "bridge_contract_passed": false,
     "deployment_mode": "sim_hybrid_ros1_slam_ros2_nav",
     "frames_valid": true,
     "gt_used_runtime": false,
-    "message_rates_nonzero": true,
+    "message_rates_nonzero": false,
     "mode": "primary",
     "native_swarm_lio2_cloud_body_nonzero_rate": true,
     "native_swarm_lio2_cloud_registered_nonzero_rate": true,
@@ -64,9 +59,9 @@
       "blocker": "",
       "path": "/home/ylhc/Desktop/Collab_QRC/logs/swarm_lio2_topic_discovery.json"
     },
-    "pass": true,
+    "pass": false,
     "primary_adapter_ownership_passed": true,
-    "recommended_next_action": "",
+    "recommended_next_action": "Start ROS1 hybrid SLAM container, ros1_bridge, ROS2 adapter, and sim sensor publishers; rerun this script.",
     "ros1_expected_topics": [
       "/robot_a/velodyne_points",
       "/robot_b/velodyne_points",
@@ -87,7 +82,8 @@
       "/robot_a/swarm_lio2_raw/cloud_static",
       "/robot_b/swarm_lio2_raw/cloud_static",
       "/robot_a/swarm_lio2_raw/cloud_map",
-      "/robot_b/swarm_lio2_raw/cloud_map"
+      "/robot_b/swarm_lio2_raw/cloud_map",
+      "/robot_a/swarm_lio2_raw/relative_transform"
     ],
     "ros1_missing_topics": [],
     "ros1_present_topics": [
@@ -110,7 +106,8 @@
       "/robot_a/swarm_lio2_raw/cloud_static",
       "/robot_b/swarm_lio2_raw/cloud_static",
       "/robot_a/swarm_lio2_raw/cloud_map",
-      "/robot_b/swarm_lio2_raw/cloud_map"
+      "/robot_b/swarm_lio2_raw/cloud_map",
+      "/robot_a/swarm_lio2_raw/relative_transform"
     ],
     "ros1_topic_list_available": true,
     "ros2_expected_topics": [
@@ -127,6 +124,7 @@
       "/robot_a/tf",
       "/robot_b/tf",
       "/team_slam/swarm_lio2_metrics",
+      "/team_slam/swarm_lio2_relative_transform",
       "/team_slam/keyframes",
       "/team_slam/alignment_status"
     ],
@@ -175,6 +173,7 @@
       "/robot_a/tf",
       "/robot_b/tf",
       "/team_slam/swarm_lio2_metrics",
+      "/team_slam/swarm_lio2_relative_transform",
       "/team_slam/keyframes",
       "/team_slam/alignment_status"
     ],
@@ -183,117 +182,123 @@
         "adapter_owned": true,
         "ok": true,
         "publisher_count": 1,
-        "raw": "lisher count: 1\n\nNode name: swarm_lio2_ros2_adapter_node\nNode namespace: /robot_a\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: PUBLISHER\nGID: 01.0f.4c.47.7d.2c.56.f4.00.00.00.00.00.00.13.03.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite\n\nSubscription count: 2\n\nNode name: loop_keyframe_exporter_node\nNode namespace: /\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: SUBSCRIPTION\nGID: 01.0f.4c.47.e3.2c.73.3a.00.00.00.00.00.00.14.04.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite\n\nNode name: team_pose_graph_node\nNode namespace: /\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: SUBSCRIPTION\nGID: 01.0f.4c.47.e9.2c.d8.16.00.00.00.00.00.00.15.04.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite",
+        "raw": "lisher count: 1\n\nNode name: swarm_lio2_ros2_adapter_node\nNode namespace: /robot_a\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: PUBLISHER\nGID: 01.0f.bc.e6.3a.b6.72.57.00.00.00.00.00.00.13.03.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite\n\nSubscription count: 2\n\nNode name: loop_keyframe_exporter_node\nNode namespace: /\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: SUBSCRIPTION\nGID: 01.0f.bc.e6.9c.b6.93.20.00.00.00.00.00.00.14.04.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite\n\nNode name: team_pose_graph_node\nNode namespace: /\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: SUBSCRIPTION\nGID: 01.0f.bc.e6.a2.b6.ad.62.00.00.00.00.00.00.15.04.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite",
         "topic": "/robot_a/Odometry"
       },
       {
         "adapter_owned": true,
         "ok": true,
         "publisher_count": 1,
-        "raw": "lisher count: 1\n\nNode name: swarm_lio2_ros2_adapter_node\nNode namespace: /robot_b\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: PUBLISHER\nGID: 01.0f.4c.47.7f.2c.e6.7f.00.00.00.00.00.00.13.03.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite\n\nSubscription count: 2\n\nNode name: loop_keyframe_exporter_node\nNode namespace: /\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: SUBSCRIPTION\nGID: 01.0f.4c.47.e3.2c.73.3a.00.00.00.00.00.00.17.04.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite\n\nNode name: team_pose_graph_node\nNode namespace: /\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: SUBSCRIPTION\nGID: 01.0f.4c.47.e9.2c.d8.16.00.00.00.00.00.00.17.04.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite",
+        "raw": "lisher count: 1\n\nNode name: swarm_lio2_ros2_adapter_node\nNode namespace: /robot_b\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: PUBLISHER\nGID: 01.0f.bc.e6.3c.b6.a2.47.00.00.00.00.00.00.13.03.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite\n\nSubscription count: 2\n\nNode name: loop_keyframe_exporter_node\nNode namespace: /\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: SUBSCRIPTION\nGID: 01.0f.bc.e6.9c.b6.93.20.00.00.00.00.00.00.17.04.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite\n\nNode name: team_pose_graph_node\nNode namespace: /\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: SUBSCRIPTION\nGID: 01.0f.bc.e6.a2.b6.ad.62.00.00.00.00.00.00.17.04.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite",
         "topic": "/robot_b/Odometry"
       },
       {
         "adapter_owned": true,
         "ok": true,
         "publisher_count": 1,
-        "raw": "lisher count: 1\n\nNode name: swarm_lio2_ros2_adapter_node\nNode namespace: /robot_a\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: PUBLISHER\nGID: 01.0f.4c.47.7d.2c.56.f4.00.00.00.00.00.00.14.03.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite\n\nSubscription count: 2\n\nNode name: loop_keyframe_exporter_node\nNode namespace: /\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: SUBSCRIPTION\nGID: 01.0f.4c.47.e3.2c.73.3a.00.00.00.00.00.00.15.04.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite\n\nNode name: team_pose_graph_node\nNode namespace: /\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: SUBSCRIPTION\nGID: 01.0f.4c.47.e9.2c.d8.16.00.00.00.00.00.00.16.04.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite",
+        "raw": "lisher count: 1\n\nNode name: swarm_lio2_ros2_adapter_node\nNode namespace: /robot_a\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: PUBLISHER\nGID: 01.0f.bc.e6.3a.b6.72.57.00.00.00.00.00.00.14.03.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite\n\nSubscription count: 2\n\nNode name: loop_keyframe_exporter_node\nNode namespace: /\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: SUBSCRIPTION\nGID: 01.0f.bc.e6.9c.b6.93.20.00.00.00.00.00.00.15.04.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite\n\nNode name: team_pose_graph_node\nNode namespace: /\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: SUBSCRIPTION\nGID: 01.0f.bc.e6.a2.b6.ad.62.00.00.00.00.00.00.16.04.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite",
         "topic": "/robot_a/corrected_odom"
       },
       {
         "adapter_owned": true,
         "ok": true,
         "publisher_count": 1,
-        "raw": "lisher count: 1\n\nNode name: swarm_lio2_ros2_adapter_node\nNode namespace: /robot_b\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: PUBLISHER\nGID: 01.0f.4c.47.7f.2c.e6.7f.00.00.00.00.00.00.14.03.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite\n\nSubscription count: 2\n\nNode name: loop_keyframe_exporter_node\nNode namespace: /\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: SUBSCRIPTION\nGID: 01.0f.4c.47.e3.2c.73.3a.00.00.00.00.00.00.18.04.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite\n\nNode name: team_pose_graph_node\nNode namespace: /\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: SUBSCRIPTION\nGID: 01.0f.4c.47.e9.2c.d8.16.00.00.00.00.00.00.18.04.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite",
+        "raw": "lisher count: 1\n\nNode name: swarm_lio2_ros2_adapter_node\nNode namespace: /robot_b\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: PUBLISHER\nGID: 01.0f.bc.e6.3c.b6.a2.47.00.00.00.00.00.00.14.03.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite\n\nSubscription count: 2\n\nNode name: loop_keyframe_exporter_node\nNode namespace: /\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: SUBSCRIPTION\nGID: 01.0f.bc.e6.9c.b6.93.20.00.00.00.00.00.00.18.04.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite\n\nNode name: team_pose_graph_node\nNode namespace: /\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: SUBSCRIPTION\nGID: 01.0f.bc.e6.a2.b6.ad.62.00.00.00.00.00.00.18.04.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite",
         "topic": "/robot_b/corrected_odom"
       },
       {
         "adapter_owned": true,
         "ok": true,
         "publisher_count": 1,
-        "raw": "e: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite\n\nNode name: stuck_watchdog\nNode namespace: /\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: SUBSCRIPTION\nGID: 01.0f.4c.47.39.2d.81.fc.00.00.00.00.00.00.12.04.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite\n\nNode name: rosbag2_recorder\nNode namespace: /\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: SUBSCRIPTION\nGID: 01.0f.4c.47.3b.2d.39.80.00.00.00.00.00.00.15.04.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite\n\nNode name: stuck_watchdog\nNode namespace: /\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: SUBSCRIPTION\nGID: 01.0f.4c.47.70.c2.ef.40.00.00.00.00.00.00.12.04.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite",
+        "raw": "inite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite\n\nNode name: cfpa2_to_nav2_bridge\nNode namespace: /\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: SUBSCRIPTION\nGID: 01.0f.bc.e6.eb.b6.65.a0.00.00.00.00.00.00.12.04.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite\n\nNode name: stuck_watchdog\nNode namespace: /\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: SUBSCRIPTION\nGID: 01.0f.bc.e6.f1.b6.e8.12.00.00.00.00.00.00.12.04.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite\n\nNode name: rosbag2_recorder\nNode namespace: /\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: SUBSCRIPTION\nGID: 01.0f.bc.e6.f3.b6.b6.9a.00.00.00.00.00.00.13.04.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite",
         "topic": "/robot_a/odom/nav"
       },
       {
         "adapter_owned": true,
         "ok": true,
         "publisher_count": 1,
-        "raw": "inite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite\n\nNode name: cfpa2_to_nav2_bridge\nNode namespace: /\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: SUBSCRIPTION\nGID: 01.0f.4c.47.85.2d.dc.e2.00.00.00.00.00.00.12.04.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite\n\nNode name: stuck_watchdog\nNode namespace: /\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: SUBSCRIPTION\nGID: 01.0f.4c.47.91.2d.dc.aa.00.00.00.00.00.00.12.04.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite\n\nNode name: rosbag2_recorder\nNode namespace: /\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: SUBSCRIPTION\nGID: 01.0f.4c.47.a5.2d.56.26.00.00.00.00.00.00.16.04.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite",
+        "raw": "Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite\n\nNode name: stuck_watchdog\nNode namespace: /\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: SUBSCRIPTION\nGID: 01.0f.bc.e6.50.b7.54.4b.00.00.00.00.00.00.12.04.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite\n\nNode name: rosbag2_recorder\nNode namespace: /\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: SUBSCRIPTION\nGID: 01.0f.bc.e6.5d.b7.7e.e6.00.00.00.00.00.00.13.04.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite\n\nNode name: cfpa2_coordinator\nNode namespace: /\nTopic type: nav_msgs/msg/Odometry\nEndpoint type: SUBSCRIPTION\nGID: 01.0f.bc.e6.d8.b7.97.68.00.00.00.00.00.00.1f.04.00.00.00.00.00.00.00.00\nQoS profile:\n  Reliability: RELIABLE\n  History (Depth): UNKNOWN\n  Durability: VOLATILE\n  Lifespan: Infinite\n  Deadline: Infinite\n  Liveliness: AUTOMATIC\n  Liveliness lease duration: Infinite",
         "topic": "/robot_b/odom/nav"
       }
     ],
     "ros2_rate_checks": [
       {
         "ok": true,
-        "rate_hz": 10.982,
-        "raw": "average rate: 10.982\n\tmin: 0.086s max: 0.100s std dev: 0.00601s window: 3\naverage rate: 11.860\n\tmin: 0.076s max: 0.095s std dev: 0.00800s window: 3\naverage rate: 12.073\n\tmin: 0.076s max: 0.086s std dev: 0.00487s window: 3\naverage rate: 10.974\n\tmin: 0.089s max: 0.093s std dev: 0.00198s window: 3\naverage rate: 10.301\n\tmin: 0.087s max: 0.109s std dev: 0.00929s window: 3\naverage rate: 10.167\n\tmin: 0.087s max: 0.111s std dev: 0.00960s window: 3",
+        "rate_hz": 10.636,
+        "raw": "average rate: 10.636\n\tmin: 0.090s max: 0.102s std dev: 0.00558s window: 3\naverage rate: 11.192\n\tmin: 0.080s max: 0.099s std dev: 0.00794s window: 3\naverage rate: 11.372\n\tmin: 0.085s max: 0.093s std dev: 0.00339s window: 3\naverage rate: 10.545\n\tmin: 0.084s max: 0.105s std dev: 0.00864s window: 3\naverage rate: 10.247\n\tmin: 0.085s max: 0.111s std dev: 0.01098s window: 3",
         "topic": "/robot_a/Odometry"
       },
       {
         "ok": true,
-        "rate_hz": 10.971,
-        "raw": "average rate: 10.971\n\tmin: 0.083s max: 0.098s std dev: 0.00648s window: 3\naverage rate: 7.616\n\tmin: 0.070s max: 0.170s std dev: 0.04385s window: 3\naverage rate: 6.267\n\tmin: 0.090s max: 0.203s std dev: 0.04952s window: 3\naverage rate: 10.625\n\tmin: 0.085s max: 0.100s std dev: 0.00674s window: 3\naverage rate: 8.294\n\tmin: 0.095s max: 0.169s std dev: 0.03435s window: 3",
+        "rate_hz": 8.234,
+        "raw": "average rate: 8.234\n\tmin: 0.092s max: 0.178s std dev: 0.03966s window: 3\naverage rate: 7.197\n\tmin: 0.075s max: 0.239s std dev: 0.07184s window: 3\naverage rate: 10.161\n\tmin: 0.086s max: 0.112s std dev: 0.01069s window: 3\naverage rate: 7.810\n\tmin: 0.100s max: 0.184s std dev: 0.03930s window: 3\naverage rate: 10.654\n\tmin: 0.087s max: 0.102s std dev: 0.00632s window: 3\nfailed to initialize wait set: the given context is not valid, either rcl_init() was not called or rcl_shutdown() was called., at ./src/rcl/wait.c:130",
         "topic": "/robot_b/Odometry"
       },
       {
         "ok": true,
-        "rate_hz": 12.359,
-        "raw": "average rate: 12.359\n\tmin: 0.071s max: 0.092s std dev: 0.00863s window: 3\naverage rate: 6.880\n\tmin: 0.083s max: 0.266s std dev: 0.08551s window: 3\naverage rate: 10.154\n\tmin: 0.082s max: 0.114s std dev: 0.01320s window: 3\naverage rate: 7.002\n\tmin: 0.099s max: 0.210s std dev: 0.04841s window: 3\naverage rate: 9.616\n\tmin: 0.091s max: 0.112s std dev: 0.00930s window: 3\naverage rate: 16.044\n\tmin: 0.002s max: 0.101s std dev: 0.04313s window: 3",
+        "rate_hz": 10.99,
+        "raw": "average rate: 10.990\n\tmin: 0.085s max: 0.098s std dev: 0.00552s window: 3\naverage rate: 10.783\n\tmin: 0.081s max: 0.112s std dev: 0.01352s window: 3\naverage rate: 8.183\n\tmin: 0.088s max: 0.179s std dev: 0.04036s window: 3\naverage rate: 10.693\n\tmin: 0.092s max: 0.095s std dev: 0.00148s window: 3\naverage rate: 10.084\n\tmin: 0.087s max: 0.117s std dev: 0.01321s window: 3\naverage rate: 10.425\n\tmin: 0.087s max: 0.107s std dev: 0.00839s window: 3",
         "topic": "/robot_a/corrected_odom"
       },
       {
         "ok": true,
-        "rate_hz": 10.919,
-        "raw": "average rate: 10.919\n\tmin: 0.083s max: 0.103s std dev: 0.00827s window: 3\naverage rate: 4.953\n\tmin: 0.109s max: 0.266s std dev: 0.06718s window: 3\naverage rate: 5.456\n\tmin: 0.083s max: 0.304s std dev: 0.09130s window: 3\naverage rate: 10.227\n\tmin: 0.093s max: 0.106s std dev: 0.00609s window: 3\naverage rate: 6.425\n\tmin: 0.085s max: 0.202s std dev: 0.05065s window: 3\naverage rate: 8.185\n\tmin: 0.093s max: 0.169s std dev: 0.03357s window: 3",
+        "rate_hz": 11.114,
+        "raw": "WARNING: topic [/robot_b/corrected_odom] does not appear to be published yet\naverage rate: 11.114\n\tmin: 0.081s max: 0.101s std dev: 0.00803s window: 3\naverage rate: 8.473\n\tmin: 0.085s max: 0.174s std dev: 0.03961s window: 3\naverage rate: 8.282\n\tmin: 0.082s max: 0.179s std dev: 0.04177s window: 3\naverage rate: 8.165\n\tmin: 0.087s max: 0.179s std dev: 0.04037s window: 3\naverage rate: 8.401\n\tmin: 0.081s max: 0.175s std dev: 0.04027s window: 3",
         "topic": "/robot_b/corrected_odom"
       },
       {
         "ok": true,
-        "rate_hz": 11.37,
-        "raw": "average rate: 11.370\n\tmin: 0.082s max: 0.093s std dev: 0.00430s window: 3\naverage rate: 10.679\n\tmin: 0.093s max: 0.095s std dev: 0.00078s window: 3\naverage rate: 9.878\n\tmin: 0.084s max: 0.130s std dev: 0.02018s window: 3\naverage rate: 8.411\n\tmin: 0.073s max: 0.180s std dev: 0.04523s window: 3\naverage rate: 10.114\n\tmin: 0.078s max: 0.125s std dev: 0.01958s window: 3\naverage rate: 11.826\n\tmin: 0.074s max: 0.104s std dev: 0.01411s window: 3",
+        "rate_hz": 10.288,
+        "raw": "average rate: 10.288\n\tmin: 0.090s max: 0.101s std dev: 0.00480s window: 3\naverage rate: 11.437\n\tmin: 0.073s max: 0.098s std dev: 0.01040s window: 3\naverage rate: 11.776\n\tmin: 0.069s max: 0.105s std dev: 0.01503s window: 3\naverage rate: 11.060\n\tmin: 0.079s max: 0.096s std dev: 0.00828s window: 3\naverage rate: 10.872\n\tmin: 0.084s max: 0.099s std dev: 0.00610s window: 3\naverage rate: 11.034\n\tmin: 0.084s max: 0.094s std dev: 0.00472s window: 3",
         "topic": "/robot_a/odom/nav"
       },
       {
         "ok": true,
-        "rate_hz": 10.492,
-        "raw": "average rate: 10.492\n\tmin: 0.092s max: 0.098s std dev: 0.00235s window: 3\naverage rate: 10.847\n\tmin: 0.083s max: 0.104s std dev: 0.00850s window: 3\naverage rate: 8.156\n\tmin: 0.087s max: 0.187s std dev: 0.04567s window: 3\naverage rate: 6.609\n\tmin: 0.085s max: 0.189s std dev: 0.04704s window: 3\naverage rate: 6.477\n\tmin: 0.099s max: 0.188s std dev: 0.03957s window: 3",
+        "rate_hz": 8.552,
+        "raw": "average rate: 8.552\n\tmin: 0.088s max: 0.167s std dev: 0.03583s window: 3\naverage rate: 11.121\n\tmin: 0.077s max: 0.108s std dev: 0.01315s window: 3\naverage rate: 8.348\n\tmin: 0.089s max: 0.173s std dev: 0.03778s window: 3\naverage rate: 10.518\n\tmin: 0.089s max: 0.101s std dev: 0.00502s window: 3\naverage rate: 11.503\n\tmin: 0.079s max: 0.092s std dev: 0.00599s window: 3",
         "topic": "/robot_b/odom/nav"
       },
       {
         "ok": true,
-        "rate_hz": 6.943,
-        "raw": "average rate: 6.943\n\tmin: 0.077s max: 0.255s std dev: 0.07906s window: 3\naverage rate: 10.596\n\tmin: 0.093s max: 0.098s std dev: 0.00235s window: 3\naverage rate: 11.846\n\tmin: 0.070s max: 0.102s std dev: 0.01334s window: 3\naverage rate: 11.106\n\tmin: 0.067s max: 0.105s std dev: 0.01665s window: 3\naverage rate: 11.511\n\tmin: 0.080s max: 0.091s std dev: 0.00466s window: 3\naverage rate: 16.225\n\tmin: 0.006s max: 0.098s std dev: 0.03962s window: 3",
+        "rate_hz": 11.157,
+        "raw": "average rate: 11.157\n\tmin: 0.085s max: 0.098s std dev: 0.00581s window: 3\naverage rate: 10.703\n\tmin: 0.083s max: 0.103s std dev: 0.00808s window: 3\naverage rate: 10.820\n\tmin: 0.085s max: 0.099s std dev: 0.00568s window: 3\naverage rate: 11.701\n\tmin: 0.074s max: 0.103s std dev: 0.01255s window: 3\naverage rate: 11.056\n\tmin: 0.080s max: 0.108s std dev: 0.01241s window: 3",
         "topic": "/robot_a/cloud_registered_body"
       },
       {
         "ok": true,
-        "rate_hz": 8.118,
-        "raw": "average rate: 8.118\n\tmin: 0.096s max: 0.166s std dev: 0.03078s window: 3\naverage rate: 6.847\n\tmin: 0.094s max: 0.174s std dev: 0.03694s window: 3\naverage rate: 8.043\n\tmin: 0.000s max: 0.198s std dev: 0.08823s window: 3\naverage rate: 7.571\n\tmin: 0.078s max: 0.235s std dev: 0.07299s window: 3\naverage rate: 5.454\n\tmin: 0.092s max: 0.259s std dev: 0.06890s window: 3\naverage rate: 6.350\n\tmin: 0.096s max: 0.189s std dev: 0.04359s window: 3",
+        "rate_hz": 6.711,
+        "raw": "average rate: 6.711\n\tmin: 0.087s max: 0.181s std dev: 0.04358s window: 3\naverage rate: 6.694\n\tmin: 0.094s max: 0.178s std dev: 0.03939s window: 3\naverage rate: 10.777\n\tmin: 0.084s max: 0.099s std dev: 0.00606s window: 3\naverage rate: 10.182\n\tmin: 0.086s max: 0.118s std dev: 0.01439s window: 3\naverage rate: 10.689\n\tmin: 0.091s max: 0.096s std dev: 0.00207s window: 3\naverage rate: 10.288\n\tmin: 0.091s max: 0.103s std dev: 0.00485s window: 3",
         "topic": "/robot_b/cloud_registered_body"
       },
       {
         "ok": true,
-        "rate_hz": 19.34,
-        "raw": "average rate: 19.340\n\tmin: 0.011s max: 0.075s std dev: 0.02887s window: 3\naverage rate: 37.754\n\tmin: 0.010s max: 0.050s std dev: 0.01736s window: 3\naverage rate: 27.862\n\tmin: 0.015s max: 0.077s std dev: 0.02889s window: 3\naverage rate: 11.409\n\tmin: 0.072s max: 0.097s std dev: 0.01116s window: 3\naverage rate: 13.705\n\tmin: 0.037s max: 0.100s std dev: 0.02640s window: 3\naverage rate: 9.034\n\tmin: 0.098s max: 0.120s std dev: 0.00956s window: 3",
+        "rate_hz": 17.021,
+        "raw": "WARNING: topic [/robot_a/cloud_static] does not appear to be published yet\naverage rate: 17.021\n\tmin: 0.004s max: 0.094s std dev: 0.03905s window: 3\naverage rate: 16.308\n\tmin: 0.004s max: 0.106s std dev: 0.04284s window: 3\naverage rate: 19.129\n\tmin: 0.004s max: 0.081s std dev: 0.03458s window: 3\naverage rate: 16.728\n\tmin: 0.002s max: 0.090s std dev: 0.04075s window: 3\naverage rate: 20.256\n\tmin: 0.025s max: 0.066s std dev: 0.01780s window: 3\naverage rate: 16.050\n\tmin: 0.004s max: 0.095s std dev: 0.04131s window: 3",
         "topic": "/robot_a/cloud_static"
       },
       {
         "ok": true,
-        "rate_hz": 26.044,
-        "raw": "average rate: 26.044\n\tmin: 0.002s max: 0.075s std dev: 0.02957s window: 3\naverage rate: 29.342\n\tmin: 0.026s max: 0.045s std dev: 0.00798s window: 3\naverage rate: 17.703\n\tmin: 0.010s max: 0.143s std dev: 0.06132s window: 3\naverage rate: 42.787\n\tmin: 0.008s max: 0.033s std dev: 0.01067s window: 3\naverage rate: 28.110\n\tmin: 0.003s max: 0.093s std dev: 0.04077s window: 3\naverage rate: 35.725\n\tmin: 0.000s max: 0.076s std dev: 0.03406s window: 3",
+        "rate_hz": 11.131,
+        "raw": "average rate: 11.131\n\tmin: 0.078s max: 0.107s std dev: 0.01256s window: 3\naverage rate: 15.706\n\tmin: 0.011s max: 0.100s std dev: 0.03839s window: 3\naverage rate: 17.927\n\tmin: 0.009s max: 0.095s std dev: 0.03540s window: 3\naverage rate: 30.062\n\tmin: 0.011s max: 0.078s std dev: 0.03161s window: 3\naverage rate: 27.396\n\tmin: 0.012s max: 0.085s std dev: 0.03431s window: 3\naverage rate: 18.021\n\tmin: 0.012s max: 0.080s std dev: 0.03097s window: 3",
         "topic": "/robot_b/cloud_static"
       },
       {
         "ok": true,
-        "rate_hz": 11.05,
-        "raw": "average rate: 11.050\n\tmin: 0.080s max: 0.105s std dev: 0.01049s window: 3\naverage rate: 7.428\n\tmin: 0.070s max: 0.244s std dev: 0.07774s window: 3\naverage rate: 11.433\n\tmin: 0.066s max: 0.104s std dev: 0.01623s window: 3\naverage rate: 11.314\n\tmin: 0.083s max: 0.091s std dev: 0.00371s window: 3\naverage rate: 8.727\n\tmin: 0.091s max: 0.159s std dev: 0.03154s window: 3\naverage rate: 17.611\n\tmin: 0.000s max: 0.087s std dev: 0.04000s window: 3",
+        "rate_hz": 11.046,
+        "raw": "average rate: 11.046\n\tmin: 0.082s max: 0.095s std dev: 0.00583s window: 3\naverage rate: 11.005\n\tmin: 0.080s max: 0.103s std dev: 0.00951s window: 3\naverage rate: 10.889\n\tmin: 0.080s max: 0.098s std dev: 0.00828s window: 3\naverage rate: 11.476\n\tmin: 0.084s max: 0.091s std dev: 0.00291s window: 3\naverage rate: 11.072\n\tmin: 0.087s max: 0.093s std dev: 0.00233s window: 3",
         "topic": "/robot_a/tf"
       },
       {
         "ok": true,
-        "rate_hz": 7.225,
-        "raw": "average rate: 7.225\n\tmin: 0.009s max: 0.236s std dev: 0.09544s window: 3\naverage rate: 5.190\n\tmin: 0.161s max: 0.213s std dev: 0.02290s window: 3\naverage rate: 5.071\n\tmin: 0.176s max: 0.214s std dev: 0.01604s window: 3\naverage rate: 8.273\n\tmin: 0.091s max: 0.179s std dev: 0.04109s window: 3\naverage rate: 5.635\n\tmin: 0.161s max: 0.198s std dev: 0.01535s window: 3",
+        "rate_hz": 8.414,
+        "raw": "average rate: 8.414\n\tmin: 0.089s max: 0.178s std dev: 0.04216s window: 3\naverage rate: 10.997\n\tmin: 0.087s max: 0.095s std dev: 0.00320s window: 3\naverage rate: 10.917\n\tmin: 0.073s max: 0.102s std dev: 0.01317s window: 3\naverage rate: 8.271\n\tmin: 0.084s max: 0.185s std dev: 0.04532s window: 3\naverage rate: 12.038\n\tmin: 0.074s max: 0.088s std dev: 0.00634s window: 3\naverage rate: 11.137\n\tmin: 0.084s max: 0.097s std dev: 0.00547s window: 3",
         "topic": "/robot_b/tf"
+      },
+      {
+        "ok": false,
+        "rate_hz": 0.0,
+        "raw": "failed to initialize wait set: the given context is not valid, either rcl_init() was not called or rcl_shutdown() was called., at ./src/rcl/wait.c:130",
+        "topic": "/team_slam/swarm_lio2_relative_transform"
       }
     ],
     "ros2_topic_list_available": true,
@@ -301,7 +306,7 @@
     "slam_backend": "swarm_lio2_primary",
     "source": "sim_bridge",
     "swarm_lio2_shadow_slam_passed": false,
-    "updated_utc": "2026-05-08T15:33:16Z"
+    "updated_utc": "2026-05-09T00:44:39Z"
   },
   "cloud_static_or_registered_valid": true,
   "corrected_odom_valid": true,
@@ -309,6 +314,14 @@
   "gt_used_runtime": false,
   "merged_map_agreement_gated": true,
   "merged_map_opened": false,
+  "native_global_extrinsic_has_entries": false,
+  "native_global_extrinsic_nonzero_rate": true,
+  "native_global_extrinsic_topics_with_entries": [],
+  "native_mutual_topic_rate_hz": 20.764,
+  "native_mutual_topic_used": "/global_extrinsic_to_teammate",
+  "native_quadstate_has_teammate_entries": false,
+  "native_quadstate_nonzero_rate": true,
+  "native_quadstate_topics_with_teammates": [],
   "native_swarm_lio2_cloud_nonzero_rate": true,
   "native_swarm_lio2_nonzero_rate_topics": [
     "/quad1/lidar_slam/odom",
@@ -329,24 +342,28 @@
   "odometry_valid": true,
   "overlap_pass": false,
   "pass": false,
-  "post_adapter_runtime_rerun_attempted": true,
-  "post_adapter_runtime_rerun_blocker": "docker_runtime_escalation_rejected_usage_limit_after_relative_transform_adapter",
-  "post_adapter_runtime_rerun_passed": null,
-  "post_relative_transform_adapter_added": true,
   "primary_attempted": true,
+  "raw_relative_transform_nonzero_rate": false,
+  "ros2_swarm_relative_transform": {
+    "available": false,
+    "blocker": "transform_echo_missing_fields",
+    "valid": false
+  },
+  "ros2_swarm_relative_transform_rate_hz": 0.0,
   "schema": "swarm_lio2_primary_validation/v5",
   "sim_bridge_input_precheck_blocker": "",
   "slam_backend": "swarm_lio2_primary",
   "source": "sim_bridge",
   "swarm_lio2_mutual_transform_available": false,
   "swarm_loop_agreement_gate_pass": false,
-  "swarm_loop_agreement_reason": "waiting_for_swarm_lio2_relative_transform",
+  "swarm_loop_agreement_reason": "no_verified_matches",
   "swarm_loop_agreement_required": true,
   "swarm_loop_translation_error_m": null,
   "swarm_loop_yaw_error_deg": null,
-  "team_loop_closure_keyframe_count": 3,
+  "t_loop_a_b_available": false,
+  "t_swarm_a_b_available": false,
+  "team_loop_closure_keyframe_count": 22,
   "team_loop_closure_keyframes_valid": true,
   "tf_valid": true,
-  "updated_utc": "2026-05-08T15:39:22Z",
-  "validation_note": "Last completed runtime evidence remains the sim_bridge primary attempt before the native GlobalExtrinsicStatus-to-TransformStamped adapter. A required Docker rerun after this wiring change was blocked by the execution environment approval/usage limit."
+  "updated_utc": "2026-05-09T00:45:50Z"
 }

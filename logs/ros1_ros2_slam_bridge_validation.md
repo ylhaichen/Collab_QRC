@@ -3,8 +3,8 @@
 - deployment_mode: `sim_hybrid_ros1_slam_ros2_nav`
 - slam_backend: `swarm_lio2_primary`
 - source: `sim_bridge`
-- pass: `True`
-- bridge_contract_passed: `True`
+- pass: `False`
+- bridge_contract_passed: `False`
 - native_swarm_lio2_output_passed: `True`
 - swarm_lio2_shadow_slam_passed: `False`
 - native_swarm_lio2_odom_nonzero_rate: `True`
@@ -14,9 +14,9 @@
 - ros2_topic_list_available: `True`
 - ros1_missing_topics: ``
 - ros2_missing_topics: ``
-- message_rates_nonzero: `True`
+- message_rates_nonzero: `False`
 - frames_valid: `True`
 - primary_adapter_ownership_passed: `True`
 - gt_used_runtime: `False`
-- blocker: ``
-- recommended_next_action: ``
+- blocker: `/team_slam/swarm_lio2_relative_transform:rate<0.1`
+- recommended_next_action: `Start ROS1 hybrid SLAM container, ros1_bridge, ROS2 adapter, and sim sensor publishers; rerun this script.`

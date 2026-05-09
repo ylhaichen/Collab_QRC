@@ -110,7 +110,14 @@ write_swarm_lio2_collab_wrapper_launch() {
   <node pkg="topic_tools" type="relay" name="swarm_lio2_robot_b_map_raw" args="/quad2/cloud_registered /robot_b/swarm_lio2_raw/cloud_map" output="log" />
 
   <!-- Convert Swarm-LIO2 native global extrinsic status into the adapter's TransformStamped contract. -->
-  <node pkg="swarm_msgs" type="swarm_lio2_global_extrinsic_to_tf.py" name="swarm_lio2_global_extrinsic_to_tf" output="log" />
+  <node pkg="swarm_msgs" type="swarm_lio2_global_extrinsic_to_tf.py" name="swarm_lio2_global_extrinsic_to_tf" output="log">
+    <param name="source_topics" type="string" value="/global_extrinsic_to_teammate,/global_extrinsic_from_teammate" />
+    <param name="output_topic" type="string" value="/robot_a/swarm_lio2_raw/relative_transform" />
+    <param name="parent_drone_id" type="int" value="1" />
+    <param name="child_drone_id" type="int" value="2" />
+    <param name="parent_frame" type="string" value="robot_a/map" />
+    <param name="child_frame" type="string" value="robot_b/map" />
+  </node>
 </launch>
 EOF
   printf '%s\n' "${wrapper}"
@@ -166,7 +173,8 @@ echo "  robot_b_swarm_lio2_imu_topic=${ROBOT_B_SWARM_LIO2_IMU_TOPIC:-/robot_b/im
 
 case "${SLAM_BACKEND}" in
   swarm_lio2_shadow|swarm_lio2_primary)
-    if roslaunch --files swarm_lio simulation.launch >/dev/null 2>&1; then
+    swarm_lio_pkg="$(rospack find swarm_lio 2>/dev/null || true)"
+    if [[ -n "${swarm_lio_pkg}" && -f "${swarm_lio_pkg}/launch/simulation.launch" ]]; then
       wrapper_launch="$(write_swarm_lio2_collab_wrapper_launch)"
       if [[ "${SWARM_LIO2_FEED_SOURCE:-sim_bridge}" == "synthetic_contract_test" ]]; then
         /swarm_lio2_synthetic_contract_feeder.py &

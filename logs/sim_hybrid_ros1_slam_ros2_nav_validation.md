@@ -12,8 +12,5 @@
 - gt_used_runtime: `False`
 - merged_map_agreement_gated: `True`
 - swarm_loop_agreement_gate_pass: `False`
-- blocker: `swarm_lio2_mutual_transform_unavailable;overlap_alignment_not_accepted_with_swarm_agreement;no_overlap_scene_not_run_after_primary_blocker`
+- blocker: `/team_slam/swarm_lio2_relative_transform:rate<0.1;swarm_lio2_global_extrinsic_status_empty;swarm_lio2_quadstate_teammate_empty;overlap_alignment_not_accepted_with_swarm_agreement;no_overlap_scene_not_run_after_primary_blocker`
 - claim: `Swarm-LIO2 shadow passed, but primary simulation is blocked; Fast-LIO remains production.`
-- post_relative_transform_adapter_added: `True`
-- post_adapter_runtime_rerun_attempted: `True`
-- post_adapter_runtime_rerun_blocker: `docker_runtime_escalation_rejected_usage_limit_after_relative_transform_adapter`

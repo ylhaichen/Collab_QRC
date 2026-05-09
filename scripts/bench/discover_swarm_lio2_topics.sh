@@ -158,8 +158,22 @@ def by_topic(results: list[dict], topic: str) -> dict:
     return next((item for item in results if item["topic"] == topic), {"rate_hz": 0.0})
 
 
+def message_array_has_entries(results: list[dict], topic: str, field: str) -> bool:
+    raw = str(by_topic(results, topic).get("echo_raw_tail", ""))
+    if re.search(rf"(?m)^{re.escape(field)}:\s*\[\]\s*$", raw):
+        return False
+    match = re.search(rf"(?ms)^{re.escape(field)}:\s*\n(?P<body>(?:[ \t].*\n?)*)", raw)
+    if not match:
+        return False
+    return any(line.strip().startswith("-") for line in match.group("body").splitlines())
+
+
+def topic_rate(results: list[dict], topic: str) -> float:
+    return float(by_topic(results, topic).get("rate_hz", 0.0) or 0.0)
+
+
 def rate_ok(results: list[dict], topic: str) -> bool:
-    return float(by_topic(results, topic).get("rate_hz", 0.0) or 0.0) >= MIN_TOPIC_RATE_HZ
+    return topic_rate(results, topic) >= MIN_TOPIC_RATE_HZ
 
 
 def is_native_output_topic(topic: str) -> bool:
@@ -256,6 +270,52 @@ payload = {
 payload["native_required_odom_topics"] = ["/quad1/lidar_slam/odom", "/quad2/lidar_slam/odom"]
 payload["native_required_cloud_registered_topics"] = ["/quad1/cloud_registered", "/quad2/cloud_registered"]
 payload["native_required_cloud_body_topics"] = ["/quad1/cloud_registered_body", "/quad2/cloud_registered_body"]
+payload["native_mutual_candidate_topics"] = [
+    "/quadstate_to_teammate",
+    "/quadstate_from_teammate",
+    "/global_extrinsic_to_teammate",
+    "/global_extrinsic_from_teammate",
+]
+payload["native_mutual_nonzero_rate_topics"] = [
+    topic for topic in payload["native_mutual_candidate_topics"] if rate_ok(results, topic)
+]
+payload["native_global_extrinsic_nonzero_rate"] = any(
+    rate_ok(results, topic)
+    for topic in ["/global_extrinsic_to_teammate", "/global_extrinsic_from_teammate"]
+)
+payload["native_quadstate_nonzero_rate"] = any(
+    rate_ok(results, topic)
+    for topic in ["/quadstate_to_teammate", "/quadstate_from_teammate"]
+)
+payload["native_mutual_topic_rates"] = {
+    topic: topic_rate(results, topic) for topic in payload["native_mutual_candidate_topics"]
+}
+payload["native_mutual_topic_types"] = {
+    topic: by_topic(results, topic).get("type", "")
+    for topic in payload["native_mutual_candidate_topics"]
+}
+payload["native_global_extrinsic_topics_with_entries"] = [
+    topic
+    for topic in ["/global_extrinsic_to_teammate", "/global_extrinsic_from_teammate"]
+    if message_array_has_entries(results, topic, "extrinsic")
+]
+payload["native_quadstate_topics_with_teammates"] = [
+    topic
+    for topic in ["/quadstate_to_teammate", "/quadstate_from_teammate"]
+    if message_array_has_entries(results, topic, "teammate")
+]
+payload["native_global_extrinsic_has_entries"] = bool(
+    payload["native_global_extrinsic_topics_with_entries"]
+)
+payload["native_quadstate_has_teammate_entries"] = bool(
+    payload["native_quadstate_topics_with_teammates"]
+)
+payload["raw_relative_transform_nonzero_rate"] = rate_ok(
+    results, "/robot_a/swarm_lio2_raw/relative_transform"
+)
+payload["raw_relative_transform_rate_hz"] = topic_rate(
+    results, "/robot_a/swarm_lio2_raw/relative_transform"
+)
 payload["native_swarm_lio2_odom_nonzero_rate"] = all(
     rate_ok(results, topic) for topic in payload["native_required_odom_topics"]
 )
@@ -299,6 +359,13 @@ LOG_MD.write_text(
             f"- native_swarm_lio2_cloud_registered_nonzero_rate: `{payload['native_swarm_lio2_cloud_registered_nonzero_rate']}`",
             f"- native_swarm_lio2_cloud_body_nonzero_rate: `{payload['native_swarm_lio2_cloud_body_nonzero_rate']}`",
             f"- native_swarm_lio2_shadow_output_nonzero_rate: `{payload['native_swarm_lio2_shadow_output_nonzero_rate']}`",
+            f"- native_mutual_nonzero_rate_topics: `{','.join(payload['native_mutual_nonzero_rate_topics'])}`",
+            f"- native_mutual_topic_rates: `{payload['native_mutual_topic_rates']}`",
+            f"- native_global_extrinsic_has_entries: `{payload['native_global_extrinsic_has_entries']}`",
+            f"- native_global_extrinsic_topics_with_entries: `{','.join(payload['native_global_extrinsic_topics_with_entries'])}`",
+            f"- native_quadstate_has_teammate_entries: `{payload['native_quadstate_has_teammate_entries']}`",
+            f"- native_quadstate_topics_with_teammates: `{','.join(payload['native_quadstate_topics_with_teammates'])}`",
+            f"- raw_relative_transform_rate_hz: `{payload['raw_relative_transform_rate_hz']}`",
             f"- raw_adapter_nonzero_rate_topics: `{','.join(payload['raw_adapter_nonzero_rate_topics'])}`",
             f"- nonzero_rate_topics: `{','.join(payload['nonzero_rate_topics'])}`",
             f"- blocker: `{payload['blocker']}`",

@@ -40,9 +40,52 @@ fi
 
 export DEPLOYMENT_MODE="${DEPLOYMENT_MODE:-$([[ "${MODE}" == "sim" ]] && echo sim_hybrid_ros1_slam_ros2_nav || echo real_hybrid_ros1_slam_ros2_nav)}"
 export SLAM_BACKEND DYNAMIC_FILTER_BACKEND STATIC_MAP_CLEANUP_BACKEND
+export ROS_MASTER_URI="${ROS_MASTER_URI:-http://127.0.0.1:11311}"
+if [[ -z "${ROS_MASTER_PORT:-}" ]]; then
+  ROS_MASTER_PORT="${ROS_MASTER_URI##*:}"
+  ROS_MASTER_PORT="${ROS_MASTER_PORT%%/*}"
+  if [[ ! "${ROS_MASTER_PORT}" =~ ^[0-9]+$ ]]; then
+    ROS_MASTER_PORT="11311"
+  fi
+fi
+export ROS_MASTER_PORT
 if [[ -z "${FASTRTPS_DEFAULT_PROFILES_FILE:-}" && -f "${WS_DIR}/config/fastdds_no_shm.xml" ]]; then
   export FASTRTPS_DEFAULT_PROFILES_FILE="${WS_DIR}/config/fastdds_no_shm.xml"
 fi
 export ROS1_HYBRID_FASTRTPS_PROFILE="${ROS1_HYBRID_FASTRTPS_PROFILE:-/config/fastdds_no_shm.xml}"
 
-exec "${COMPOSE[@]}" up --build
+cleanup() {
+  "${COMPOSE[@]}" down >/dev/null 2>&1 || true
+}
+trap cleanup INT TERM EXIT
+
+"${COMPOSE[@]}" up -d --build ros1_master
+for _ in {1..30}; do
+  if "${COMPOSE[@]}" exec -T ros1_master bash -lc \
+    'source /opt/ros/noetic/setup.bash; rosnode list >/dev/null 2>&1'; then
+    break
+  fi
+  sleep 1
+done
+if ! "${COMPOSE[@]}" exec -T ros1_master bash -lc \
+  'source /opt/ros/noetic/setup.bash; rosnode list >/dev/null 2>&1'; then
+  echo "ERROR: ROS1 master did not become reachable at ${ROS_MASTER_URI}." >&2
+  exit 3
+fi
+
+"${COMPOSE[@]}" up -d --build ros1_hybrid_slam
+for _ in {1..45}; do
+  if "${COMPOSE[@]}" exec -T ros1_hybrid_slam bash -lc \
+    'source /opt/ros/noetic/setup.bash; source /catkin_ws/devel/setup.bash; rosnode list | grep -q /laserMapping_quad1'; then
+    break
+  fi
+  sleep 1
+done
+if ! "${COMPOSE[@]}" exec -T ros1_hybrid_slam bash -lc \
+  'source /opt/ros/noetic/setup.bash; source /catkin_ws/devel/setup.bash; rosnode list | grep -q /laserMapping_quad1'; then
+  echo "ERROR: Swarm-LIO2 ROS1 runtime did not become reachable." >&2
+  exit 4
+fi
+
+"${COMPOSE[@]}" up -d --build ros1_bridge
+"${COMPOSE[@]}" logs -f ros1_master ros1_hybrid_slam ros1_bridge

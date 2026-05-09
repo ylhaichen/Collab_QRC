@@ -1,20 +1,6 @@
-# Swarm-LIO2 Primary Validation
+# Swarm-Loop Agreement Validation
 
 - source: `sim_bridge`
-- primary_attempted: `True`
-- native_swarm_lio2_odom_nonzero_rate: `True`
-- native_swarm_lio2_cloud_nonzero_rate: `True`
-- adapter_owns_odometry: `True`
-- adapter_owns_corrected_odom: `True`
-- adapter_owns_odom_nav: `True`
-- nav2_runtime_valid: `True`
-- team_loop_closure_keyframes_valid: `True`
-- team_loop_closure_keyframe_count: `22`
-- overlap_pass: `False`
-- no_overlap_pass: `False`
-- gt_used_runtime: `False`
-- merged_map_agreement_gated: `True`
-- swarm_lio2_mutual_transform_available: `False`
 - native_mutual_topic_used: `/global_extrinsic_to_teammate`
 - native_mutual_topic_rate_hz: `20.764`
 - native_global_extrinsic_has_entries: `False`
@@ -25,5 +11,8 @@
 - swarm_loop_agreement_gate_pass: `False`
 - swarm_loop_translation_error_m: `None`
 - swarm_loop_yaw_error_deg: `None`
-- pass: `False`
+- overlap_pass: `False`
+- no_overlap_pass: `False`
+- merged_map_agreement_gated: `True`
+- gt_used_runtime: `False`
 - blocker: `/team_slam/swarm_lio2_relative_transform:rate<0.1;swarm_lio2_global_extrinsic_status_empty;swarm_lio2_quadstate_teammate_empty;overlap_alignment_not_accepted_with_swarm_agreement;no_overlap_scene_not_run_after_primary_blocker`

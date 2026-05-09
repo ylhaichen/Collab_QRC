@@ -5,6 +5,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 EXPECTED_BRANCH="feature/swarm-lio2-primary-dynamiclio-erasor-clean"
 COMPOSE_FILE="${ROOT}/docker/ros1_hybrid_slam/docker-compose.yml"
 ROS_LOG_DIR="${ROS_LOG_DIR:-/tmp/collab_qrc_ros_logs}"
+ROS1_VALIDATION_MASTER_URI="${ROS1_HYBRID_VALIDATION_ROS_MASTER_URI:-http://127.0.0.1:11312}"
 PRIMARY_WARMUP_SEC="${PRIMARY_WARMUP_SEC:-90}"
 RATE_TIMEOUT_SEC="${RATE_TIMEOUT_SEC:-10}"
 TOPIC_TIMEOUT_SEC="${TOPIC_TIMEOUT_SEC:-10}"
@@ -14,6 +15,11 @@ MIN_TOPIC_RATE_HZ="${MIN_TOPIC_RATE_HZ:-0.1}"
 
 mkdir -p "${ROS_LOG_DIR}" "${ROOT}/logs/manual"
 export ROS_LOG_DIR
+export ROS_MASTER_URI="${ROS1_VALIDATION_MASTER_URI}"
+export ROS_MASTER_PORT="${ROS1_VALIDATION_MASTER_URI##*:}"
+export ROS_MASTER_PORT="${ROS_MASTER_PORT%%/*}"
+export ROS_HOSTNAME="${ROS_HOSTNAME:-127.0.0.1}"
+export ROS_IP="${ROS_IP:-127.0.0.1}"
 
 branch="$(git -C "${ROOT}" branch --show-current)"
 echo "current_branch=${branch}"
@@ -268,6 +274,7 @@ python3 - <<'PY'
 from __future__ import annotations
 
 import json
+import math
 import os
 import re
 from datetime import datetime, timezone
@@ -282,6 +289,15 @@ shadow = json.loads((logs / "swarm_lio2_shadow_validation.json").read_text()) if
 
 def rate_ok(topic: str) -> bool:
     return any(item.get("topic") == topic and item.get("ok") for item in contract.get("ros2_rate_checks", []))
+
+def rate_hz(topic: str) -> float:
+    for item in contract.get("ros2_rate_checks", []):
+        if item.get("topic") == topic:
+            return float(item.get("rate_hz", 0.0) or 0.0)
+    for topic_name, rate in discovery.get("native_mutual_topic_rates", {}).items():
+        if topic_name == topic:
+            return float(rate or 0.0)
+    return 0.0
 
 def publisher_ok(topic: str) -> bool:
     return any(item.get("topic") == topic and item.get("ok") for item in contract.get("ros2_publisher_checks", []))
@@ -311,11 +327,67 @@ def latest_alignment(path: Path) -> dict:
             latest = payload
     return latest
 
+def parse_transform_echo(text: str) -> dict:
+    def _float(value: str) -> float | None:
+        try:
+            out = float(value)
+        except (TypeError, ValueError):
+            return None
+        return out if math.isfinite(out) else None
+
+    translation_match = re.search(
+        r"translation:\s*\n\s*x:\s*([-+0-9.eE]+)\s*\n\s*y:\s*([-+0-9.eE]+)\s*\n\s*z:\s*([-+0-9.eE]+)",
+        text,
+    )
+    rotation_match = re.search(
+        r"rotation:\s*\n\s*x:\s*([-+0-9.eE]+)\s*\n\s*y:\s*([-+0-9.eE]+)\s*\n\s*z:\s*([-+0-9.eE]+)\s*\n\s*w:\s*([-+0-9.eE]+)",
+        text,
+    )
+    frame_match = re.search(r"frame_id:\s*['\"]?([^'\"\n]*)", text)
+    child_match = re.search(r"child_frame_id:\s*['\"]?([^'\"\n]*)", text)
+    if not translation_match or not rotation_match:
+        return {"available": False, "valid": False, "blocker": "transform_echo_missing_fields"}
+
+    translation = tuple(_float(v) for v in translation_match.groups())
+    rotation = tuple(_float(v) for v in rotation_match.groups())
+    if any(v is None for v in translation) or any(v is None for v in rotation):
+        return {"available": True, "valid": False, "blocker": "transform_echo_nonfinite_fields"}
+    qnorm = math.sqrt(sum(float(v) * float(v) for v in rotation))
+    tnorm = math.sqrt(sum(float(v) * float(v) for v in translation))
+    frame_id = frame_match.group(1).strip() if frame_match else ""
+    child_frame_id = child_match.group(1).strip() if child_match else ""
+    valid = bool(frame_id and child_frame_id and tnorm > 0.001 and 0.95 <= qnorm <= 1.05)
+    return {
+        "available": True,
+        "valid": valid,
+        "frame_id": frame_id,
+        "child_frame_id": child_frame_id,
+        "translation": {"x": translation[0], "y": translation[1], "z": translation[2]},
+        "translation_norm": tnorm,
+        "rotation": {"x": rotation[0], "y": rotation[1], "z": rotation[2], "w": rotation[3]},
+        "quaternion_norm": qnorm,
+        "blocker": "" if valid else "transform_echo_invalid_frame_translation_or_quaternion",
+    }
+
+def selected_native_mutual_topic() -> tuple[str, float]:
+    rates = discovery.get("native_mutual_topic_rates", {})
+    for topic in (
+        "/global_extrinsic_to_teammate",
+        "/global_extrinsic_from_teammate",
+        "/quadstate_to_teammate",
+        "/quadstate_from_teammate",
+    ):
+        rate = float(rates.get(topic, 0.0) or 0.0)
+        if rate >= 0.1:
+            return topic, rate
+    return "", 0.0
+
 keyframe_count = count_records(Path(os.environ["KEYFRAMES_FILE"]), "team_loop_keyframe/v1")
 alignment = latest_alignment(Path(os.environ["ALIGNMENT_FILE"]))
 swarm_relative_text = Path(os.environ["SWARM_RELATIVE_FILE"]).read_text(errors="replace") if Path(os.environ["SWARM_RELATIVE_FILE"]).exists() else ""
 merged_map_text = Path(os.environ["MERGED_MAP_FILE"]).read_text(errors="replace") if Path(os.environ["MERGED_MAP_FILE"]).exists() else ""
-swarm_relative_available = "transform:" in swarm_relative_text and "translation:" in swarm_relative_text
+swarm_relative_transform = parse_transform_echo(swarm_relative_text)
+swarm_relative_available = bool(swarm_relative_transform.get("valid"))
 merged_map_opened = bool(re.search(r"^\s*[0-9]+", merged_map_text, re.M))
 agreement_required = bool(alignment.get("swarm_loop_agreement_required", True))
 agreement_accepted = bool(alignment.get("swarm_loop_agreement_accepted", False))
@@ -323,6 +395,14 @@ agreement_reason = str(alignment.get("swarm_loop_agreement_reason") or alignment
 alignment_status = str(alignment.get("status") or "unknown")
 translation_error = alignment.get("swarm_loop_translation_error_m")
 yaw_error = alignment.get("swarm_loop_yaw_error_deg")
+t_loop_available = isinstance(alignment.get("transform"), dict)
+native_mutual_topic_used, native_mutual_topic_rate = selected_native_mutual_topic()
+native_global_extrinsic_nonzero = bool(discovery.get("native_global_extrinsic_nonzero_rate"))
+native_quadstate_nonzero = bool(discovery.get("native_quadstate_nonzero_rate"))
+native_global_extrinsic_has_entries = bool(discovery.get("native_global_extrinsic_has_entries"))
+native_quadstate_has_teammate_entries = bool(discovery.get("native_quadstate_has_teammate_entries"))
+raw_relative_nonzero = bool(discovery.get("raw_relative_transform_nonzero_rate"))
+ros2_relative_rate = rate_hz("/team_slam/swarm_lio2_relative_transform")
 
 odom_valid = (
     topic_present("/robot_a/Odometry") and topic_present("/robot_b/Odometry")
@@ -376,8 +456,19 @@ if not cloud_valid:
     blockers.append("swarm_lio2_adapter_cloud_not_valid")
 if not keyframes_valid:
     blockers.append("team_loop_closure_keyframes_not_received")
-if agreement_required and not swarm_relative_available:
-    blockers.append("swarm_lio2_mutual_transform_unavailable")
+if agreement_required and not native_global_extrinsic_nonzero:
+    if native_quadstate_nonzero:
+        blockers.append("swarm_lio2_global_extrinsic_topic_zero_rate")
+    else:
+        blockers.append("swarm_lio2_mutual_state_not_available_in_current_launch")
+elif agreement_required and not native_global_extrinsic_has_entries:
+    blockers.append("swarm_lio2_global_extrinsic_status_empty")
+    if native_quadstate_nonzero and not native_quadstate_has_teammate_entries:
+        blockers.append("swarm_lio2_quadstate_teammate_empty")
+elif agreement_required and not raw_relative_nonzero:
+    blockers.append("swarm_lio2_relative_transform_adapter_zero_rate")
+elif agreement_required and not swarm_relative_available:
+    blockers.append(str(swarm_relative_transform.get("blocker") or "swarm_lio2_relative_transform_bridge_zero_rate"))
 elif agreement_required and not agreement_accepted:
     blockers.append(agreement_reason or "swarm_loop_agreement_not_accepted")
 if not merged_map_gated:
@@ -434,11 +525,80 @@ primary = {
     "swarm_loop_translation_error_m": translation_error,
     "swarm_loop_yaw_error_deg": yaw_error,
     "swarm_lio2_mutual_transform_available": swarm_relative_available,
+    "native_mutual_topic_used": native_mutual_topic_used,
+    "native_mutual_topic_rate_hz": native_mutual_topic_rate,
+    "native_global_extrinsic_nonzero_rate": native_global_extrinsic_nonzero,
+    "native_quadstate_nonzero_rate": native_quadstate_nonzero,
+    "native_global_extrinsic_has_entries": native_global_extrinsic_has_entries,
+    "native_global_extrinsic_topics_with_entries": discovery.get("native_global_extrinsic_topics_with_entries", []),
+    "native_quadstate_has_teammate_entries": native_quadstate_has_teammate_entries,
+    "native_quadstate_topics_with_teammates": discovery.get("native_quadstate_topics_with_teammates", []),
+    "raw_relative_transform_nonzero_rate": raw_relative_nonzero,
+    "ros2_swarm_relative_transform_rate_hz": ros2_relative_rate,
+    "ros2_swarm_relative_transform": swarm_relative_transform,
+    "t_swarm_a_b_available": swarm_relative_available,
+    "t_loop_a_b_available": t_loop_available,
     "bridge_contract": contract,
     "pass": primary_pass,
     "blocker": ";".join(dict.fromkeys(b for b in blockers if b)),
 }
 (logs / "swarm_lio2_primary_validation.json").write_text(json.dumps(primary, indent=2, sort_keys=True) + "\n")
+agreement_log = {
+    "schema": "swarm_loop_agreement_validation/v1",
+    "updated_utc": updated,
+    "source": "sim_bridge",
+    "native_mutual_topic_used": native_mutual_topic_used,
+    "native_mutual_topic_rate_hz": native_mutual_topic_rate,
+    "native_mutual_topic_rates": discovery.get("native_mutual_topic_rates", {}),
+    "native_mutual_topic_types": discovery.get("native_mutual_topic_types", {}),
+    "native_global_extrinsic_nonzero_rate": native_global_extrinsic_nonzero,
+    "native_quadstate_nonzero_rate": native_quadstate_nonzero,
+    "native_global_extrinsic_has_entries": native_global_extrinsic_has_entries,
+    "native_global_extrinsic_topics_with_entries": discovery.get("native_global_extrinsic_topics_with_entries", []),
+    "native_quadstate_has_teammate_entries": native_quadstate_has_teammate_entries,
+    "native_quadstate_topics_with_teammates": discovery.get("native_quadstate_topics_with_teammates", []),
+    "raw_relative_transform_nonzero_rate": raw_relative_nonzero,
+    "raw_relative_transform_rate_hz": discovery.get("raw_relative_transform_rate_hz", 0.0),
+    "ros2_swarm_relative_transform_rate_hz": ros2_relative_rate,
+    "ros2_swarm_relative_transform": swarm_relative_transform,
+    "t_swarm_a_b_available": swarm_relative_available,
+    "t_loop_a_b_available": t_loop_available,
+    "swarm_loop_agreement_required": agreement_required,
+    "swarm_loop_agreement_gate_pass": agreement_accepted,
+    "swarm_loop_agreement_reason": agreement_reason,
+    "swarm_loop_translation_error_m": translation_error,
+    "swarm_loop_yaw_error_deg": yaw_error,
+    "overlap_pass": overlap_pass,
+    "no_overlap_pass": no_overlap_pass,
+    "merged_map_opened": merged_map_opened,
+    "merged_map_agreement_gated": merged_map_gated,
+    "gt_used_runtime": False,
+    "pass": agreement_accepted and overlap_pass,
+    "blocker": primary["blocker"],
+}
+(logs / "swarm_loop_agreement_validation.json").write_text(json.dumps(agreement_log, indent=2, sort_keys=True) + "\n")
+(logs / "swarm_loop_agreement_validation.md").write_text(
+    "\n".join([
+        "# Swarm-Loop Agreement Validation",
+        "",
+        "- source: `sim_bridge`",
+        f"- native_mutual_topic_used: `{native_mutual_topic_used}`",
+        f"- native_mutual_topic_rate_hz: `{native_mutual_topic_rate}`",
+        f"- native_global_extrinsic_has_entries: `{native_global_extrinsic_has_entries}`",
+        f"- native_quadstate_has_teammate_entries: `{native_quadstate_has_teammate_entries}`",
+        f"- ros2_swarm_relative_transform_rate_hz: `{ros2_relative_rate}`",
+        f"- t_swarm_a_b_available: `{swarm_relative_available}`",
+        f"- t_loop_a_b_available: `{t_loop_available}`",
+        f"- swarm_loop_agreement_gate_pass: `{agreement_accepted}`",
+        f"- swarm_loop_translation_error_m: `{translation_error}`",
+        f"- swarm_loop_yaw_error_deg: `{yaw_error}`",
+        f"- overlap_pass: `{overlap_pass}`",
+        f"- no_overlap_pass: `{no_overlap_pass}`",
+        f"- merged_map_agreement_gated: `{merged_map_gated}`",
+        "- gt_used_runtime: `False`",
+        f"- blocker: `{primary['blocker']}`",
+    ]) + "\n"
+)
 (logs / "swarm_lio2_primary_validation.md").write_text(
     "\n".join([
         "# Swarm-LIO2 Primary Validation",
@@ -458,6 +618,13 @@ primary = {
         "- gt_used_runtime: `False`",
         f"- merged_map_agreement_gated: `{merged_map_gated}`",
         f"- swarm_lio2_mutual_transform_available: `{swarm_relative_available}`",
+        f"- native_mutual_topic_used: `{native_mutual_topic_used}`",
+        f"- native_mutual_topic_rate_hz: `{native_mutual_topic_rate}`",
+        f"- native_global_extrinsic_has_entries: `{native_global_extrinsic_has_entries}`",
+        f"- native_quadstate_has_teammate_entries: `{native_quadstate_has_teammate_entries}`",
+        f"- ros2_swarm_relative_transform_rate_hz: `{ros2_relative_rate}`",
+        f"- t_swarm_a_b_available: `{swarm_relative_available}`",
+        f"- t_loop_a_b_available: `{t_loop_available}`",
         f"- swarm_loop_agreement_gate_pass: `{agreement_accepted}`",
         f"- swarm_loop_translation_error_m: `{translation_error}`",
         f"- swarm_loop_yaw_error_deg: `{yaw_error}`",

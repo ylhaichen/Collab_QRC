@@ -1,7 +1,7 @@
 # Swarm-LIO2 Topic Discovery
 
 - mode: `docker`
-- ros_master_uri: ``
+- ros_master_uri: `http://127.0.0.1:11312`
 - rostopic_list_available: `True`
 - listed_topic_count: `246`
 - native_swarm_lio2_candidate_topics: `/quad1/lidar_slam/odom,/quad2/lidar_slam/odom,/quad_1/lidar_slam/odom,/quad_2/lidar_slam/odom,/quad1/cloud_registered_body,/quad2/cloud_registered_body,/quad1/cloud_registered,/quad2/cloud_registered,/quad1/downsampled_map,/quad2/downsampled_map,/quad1/path,/quad2/path,/quadstate_to_teammate,/quadstate_from_teammate,/global_extrinsic_to_teammate,/global_extrinsic_from_teammate`
@@ -10,6 +10,13 @@
 - native_swarm_lio2_cloud_registered_nonzero_rate: `True`
 - native_swarm_lio2_cloud_body_nonzero_rate: `True`
 - native_swarm_lio2_shadow_output_nonzero_rate: `True`
+- native_mutual_nonzero_rate_topics: `/quadstate_to_teammate,/global_extrinsic_to_teammate`
+- native_mutual_topic_rates: `{'/quadstate_to_teammate': 21.562, '/quadstate_from_teammate': 0.0, '/global_extrinsic_to_teammate': 20.764, '/global_extrinsic_from_teammate': 0.0}`
+- native_global_extrinsic_has_entries: `False`
+- native_global_extrinsic_topics_with_entries: ``
+- native_quadstate_has_teammate_entries: `False`
+- native_quadstate_topics_with_teammates: ``
+- raw_relative_transform_rate_hz: `0.0`
 - raw_adapter_nonzero_rate_topics: `/robot_a/swarm_lio2_raw/Odometry,/robot_b/swarm_lio2_raw/Odometry,/robot_a/swarm_lio2_raw/cloud_static,/robot_b/swarm_lio2_raw/cloud_static,/robot_a/swarm_lio2_raw/cloud_map,/robot_b/swarm_lio2_raw/cloud_map,/robot_a/velodyne_points,/robot_b/velodyne_points,/robot_a/imu/data,/robot_b/imu/data`
 - nonzero_rate_topics: `/quad1/lidar_slam/odom,/quad2/lidar_slam/odom,/quad1_pcl_render_node/sensor_cloud,/quad2_pcl_render_node/sensor_cloud,/quad_1/imu,/quad_2/imu,/quad1/cloud_registered_body,/quad2/cloud_registered_body,/quad1/cloud_registered,/quad2/cloud_registered,/quad1/path,/quad2/path,/quadstate_to_teammate,/global_extrinsic_to_teammate,/robot_a/swarm_lio2_raw/Odometry,/robot_b/swarm_lio2_raw/Odometry,/robot_a/swarm_lio2_raw/cloud_static,/robot_b/swarm_lio2_raw/cloud_static,/robot_a/swarm_lio2_raw/cloud_map,/robot_b/swarm_lio2_raw/cloud_map,/robot_a/velodyne_points,/robot_b/velodyne_points,/robot_a/imu/data,/robot_b/imu/data`
 - blocker: ``
