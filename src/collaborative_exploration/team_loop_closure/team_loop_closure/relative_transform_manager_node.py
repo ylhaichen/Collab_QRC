@@ -30,6 +30,8 @@ class RelativeTransformManager(Node):
         self.declare_parameter("parent_frame", "robot_a/map")
         self.declare_parameter("child_frame", "robot_b/map")
         self.declare_parameter("team_alignment_allow_export_only_gate", False)
+        self.declare_parameter("cross_robot_alignment_source", "team_loop_closure")
+        self.declare_parameter("swarm_agreement_mode", "optional_if_available")
         self.declare_parameter("require_swarm_loop_agreement", False)
         self.declare_parameter(
             "swarm_loop_relative_transform_topic",
@@ -51,9 +53,41 @@ class RelativeTransformManager(Node):
         self.allow_export_only = bool(
             self.get_parameter("team_alignment_allow_export_only_gate").value
         )
+        self.cross_robot_alignment_source = str(
+            self.get_parameter("cross_robot_alignment_source").value
+        ).strip().lower()
+        if self.cross_robot_alignment_source not in {
+            "team_loop_closure",
+            "swarm_lio2_mutual",
+            "hybrid",
+        }:
+            self.get_logger().warning(
+                f"Invalid cross_robot_alignment_source='{self.cross_robot_alignment_source}'; "
+                "fallback to team_loop_closure"
+            )
+            self.cross_robot_alignment_source = "team_loop_closure"
+        self.swarm_agreement_mode = str(
+            self.get_parameter("swarm_agreement_mode").value
+        ).strip().lower()
+        if self.swarm_agreement_mode not in {
+            "required",
+            "optional_if_available",
+            "disabled_for_debug",
+        }:
+            self.get_logger().warning(
+                f"Invalid swarm_agreement_mode='{self.swarm_agreement_mode}'; "
+                "fallback to optional_if_available"
+            )
+            self.swarm_agreement_mode = "optional_if_available"
         self.require_swarm_agreement = bool(
             self.get_parameter("require_swarm_loop_agreement").value
         )
+        if self.require_swarm_agreement and self.swarm_agreement_mode != "required":
+            self.get_logger().warning(
+                "Legacy require_swarm_loop_agreement=true overrides "
+                f"swarm_agreement_mode '{self.swarm_agreement_mode}' -> 'required'"
+            )
+            self.swarm_agreement_mode = "required"
         self.swarm_relative_topic = str(
             self.get_parameter("swarm_loop_relative_transform_topic").value
         )
@@ -77,6 +111,9 @@ class RelativeTransformManager(Node):
         self.status = "unaligned"
         self.last_reason = "waiting_for_robust_loop_inliers"
         self.current_transform: np.ndarray | None = None
+        self.output_transform: np.ndarray | None = None
+        self.swarm_agreement_enforced = False
+        self.swarm_agreement_status = ""
 
         self.create_subscription(String, self.robust_topic, self._on_robust, 10)
         self.create_subscription(String, self.metrics_topic, self._on_metrics, 10)
@@ -126,7 +163,10 @@ class RelativeTransformManager(Node):
         robust = self.robust_payload or {}
         metrics = self.metrics_payload or {}
         self.current_transform = self._transform_from_robust()
+        self.output_transform = None
         self.swarm_agreement = None
+        self.swarm_agreement_enforced = False
+        self.swarm_agreement_status = ""
         robust_accepted = bool(robust.get("accepted", False)) and robust.get("status") == "accepted"
         gt_used = bool(robust.get("gt_used_runtime", False)) or bool(metrics.get("gt_used_runtime", False))
         backend = str(metrics.get("optimization_backend", "unknown"))
@@ -181,14 +221,32 @@ class RelativeTransformManager(Node):
                 if backend == "g2o_export_only"
                 else "pose_graph_optimization_not_successful"
             )
-        elif self.require_swarm_agreement and self.current_transform is None:
-            self.status = "tentative"
-            self.last_reason = "waiting_for_team_loop_transform"
-        elif self.require_swarm_agreement and self.swarm_transform is None:
-            self.status = "tentative"
-            self.last_reason = "waiting_for_swarm_lio2_relative_transform"
         else:
-            if self.require_swarm_agreement:
+            if self.cross_robot_alignment_source == "swarm_lio2_mutual":
+                if self.swarm_transform is None:
+                    self.status = "tentative"
+                    self.last_reason = "waiting_for_swarm_lio2_relative_transform_authoritative"
+                    return
+                self.output_transform = self.swarm_transform
+            else:
+                if self.current_transform is None:
+                    self.status = "tentative"
+                    self.last_reason = "waiting_for_team_loop_transform"
+                    return
+                self.output_transform = self.current_transform
+
+            if self.swarm_agreement_mode == "required":
+                self.swarm_agreement_enforced = True
+                if self.swarm_transform is None:
+                    self.status = "tentative"
+                    self.last_reason = "waiting_for_swarm_lio2_relative_transform"
+                    self.swarm_agreement_status = "required_waiting_for_swarm_transform"
+                    return
+                if self.current_transform is None:
+                    self.status = "tentative"
+                    self.last_reason = "waiting_for_team_loop_transform"
+                    self.swarm_agreement_status = "required_waiting_for_team_loop_transform"
+                    return
                 self.swarm_agreement = evaluate_swarm_loop_agreement(
                     self.swarm_transform,
                     self.current_transform,
@@ -198,17 +256,47 @@ class RelativeTransformManager(Node):
                 if not self.swarm_agreement.accepted:
                     self.status = "rejected"
                     self.last_reason = self.swarm_agreement.reason
+                    self.swarm_agreement_status = "required_rejected"
                     return
+                self.swarm_agreement_status = "required_accepted"
+            elif self.swarm_agreement_mode == "optional_if_available":
+                if self.swarm_transform is None:
+                    self.swarm_agreement_status = "optional_unavailable"
+                else:
+                    if self.current_transform is None:
+                        self.status = "tentative"
+                        self.last_reason = "waiting_for_team_loop_transform"
+                        self.swarm_agreement_status = "optional_waiting_for_team_loop_transform"
+                        return
+                    self.swarm_agreement_enforced = True
+                    self.swarm_agreement = evaluate_swarm_loop_agreement(
+                        self.swarm_transform,
+                        self.current_transform,
+                        max_translation_m=self.swarm_max_translation,
+                        max_yaw_rad=self.swarm_max_yaw_rad,
+                    )
+                    if not self.swarm_agreement.accepted:
+                        self.status = "rejected"
+                        self.last_reason = self.swarm_agreement.reason
+                        self.swarm_agreement_status = "optional_rejected"
+                        return
+                    self.swarm_agreement_status = "optional_accepted"
+            else:
+                self.swarm_agreement_status = "disabled_for_debug"
+
             self.status = "aligned"
-            self.last_reason = (
-                "robust_alignment_pose_graph_and_swarm_agreement_accepted"
-                if self.require_swarm_agreement
-                else (
-                    "robust_alignment_and_pose_graph_accepted"
-                    if optimization_success
-                    else "robust_alignment_export_only_gate_accepted"
+            if self.swarm_agreement_mode == "required":
+                self.last_reason = "robust_alignment_pose_graph_and_swarm_agreement_accepted"
+            elif self.swarm_agreement_mode == "optional_if_available":
+                self.last_reason = (
+                    "robust_alignment_pose_graph_and_swarm_agreement_accepted"
+                    if self.swarm_agreement_status == "optional_accepted"
+                    else "robust_alignment_pose_graph_swarm_optional_unavailable"
                 )
-            )
+            elif optimization_success:
+                self.last_reason = "robust_alignment_and_pose_graph_accepted_swarm_disabled_for_debug"
+            else:
+                self.last_reason = "robust_alignment_export_only_gate_accepted_swarm_disabled_for_debug"
 
     def _transform_msg(self, transform: np.ndarray) -> TransformStamped:
         x, y, yaw = xyyaw_from_se2(transform)
@@ -253,7 +341,11 @@ class RelativeTransformManager(Node):
             "reject_reason": robust.get("reject_reason", ""),
             "pose_graph_backend": metrics.get("optimization_backend", "unknown"),
             "pose_graph_optimization_success": bool(metrics.get("optimization_success", False)),
-            "swarm_loop_agreement_required": self.require_swarm_agreement,
+            "cross_robot_alignment_source": self.cross_robot_alignment_source,
+            "swarm_loop_agreement_mode": self.swarm_agreement_mode,
+            "swarm_loop_agreement_required": self.swarm_agreement_mode == "required",
+            "swarm_loop_agreement_enforced": self.swarm_agreement_enforced,
+            "swarm_loop_agreement_status": self.swarm_agreement_status,
             "swarm_loop_agreement_accepted": (
                 bool(self.swarm_agreement.accepted) if self.swarm_agreement is not None else False
             ),
@@ -271,15 +363,15 @@ class RelativeTransformManager(Node):
             "gt_used_runtime": bool(robust.get("gt_used_runtime", False))
             or bool(metrics.get("gt_used_runtime", False)),
         }
-        if self.current_transform is not None:
-            x, y, yaw = xyyaw_from_se2(self.current_transform)
+        if self.output_transform is not None:
+            x, y, yaw = xyyaw_from_se2(self.output_transform)
             payload["transform"] = {
                 "x": round(float(x), 5),
                 "y": round(float(y), 5),
                 "yaw": round(float(wrap_pi(yaw)), 6),
             }
             if self.status == "aligned":
-                tf_msg = self._transform_msg(self.current_transform)
+                tf_msg = self._transform_msg(self.output_transform)
                 self.tf_pub.publish(tf_msg)
                 if self.tf_br is not None:
                     self.tf_br.sendTransform(tf_msg)

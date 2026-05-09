@@ -13,6 +13,7 @@ MIN_TOPIC_RATE_HZ="${MIN_TOPIC_RATE_HZ:-0.1}"
 CHECK_ROS1_TOPICS="${CHECK_ROS1_TOPICS:-true}"
 CHECK_RATES="${CHECK_RATES:-true}"
 SOURCE="${SWARM_LIO2_SHADOW_SOURCE:-${SWARM_LIO2_FEED_SOURCE:-unknown}}"
+SWARM_AGREEMENT_MODE="${SWARM_AGREEMENT_MODE:-required}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -80,6 +81,7 @@ mkdir -p "$(dirname "${LOG_JSON}")" "$(dirname "${LOG_MD}")"
 
 export ROOT MODE DEPLOYMENT_MODE LOG_JSON LOG_MD DISCOVERY_JSON TOPIC_TIMEOUT_SEC RATE_TIMEOUT_SEC SOURCE
 export MIN_TOPIC_RATE_HZ CHECK_ROS1_TOPICS CHECK_RATES
+export SWARM_AGREEMENT_MODE
 
 python3 - <<'PY'
 from __future__ import annotations
@@ -105,6 +107,9 @@ MIN_TOPIC_RATE_HZ = float(os.environ["MIN_TOPIC_RATE_HZ"])
 CHECK_ROS1_TOPICS = os.environ["CHECK_ROS1_TOPICS"].lower() == "true"
 CHECK_RATES = os.environ["CHECK_RATES"].lower() == "true"
 SOURCE = os.environ["SOURCE"]
+SWARM_AGREEMENT_MODE = (os.environ.get("SWARM_AGREEMENT_MODE") or "required").strip().lower()
+if SWARM_AGREEMENT_MODE not in {"required", "optional_if_available", "disabled_for_debug"}:
+    SWARM_AGREEMENT_MODE = "required"
 
 
 def run_shell(command: str, timeout: float) -> tuple[int, str, str]:
@@ -227,7 +232,7 @@ def expected_ros2_topics() -> list[str]:
 def required_rate_topics() -> list[str]:
     if MODE == "shadow":
         return [topic for topic in expected_ros2_topics() if not topic.endswith("metrics")]
-    return [
+    topics = [
         "/robot_a/Odometry",
         "/robot_b/Odometry",
         "/robot_a/corrected_odom",
@@ -240,8 +245,10 @@ def required_rate_topics() -> list[str]:
         "/robot_b/cloud_static",
         "/robot_a/tf",
         "/robot_b/tf",
-        "/team_slam/swarm_lio2_relative_transform",
     ]
+    if SWARM_AGREEMENT_MODE == "required":
+        topics.append("/team_slam/swarm_lio2_relative_transform")
+    return topics
 
 
 def ros2_rate(topic: str) -> dict:
@@ -380,6 +387,7 @@ payload = {
     "slam_backend": f"swarm_lio2_{MODE}",
     "mode": MODE,
     "source": SOURCE,
+    "swarm_agreement_mode": SWARM_AGREEMENT_MODE,
     "pass": overall_pass,
     "bridge_contract_passed": bridge_contract_passed,
     "native_swarm_lio2_output_passed": native_output_ok,
@@ -426,6 +434,7 @@ LOG_MD.write_text(
         f"- deployment_mode: `{DEPLOYMENT_MODE}`",
         f"- slam_backend: `swarm_lio2_{MODE}`",
         f"- source: `{SOURCE}`",
+        f"- swarm_agreement_mode: `{SWARM_AGREEMENT_MODE}`",
         f"- pass: `{payload['pass']}`",
         f"- bridge_contract_passed: `{payload['bridge_contract_passed']}`",
         f"- native_swarm_lio2_output_passed: `{payload['native_swarm_lio2_output_passed']}`",

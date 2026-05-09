@@ -12,6 +12,8 @@ TOPIC_TIMEOUT_SEC="${TOPIC_TIMEOUT_SEC:-10}"
 KEYFRAME_WAIT_SEC="${KEYFRAME_WAIT_SEC:-25}"
 ALIGNMENT_WAIT_SEC="${ALIGNMENT_WAIT_SEC:-25}"
 MIN_TOPIC_RATE_HZ="${MIN_TOPIC_RATE_HZ:-0.1}"
+CROSS_ROBOT_ALIGNMENT_SOURCE="${CROSS_ROBOT_ALIGNMENT_SOURCE:-team_loop_closure}"
+SWARM_AGREEMENT_MODE="${SWARM_AGREEMENT_MODE:-optional_if_available}"
 
 mkdir -p "${ROS_LOG_DIR}" "${ROOT}/logs/manual"
 export ROS_LOG_DIR
@@ -20,6 +22,8 @@ export ROS_MASTER_PORT="${ROS1_VALIDATION_MASTER_URI##*:}"
 export ROS_MASTER_PORT="${ROS_MASTER_PORT%%/*}"
 export ROS_HOSTNAME="${ROS_HOSTNAME:-127.0.0.1}"
 export ROS_IP="${ROS_IP:-127.0.0.1}"
+export CROSS_ROBOT_ALIGNMENT_SOURCE
+export SWARM_AGREEMENT_MODE
 
 branch="$(git -C "${ROOT}" branch --show-current)"
 echo "current_branch=${branch}"
@@ -211,6 +215,11 @@ export ROBOT_A_SWARM_LIO2_LIDAR_TOPIC="${ROBOT_A_SWARM_LIO2_LIDAR_TOPIC:-/mujoco
 export ROBOT_B_SWARM_LIO2_LIDAR_TOPIC="${ROBOT_B_SWARM_LIO2_LIDAR_TOPIC:-/mujoco_sim/b_mujoco_lidar_sensor/registered_scan}"
 export ROBOT_A_SWARM_LIO2_IMU_TOPIC="${ROBOT_A_SWARM_LIO2_IMU_TOPIC:-/robot_a/imu/data}"
 export ROBOT_B_SWARM_LIO2_IMU_TOPIC="${ROBOT_B_SWARM_LIO2_IMU_TOPIC:-/robot_b/imu/data}"
+if [[ "${SWARM_AGREEMENT_MODE}" == "required" ]]; then
+  REQUIRE_SWARM_LOOP_AGREEMENT_FLAG=true
+else
+  REQUIRE_SWARM_LOOP_AGREEMENT_FLAG=false
+fi
 
 launch_log="${ROOT}/logs/manual/swarm_lio2_primary_sim_bridge_launch.log"
 ros2 launch go2_gazebo_sim sim_hybrid_ros1_slam_ros2_nav.launch.py \
@@ -220,7 +229,9 @@ ros2 launch go2_gazebo_sim sim_hybrid_ros1_slam_ros2_nav.launch.py \
   static_map_cleanup_backend:=none \
   start_ros1_slam_bridge:=true \
   gui:=false rviz:=false explore:=true \
-  require_swarm_loop_agreement:=true \
+  cross_robot_alignment_source:="${CROSS_ROBOT_ALIGNMENT_SOURCE}" \
+  swarm_agreement_mode:="${SWARM_AGREEMENT_MODE}" \
+  require_swarm_loop_agreement:="${REQUIRE_SWARM_LOOP_AGREEMENT_FLAG}" \
   swarm_loop_agreement_max_translation:=0.5 \
   swarm_loop_agreement_max_yaw_deg:=5.0 \
   >"${launch_log}" 2>&1 &
@@ -271,6 +282,8 @@ SWARM_RELATIVE_FILE="${swarm_relative_file}" \
 MERGED_MAP_FILE="${merged_map_file}" \
 CONTRACT_RC="${contract_rc}" \
 SENSOR_PRECHECK_BLOCKER="${sensor_precheck_blocker}" \
+CROSS_ROBOT_ALIGNMENT_SOURCE="${CROSS_ROBOT_ALIGNMENT_SOURCE}" \
+SWARM_AGREEMENT_MODE="${SWARM_AGREEMENT_MODE}" \
 python3 - <<'PY'
 from __future__ import annotations
 
@@ -289,6 +302,8 @@ discovery = json.loads((logs / "swarm_lio2_topic_discovery.json").read_text())
 mutual_debug_path = logs / "swarm_lio2_mutual_state_debug.json"
 mutual_debug = json.loads(mutual_debug_path.read_text()) if mutual_debug_path.exists() else {}
 shadow = json.loads((logs / "swarm_lio2_shadow_validation.json").read_text()) if (logs / "swarm_lio2_shadow_validation.json").exists() else {}
+cross_loop_eval_path = logs / "cross_loop_closure_final_eval.json"
+cross_loop_eval = json.loads(cross_loop_eval_path.read_text()) if cross_loop_eval_path.exists() else {}
 
 def rate_ok(topic: str) -> bool:
     return any(item.get("topic") == topic and item.get("ok") for item in contract.get("ros2_rate_checks", []))
@@ -392,13 +407,25 @@ merged_map_text = Path(os.environ["MERGED_MAP_FILE"]).read_text(errors="replace"
 swarm_relative_transform = parse_transform_echo(swarm_relative_text)
 swarm_relative_available = bool(swarm_relative_transform.get("valid"))
 merged_map_opened = bool(re.search(r"^\s*[0-9]+", merged_map_text, re.M))
-agreement_required = bool(alignment.get("swarm_loop_agreement_required", True))
+cross_robot_alignment_source = str(
+    alignment.get("cross_robot_alignment_source")
+    or os.environ.get("CROSS_ROBOT_ALIGNMENT_SOURCE", "team_loop_closure")
+).strip().lower()
+swarm_agreement_mode = str(
+    alignment.get("swarm_loop_agreement_mode")
+    or os.environ.get("SWARM_AGREEMENT_MODE", "required")
+).strip().lower()
+if cross_robot_alignment_source not in {"team_loop_closure", "swarm_lio2_mutual", "hybrid"}:
+    cross_robot_alignment_source = "team_loop_closure"
+if swarm_agreement_mode not in {"required", "optional_if_available", "disabled_for_debug"}:
+    swarm_agreement_mode = "required"
 agreement_accepted = bool(alignment.get("swarm_loop_agreement_accepted", False))
 agreement_reason = str(alignment.get("swarm_loop_agreement_reason") or alignment.get("reason") or "")
 alignment_status = str(alignment.get("status") or "unknown")
 translation_error = alignment.get("swarm_loop_translation_error_m")
 yaw_error = alignment.get("swarm_loop_yaw_error_deg")
 t_loop_available = isinstance(alignment.get("transform"), dict)
+swarm_agreement_status = str(alignment.get("swarm_loop_agreement_status") or "")
 native_mutual_topic_used, native_mutual_topic_rate = selected_native_mutual_topic()
 native_global_extrinsic_nonzero = bool(discovery.get("native_global_extrinsic_nonzero_rate"))
 native_quadstate_nonzero = bool(discovery.get("native_quadstate_nonzero_rate"))
@@ -406,6 +433,12 @@ native_global_extrinsic_has_entries = bool(discovery.get("native_global_extrinsi
 native_quadstate_has_teammate_entries = bool(discovery.get("native_quadstate_has_teammate_entries"))
 raw_relative_nonzero = bool(discovery.get("raw_relative_transform_nonzero_rate"))
 ros2_relative_rate = rate_hz("/team_slam/swarm_lio2_relative_transform")
+cross_loop_eval_available = bool(cross_loop_eval)
+cross_loop_overlap_pass = bool(cross_loop_eval.get("overlap_pass", False))
+cross_loop_no_overlap_pass = bool(cross_loop_eval.get("no_overlap_pass", False))
+cross_loop_gt_used_runtime = bool(cross_loop_eval.get("overlap", {}).get("gt_used_runtime", False)) or bool(
+    cross_loop_eval.get("no_overlap", {}).get("gt_used_runtime", False)
+)
 allowed_mutual_blockers = {
     "udp_bridge_not_running",
     "teammate_state_not_received",
@@ -442,9 +475,18 @@ native_odom = bool(discovery.get("native_swarm_lio2_odom_nonzero_rate"))
 native_cloud = bool(discovery.get("native_swarm_lio2_cloud_registered_nonzero_rate")) and bool(discovery.get("native_swarm_lio2_cloud_body_nonzero_rate"))
 keyframes_valid = keyframe_count > 0
 nav2_valid = nav_valid and tf_valid
-merged_map_gated = (not merged_map_opened) or (alignment_status == "aligned" and agreement_accepted)
-overlap_pass = alignment_status == "aligned" and agreement_accepted and merged_map_opened
-no_overlap_pass = False
+agreement_required = swarm_agreement_mode == "required"
+agreement_enforced = (
+    swarm_agreement_mode == "required"
+    or (swarm_agreement_mode == "optional_if_available" and swarm_relative_available)
+)
+if swarm_agreement_mode == "optional_if_available" and not swarm_relative_available:
+    swarm_agreement_status = "optional_unavailable"
+agreement_gate_pass = (agreement_accepted if agreement_enforced else True)
+merged_map_gated = (not merged_map_opened) or (alignment_status == "aligned" and agreement_gate_pass)
+overlap_runtime_pass = alignment_status == "aligned" and agreement_gate_pass and merged_map_opened
+overlap_pass = overlap_runtime_pass and (cross_loop_overlap_pass if cross_loop_eval_available else True)
+no_overlap_pass = cross_loop_no_overlap_pass if cross_loop_eval_available else False
 
 blockers: list[str] = []
 if int(os.environ["CONTRACT_RC"]) != 0 or contract.get("blocker"):
@@ -489,14 +531,18 @@ elif agreement_required and not raw_relative_nonzero:
         blockers.append("global_extrinsic_not_initialized")
 elif agreement_required and not swarm_relative_available:
     blockers.append(str(swarm_relative_transform.get("blocker") or "swarm_lio2_relative_transform_bridge_zero_rate"))
-elif agreement_required and not agreement_accepted:
+elif agreement_enforced and not agreement_accepted:
     blockers.append(agreement_reason or "swarm_loop_agreement_not_accepted")
 if not merged_map_gated:
     blockers.append("merged_map_opened_without_required_agreement_gate")
-if not overlap_pass:
-    blockers.append("overlap_alignment_not_accepted_with_swarm_agreement")
-if no_overlap_pass is False:
-    blockers.append("no_overlap_scene_not_run_after_primary_blocker")
+if not overlap_runtime_pass:
+    blockers.append("overlap_alignment_not_accepted_with_required_alignment_gate")
+if not cross_loop_eval_available:
+    blockers.append("no_overlap_scene_not_validated")
+elif not no_overlap_pass:
+    blockers.append("no_overlap_scene_rejection_failed")
+if cross_loop_gt_used_runtime:
+    blockers.append("gt_used_runtime_detected_in_cross_loop_eval")
 
 primary_pass = (
     odom_valid
@@ -506,7 +552,7 @@ primary_pass = (
     and keyframes_valid
     and native_odom
     and native_cloud
-    and overlap_pass
+    and overlap_runtime_pass
     and no_overlap_pass
     and not blockers
 )
@@ -534,13 +580,21 @@ primary = {
     "team_loop_closure_keyframes_valid": keyframes_valid,
     "team_loop_closure_keyframe_count": keyframe_count,
     "alignment_status": alignment,
+    "cross_robot_alignment_source": cross_robot_alignment_source,
+    "swarm_loop_agreement_mode": swarm_agreement_mode,
     "overlap_pass": overlap_pass,
+    "overlap_runtime_pass": overlap_runtime_pass,
     "no_overlap_pass": no_overlap_pass,
     "gt_used_runtime": False,
+    "cross_loop_gt_used_runtime": cross_loop_gt_used_runtime,
     "merged_map_opened": merged_map_opened,
     "merged_map_agreement_gated": merged_map_gated,
+    "cross_loop_alignment_eval_available": cross_loop_eval_available,
+    "cross_loop_alignment_eval": cross_loop_eval,
     "swarm_loop_agreement_required": agreement_required,
-    "swarm_loop_agreement_gate_pass": agreement_accepted,
+    "swarm_loop_agreement_enforced": agreement_enforced,
+    "swarm_loop_agreement_gate_pass": agreement_gate_pass,
+    "swarm_loop_agreement_status": swarm_agreement_status,
     "swarm_loop_agreement_reason": agreement_reason,
     "swarm_loop_translation_error_m": translation_error,
     "swarm_loop_yaw_error_deg": yaw_error,
@@ -605,17 +659,25 @@ agreement_log = {
     "mutual_observation_triggered": bool(mutual_debug.get("mutual_observation_triggered", False)),
     "global_extrinsic_initialized": bool(mutual_debug.get("global_extrinsic_initialized", False)),
     "mutual_state_debug_blocker": mutual_debug_blocker,
+    "cross_loop_alignment_eval_available": cross_loop_eval_available,
+    "cross_loop_alignment_eval": cross_loop_eval,
+    "cross_robot_alignment_source": cross_robot_alignment_source,
+    "swarm_loop_agreement_mode": swarm_agreement_mode,
+    "swarm_loop_agreement_enforced": agreement_enforced,
+    "swarm_loop_agreement_status": swarm_agreement_status,
     "swarm_loop_agreement_required": agreement_required,
-    "swarm_loop_agreement_gate_pass": agreement_accepted,
+    "swarm_loop_agreement_gate_pass": agreement_gate_pass,
     "swarm_loop_agreement_reason": agreement_reason,
     "swarm_loop_translation_error_m": translation_error,
     "swarm_loop_yaw_error_deg": yaw_error,
     "overlap_pass": overlap_pass,
+    "overlap_runtime_pass": overlap_runtime_pass,
     "no_overlap_pass": no_overlap_pass,
     "merged_map_opened": merged_map_opened,
     "merged_map_agreement_gated": merged_map_gated,
     "gt_used_runtime": False,
-    "pass": agreement_accepted and overlap_pass,
+    "cross_loop_gt_used_runtime": cross_loop_gt_used_runtime,
+    "pass": agreement_gate_pass and overlap_runtime_pass and no_overlap_pass and not cross_loop_gt_used_runtime,
     "blocker": primary["blocker"],
 }
 (logs / "swarm_loop_agreement_validation.json").write_text(json.dumps(agreement_log, indent=2, sort_keys=True) + "\n")
@@ -624,6 +686,10 @@ agreement_log = {
         "# Swarm-Loop Agreement Validation",
         "",
         "- source: `sim_bridge`",
+        f"- cross_robot_alignment_source: `{cross_robot_alignment_source}`",
+        f"- swarm_loop_agreement_mode: `{swarm_agreement_mode}`",
+        f"- swarm_loop_agreement_enforced: `{agreement_enforced}`",
+        f"- swarm_loop_agreement_status: `{swarm_agreement_status}`",
         f"- native_mutual_topic_used: `{native_mutual_topic_used}`",
         f"- native_mutual_topic_rate_hz: `{native_mutual_topic_rate}`",
         f"- native_global_extrinsic_has_entries: `{native_global_extrinsic_has_entries}`",
@@ -639,11 +705,14 @@ agreement_log = {
         f"- mutual_state_debug_blocker: `{mutual_debug_blocker}`",
         f"- t_swarm_a_b_available: `{swarm_relative_available}`",
         f"- t_loop_a_b_available: `{t_loop_available}`",
-        f"- swarm_loop_agreement_gate_pass: `{agreement_accepted}`",
+        f"- swarm_loop_agreement_gate_pass: `{agreement_gate_pass}`",
         f"- swarm_loop_translation_error_m: `{translation_error}`",
         f"- swarm_loop_yaw_error_deg: `{yaw_error}`",
         f"- overlap_pass: `{overlap_pass}`",
+        f"- overlap_runtime_pass: `{overlap_runtime_pass}`",
         f"- no_overlap_pass: `{no_overlap_pass}`",
+        f"- cross_loop_alignment_eval_available: `{cross_loop_eval_available}`",
+        f"- cross_loop_gt_used_runtime: `{cross_loop_gt_used_runtime}`",
         f"- merged_map_agreement_gated: `{merged_map_gated}`",
         "- gt_used_runtime: `False`",
         f"- blocker: `{primary['blocker']}`",
@@ -654,6 +723,10 @@ agreement_log = {
         "# Swarm-LIO2 Primary Validation",
         "",
         "- source: `sim_bridge`",
+        f"- cross_robot_alignment_source: `{cross_robot_alignment_source}`",
+        f"- swarm_loop_agreement_mode: `{swarm_agreement_mode}`",
+        f"- swarm_loop_agreement_enforced: `{agreement_enforced}`",
+        f"- swarm_loop_agreement_status: `{swarm_agreement_status}`",
         "- primary_attempted: `True`",
         f"- native_swarm_lio2_odom_nonzero_rate: `{native_odom}`",
         f"- native_swarm_lio2_cloud_nonzero_rate: `{native_cloud}`",
@@ -664,8 +737,11 @@ agreement_log = {
         f"- team_loop_closure_keyframes_valid: `{keyframes_valid}`",
         f"- team_loop_closure_keyframe_count: `{keyframe_count}`",
         f"- overlap_pass: `{overlap_pass}`",
+        f"- overlap_runtime_pass: `{overlap_runtime_pass}`",
         f"- no_overlap_pass: `{no_overlap_pass}`",
         "- gt_used_runtime: `False`",
+        f"- cross_loop_gt_used_runtime: `{cross_loop_gt_used_runtime}`",
+        f"- cross_loop_alignment_eval_available: `{cross_loop_eval_available}`",
         f"- merged_map_agreement_gated: `{merged_map_gated}`",
         f"- swarm_lio2_mutual_transform_available: `{swarm_relative_available}`",
         f"- native_mutual_topic_used: `{native_mutual_topic_used}`",
@@ -683,7 +759,7 @@ agreement_log = {
         f"- mutual_state_debug_blocker: `{mutual_debug_blocker}`",
         f"- t_swarm_a_b_available: `{swarm_relative_available}`",
         f"- t_loop_a_b_available: `{t_loop_available}`",
-        f"- swarm_loop_agreement_gate_pass: `{agreement_accepted}`",
+        f"- swarm_loop_agreement_gate_pass: `{agreement_gate_pass}`",
         f"- swarm_loop_translation_error_m: `{translation_error}`",
         f"- swarm_loop_yaw_error_deg: `{yaw_error}`",
         f"- pass: `{primary_pass}`",
@@ -720,16 +796,21 @@ sim = {
         "",
         f"- final_status: `{sim['final_status']}`",
         "- source: `sim_bridge`",
+        f"- cross_robot_alignment_source: `{cross_robot_alignment_source}`",
+        f"- swarm_loop_agreement_mode: `{swarm_agreement_mode}`",
+        f"- swarm_loop_agreement_status: `{swarm_agreement_status}`",
         "- primary_attempted: `True`",
         f"- swarm_lio2_shadow_slam_passed: `{sim['swarm_lio2_shadow_slam_passed']}`",
         f"- swarm_lio2_primary_passed: `{primary_pass}`",
         f"- nav2_runtime_valid: `{nav2_valid}`",
         f"- team_loop_closure_keyframes_valid: `{keyframes_valid}`",
         f"- overlap_pass: `{overlap_pass}`",
+        f"- overlap_runtime_pass: `{overlap_runtime_pass}`",
         f"- no_overlap_pass: `{no_overlap_pass}`",
         "- gt_used_runtime: `False`",
+        f"- cross_loop_gt_used_runtime: `{cross_loop_gt_used_runtime}`",
         f"- merged_map_agreement_gated: `{merged_map_gated}`",
-        f"- swarm_loop_agreement_gate_pass: `{agreement_accepted}`",
+        f"- swarm_loop_agreement_gate_pass: `{agreement_gate_pass}`",
         f"- blocker: `{sim['blocker']}`",
         f"- claim: `{sim['claim']}`",
     ]) + "\n"

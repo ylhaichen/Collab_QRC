@@ -8,6 +8,10 @@
 - ROS1 hybrid Docker files, bridge config, launch config, backend check scripts, and ROS2 adapter nodes are present.
 - Swarm-LIO2 shadow mode remains isolated under `/<ns>/swarm_lio2/*`.
 - Swarm-LIO2 primary mode is only a configured candidate topic contract, not a replacement claim.
+- Primary alignment policy now defaults to:
+  - `cross_robot_alignment_source:=team_loop_closure`
+  - `swarm_agreement_mode:=optional_if_available`
+  Team-loop robust alignment remains authoritative; Swarm mutual transform is only an optional consistency check when available.
 - The ROS1 hybrid wrapper launch now stages Swarm-LIO2 in a writable catkin workspace and adds `topic_tools relay` entries for ROS2-sim-compatible LiDAR/IMU inputs plus Swarm-LIO2 raw odom/cloud outputs.
 - The ROS1 bridge entrypoint is guarded against `set -u` failures while sourcing ROS1/ROS2 setup files, and the hybrid launch exports `config/fastdds_no_shm.xml` when present so host ROS2 CLI/topic checks can see container topics on this machine.
 
@@ -53,11 +57,11 @@ This mode is simulation-only. Real robot validation must use `real_hybrid_ros1_s
 
 ## Current Blockers
 
-- Current valid status is `Status D -- External Blocker`.
+- Current valid status is `Status C -- Shadow Passed, Primary Blocked`.
 - Backend Docker/catkin recovery passed, but full `sim_hybrid_ros1_slam_ros2_nav` did not pass.
 - Fresh `START_BRIDGE=true bash scripts/bench/run_cross_loop_runtime_validation.sh` passed the existing Fast-LIO / SC-PGO baseline regression with GTSAM C++ optimization.
-- The current ROS1/ROS2 topic contract blocker is: missing ROS1 raw relay output topics for `/robot_a` and `/robot_b`, ROS2 `/<ns>/swarm_lio2/Odometry` and cloud topics present but below `0.1 Hz`, and empty odometry `header.frame_id` / `child_frame_id`.
-- Swarm-LIO2 primary `/<ns>/Odometry` / `/<ns>/corrected_odom`, Nav2 odom/tf, and `team_loop_closure` keyframes remain runtime-unvalidated.
+- In current sim-bridge evidence, Swarm-LIO2 native odom/cloud and ROS2 primary path are available, but Swarm mutual observation is not triggered in this MuJoCo scene (`high_intensity_input=0`, `teammate[]=[]`, `extrinsic[]=[]`), so relative transform remains optional-unavailable.
+- Latest primary rerun on this host is blocked by Docker permission (`docker_socket_permission_denied`), so there is no fresh full runtime pass claim.
 - Dynamic-LIO runtime static/dynamic cloud separation and ERASOR cleaned map output remain unvalidated; fallbacks stay active.
 - Fast-LIO remains the production backend until sim and real primary validations pass.
 - Do not claim Swarm-LIO2 replacement from this runbook alone.

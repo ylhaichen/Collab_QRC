@@ -1889,6 +1889,12 @@ def _launch_setup(context):
         _get(context, "static_map_cleanup_backend").strip().lower() or "none"
     )
     erasor_trigger_mode = (_get(context, "erasor_trigger_mode").strip().lower() or "manual")
+    cross_robot_alignment_source = (
+        _get(context, "cross_robot_alignment_source").strip().lower() or "team_loop_closure"
+    )
+    swarm_agreement_mode = (
+        _get(context, "swarm_agreement_mode").strip().lower() or "optional_if_available"
+    )
     require_swarm_loop_agreement = _as_bool(_get(context, "require_swarm_loop_agreement"))
     swarm_loop_agreement_max_translation = float(
         _get(context, "swarm_loop_agreement_max_translation").strip() or "0.5"
@@ -2057,6 +2063,16 @@ def _launch_setup(context):
     if erasor_trigger_mode not in {"manual", "periodic", "benchmark"}:
         raise ValueError(
             f"erasor_trigger_mode must be 'manual' | 'periodic' | 'benchmark', got '{erasor_trigger_mode}'")
+    if cross_robot_alignment_source not in {"team_loop_closure", "swarm_lio2_mutual", "hybrid"}:
+        raise ValueError(
+            "cross_robot_alignment_source must be 'team_loop_closure' | "
+            f"'swarm_lio2_mutual' | 'hybrid', got '{cross_robot_alignment_source}'"
+        )
+    if swarm_agreement_mode not in {"required", "optional_if_available", "disabled_for_debug"}:
+        raise ValueError(
+            "swarm_agreement_mode must be 'required' | 'optional_if_available' | "
+            f"'disabled_for_debug', got '{swarm_agreement_mode}'"
+        )
     if team_pose_graph_backend not in {"auto", "gtsam", "gtsam_python", "gtsam_cpp", "g2o_export_only"}:
         raise ValueError(
             "team_pose_graph_backend must be 'auto' | 'gtsam' | 'gtsam_python' | 'gtsam_cpp' | "
@@ -2139,6 +2155,10 @@ def _launch_setup(context):
         f"[nav_test_mujoco_fastlio_mixed] relative_pose_source:={relative_pose_source} "
         f"bootstrap_from_gt:={'true' if slam_bootstrap_from_gt else 'false'} "
         f"map_merge:={'true' if map_merge_enabled else 'false'}"
+    )))
+    actions.append(LogInfo(msg=(
+        f"[nav_test_mujoco_fastlio_mixed] cross_robot_alignment_source:={cross_robot_alignment_source} "
+        f"swarm_agreement_mode:={swarm_agreement_mode}"
     )))
     if relative_pose_source == "none":
         actions.append(LogInfo(msg=(
@@ -2532,9 +2552,14 @@ def _launch_setup(context):
                             "parent_frame": "robot_a/map",
                             "child_frame": "robot_b/map",
                             "team_alignment_allow_export_only_gate": team_alignment_allow_export_only_gate,
+                            "cross_robot_alignment_source": cross_robot_alignment_source,
+                            "swarm_agreement_mode": swarm_agreement_mode,
                             "require_swarm_loop_agreement": (
-                                require_swarm_loop_agreement
-                                and slam_backend == "swarm_lio2_primary"
+                                (swarm_agreement_mode == "required")
+                                or (
+                                    require_swarm_loop_agreement
+                                    and slam_backend == "swarm_lio2_primary"
+                                )
                             ),
                             "swarm_loop_relative_transform_topic": (
                                 "/team_slam/swarm_lio2_relative_transform"
@@ -3161,8 +3186,16 @@ def generate_launch_description():
             description="manual | periodic | benchmark.",
         ),
         DeclareLaunchArgument(
-            "require_swarm_loop_agreement", default_value="true",
-            description="Require Swarm-LIO2 mutual transform to agree with robust loop closure in swarm_lio2_primary mode.",
+            "require_swarm_loop_agreement", default_value="false",
+            description="Legacy compatibility flag; prefer swarm_agreement_mode. When true, overrides swarm_agreement_mode to required.",
+        ),
+        DeclareLaunchArgument(
+            "cross_robot_alignment_source", default_value="team_loop_closure",
+            description="team_loop_closure | swarm_lio2_mutual | hybrid",
+        ),
+        DeclareLaunchArgument(
+            "swarm_agreement_mode", default_value="optional_if_available",
+            description="required | optional_if_available | disabled_for_debug",
         ),
         DeclareLaunchArgument("swarm_loop_agreement_max_translation", default_value="0.5"),
         DeclareLaunchArgument("swarm_loop_agreement_max_yaw_deg", default_value="5.0"),

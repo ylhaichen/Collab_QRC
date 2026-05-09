@@ -4,12 +4,17 @@
 
 ## Implemented Scaffolding
 
-In `swarm_lio2_primary`, map merge requires agreement between:
+In `swarm_lio2_primary`, cross-robot alignment is policy-driven:
 
-- Swarm-LIO2 mutual transform: `T_swarm_a_b`
-- robust loop closure transform: `T_loop_a_b`
+- `cross_robot_alignment_source = team_loop_closure | swarm_lio2_mutual | hybrid`
+- `swarm_agreement_mode = required | optional_if_available | disabled_for_debug`
 
-The gate computes:
+Default sim-hybrid policy:
+
+- `cross_robot_alignment_source:=team_loop_closure`
+- `swarm_agreement_mode:=optional_if_available`
+
+Agreement math (when evaluated):
 
 - `translation_error = ||translation(T_swarm_a_b^-1 * T_loop_a_b)||`
 - `yaw_error = yaw(T_swarm_a_b^-1 * T_loop_a_b)`
@@ -19,7 +24,8 @@ Default limits:
 - `swarm_loop_agreement_max_translation = 0.5`
 - `swarm_loop_agreement_max_yaw_deg = 5.0`
 
-`relative_transform_manager_node` publishes `aligned` only after robust loop closure, pose graph acceptance, and Swarm agreement pass.
+`relative_transform_manager_node` publishes `aligned` only after robust loop closure and pose graph acceptance.
+When `swarm_agreement_mode=optional_if_available`, Swarm agreement is enforced only if `T_swarm_a_b` is available; otherwise it records `swarm_loop_agreement_status=optional_unavailable` and keeps `team_loop_closure` authoritative.
 
 ## Mock / Synthetic Validation
 
@@ -49,8 +55,9 @@ CONFIRM_REAL_ROBOT=1 bash scripts/manual/run_real_robot_primary_validation.sh
 
 ## Current Blockers
 
-- Current valid status is `Status D -- External Blocker`.
-- Swarm-LIO2 ROS1 wrapper launch smoke passed, but ROS2 shadow odometry and primary keyframe/transform flow have not passed because the live topic contract had zero Swarm-LIO2 odom/cloud rates and empty odometry frame fields.
-- Fresh overlap/no-overlap runtime regression with the corrected GTSAM-capable default passed for the existing Fast-LIO / SC-PGO baseline: overlap aligned, no-overlap rejected, and runtime GT was not used.
-- Swarm-LIO2 runtime transform and team robust transform agreement have not been validated in sim or real runtime.
+- Current valid status is `Status C -- Shadow Passed, Primary Blocked`.
+- Swarm-LIO2 local odometry/cloud and ROS2 primary adapter path are validated in sim-bridge shadow/primary runs.
+- In the current MuJoCo scene, Swarm mutual/extrinsic payload remains empty (`teammate[]=[]`, `extrinsic[]=[]`), so `T_swarm_a_b` is unavailable.
+- Under the new policy, this condition is treated as `optional_unavailable` (not a standalone merge-authority source), while map merge still depends on robust `team_loop_closure` acceptance and pose-graph checks.
+- The latest primary rerun on this host is externally blocked by Docker permission (`docker_socket_permission_denied`), so no fresh full-runtime pass claim is made.
 - Descriptor-only matches, weak single matches, ERASOR-only cleanup, Swarm-only mutual state, and runtime GT remain forbidden merge triggers.

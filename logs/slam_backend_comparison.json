@@ -28,15 +28,19 @@
     },
     "updated_utc": "2026-05-07T19:59:00Z"
   },
-  "claim": "Migration interface and hybrid deployment scaffolding are implemented; Fast-LIO remains production backend.",
+  "claim": "Swarm-LIO2 local SLAM/odometry path is validated in shadow; primary cross-robot acceptance remains blocked on this host runtime. team_loop_closure remains authoritative and Fast-LIO stays production.",
+  "cross_robot_alignment_source_default_sim_hybrid": "team_loop_closure",
+  "current_sim_primary_blocker": "docker_socket_permission_denied",
+  "current_sim_primary_status": "blocked",
   "default_deployment_mode": "sim_ros2",
   "default_slam_backend": "fast_lio_scpgo",
+  "fast_lio_production": true,
   "fast_lio_scpgo": {
     "gt_used_runtime": false,
     "no_overlap_pass": true,
     "overlap_pass": true
   },
-  "final_status": "Status D \u2014 External Blocker",
+  "final_status": "Status C \u2014 Shadow Passed, Primary Blocked",
   "next_manual_commands": [
     "bash scripts/manual/run_sim_hybrid_full_validation.sh",
     "CONFIRM_REAL_ROBOT=1 bash scripts/manual/run_real_robot_shadow_validation.sh",
@@ -419,5 +423,8 @@
       "swarm_lio2_source_available": true,
       "swarm_lio2_started": true
     }
-  }
+  },
+  "swarm_agreement_mode_default_sim_hybrid": "optional_if_available",
+  "swarm_lio2_primary_policy": "team_loop_authoritative_cross_robot_alignment",
+  "updated_utc": "2026-05-09T13:41:17Z"
 }

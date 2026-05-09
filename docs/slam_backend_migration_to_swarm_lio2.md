@@ -30,6 +30,13 @@ Primary candidate mode maps Swarm-LIO2 outputs into the existing ROS2 contract:
 - `/team_slam/swarm_lio2_relative_transform`
 - `/tf`
 
+Cross-robot alignment policy in primary mode:
+
+- `cross_robot_alignment_source:=team_loop_closure` (default in sim/real hybrid)
+- `swarm_agreement_mode:=optional_if_available` (default in sim/real hybrid)
+- `team_loop_closure` remains authoritative for robust alignment and merge gating.
+- Swarm mutual transform is used as an additional consistency check when available; if unavailable, status is recorded as `optional_unavailable` and runtime continues with team-loop authoritative alignment.
+
 ## Mock / Synthetic Validation
 
 Synthetic tests validate the ROS2-side adapter contract, Dynamic-LIO cloud forwarding contract, ERASOR cleanup topic/metrics contract, and Swarm-loop agreement gate math. These tests do not prove ROS1 backend runtime or real robot readiness.
@@ -67,10 +74,11 @@ CONFIRM_REAL_ROBOT=1 bash scripts/manual/run_real_robot_primary_validation.sh
 
 ## Current Blockers
 
-- Current valid status is `Status D -- External Blocker`.
+- Current valid status is `Status C -- Shadow Passed, Primary Blocked`.
 - Backend Docker/catkin recovery is complete, but full hybrid runtime validation is not complete.
-- Swarm-LIO2 shadow mode has not passed ROS2 odometry reception: ROS2 shadow topics are visible, but message rates remain below `0.1 Hz`, odometry frames are empty, and ROS1 `/<ns>/swarm_lio2_raw/*` relay output topics were missing in the bounded runtime check.
-- Swarm-LIO2 primary mode has not passed ROS2 odometry/corrected odom/cloud/Nav2/tf/keyframe runtime validation.
+- Swarm-LIO2 shadow and primary local-odometry data paths passed in sim-bridge runs, but full primary acceptance is still blocked by the cross-scene validation chain and current host runtime constraints.
+- Swarm-LIO2 mutual/extrinsic payload is empty in the current MuJoCo scene (`teammate[]=[]`, `extrinsic[]=[]`), so `/team_slam/swarm_lio2_relative_transform` is optional/unavailable under the new policy and cannot be used as merge authority.
+- Latest primary rerun attempt on this host is blocked by Docker permission (`docker_socket_permission_denied`).
 - Dynamic-LIO and ERASOR are buildable wrappers, but their runtime outputs are not validated.
 - Real robot LiDAR/IMU/Unitree topics and peer network are unavailable here.
 - Fast-LIO remains production backend.
