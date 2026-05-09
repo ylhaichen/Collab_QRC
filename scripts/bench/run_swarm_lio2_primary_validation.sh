@@ -246,6 +246,7 @@ fi
 
 bash "${ROOT}/scripts/bench/inspect_swarm_lio2_required_inputs.sh" --docker || true
 bash "${ROOT}/scripts/bench/discover_swarm_lio2_topics.sh" --docker || true
+bash "${ROOT}/scripts/bench/inspect_swarm_lio2_mutual_state.sh" --docker || true
 
 export ROS1_TOPIC_LIST_CMD="docker compose -f ${COMPOSE_FILE} exec -T ros1_hybrid_slam bash -lc 'source /opt/ros/noetic/setup.bash; source /catkin_ws/devel/setup.bash; rostopic list'"
 set +e
@@ -285,6 +286,8 @@ logs = root / "logs"
 updated = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 contract = json.loads((logs / "ros1_ros2_slam_bridge_validation.json").read_text())
 discovery = json.loads((logs / "swarm_lio2_topic_discovery.json").read_text())
+mutual_debug_path = logs / "swarm_lio2_mutual_state_debug.json"
+mutual_debug = json.loads(mutual_debug_path.read_text()) if mutual_debug_path.exists() else {}
 shadow = json.loads((logs / "swarm_lio2_shadow_validation.json").read_text()) if (logs / "swarm_lio2_shadow_validation.json").exists() else {}
 
 def rate_ok(topic: str) -> bool:
@@ -403,6 +406,15 @@ native_global_extrinsic_has_entries = bool(discovery.get("native_global_extrinsi
 native_quadstate_has_teammate_entries = bool(discovery.get("native_quadstate_has_teammate_entries"))
 raw_relative_nonzero = bool(discovery.get("raw_relative_transform_nonzero_rate"))
 ros2_relative_rate = rate_hz("/team_slam/swarm_lio2_relative_transform")
+allowed_mutual_blockers = {
+    "udp_bridge_not_running",
+    "teammate_state_not_received",
+    "global_extrinsic_not_initialized",
+    "mutual_observation_not_triggered",
+    "unsupported_observation_model_for_current_sim",
+    "namespace_or_robot_id_mismatch",
+}
+mutual_debug_blocker = str(mutual_debug.get("blocker") or "")
 
 odom_valid = (
     topic_present("/robot_a/Odometry") and topic_present("/robot_b/Odometry")
@@ -457,16 +469,24 @@ if not cloud_valid:
 if not keyframes_valid:
     blockers.append("team_loop_closure_keyframes_not_received")
 if agreement_required and not native_global_extrinsic_nonzero:
-    if native_quadstate_nonzero:
+    if mutual_debug_blocker in allowed_mutual_blockers:
+        blockers.append(mutual_debug_blocker)
+    elif native_quadstate_nonzero:
         blockers.append("swarm_lio2_global_extrinsic_topic_zero_rate")
     else:
         blockers.append("swarm_lio2_mutual_state_not_available_in_current_launch")
 elif agreement_required and not native_global_extrinsic_has_entries:
-    blockers.append("swarm_lio2_global_extrinsic_status_empty")
-    if native_quadstate_nonzero and not native_quadstate_has_teammate_entries:
-        blockers.append("swarm_lio2_quadstate_teammate_empty")
+    if mutual_debug_blocker in allowed_mutual_blockers:
+        blockers.append(mutual_debug_blocker)
+    elif mutual_debug.get("teammate_state_received") and not mutual_debug.get("mutual_observation_triggered"):
+        blockers.append("mutual_observation_not_triggered")
+    else:
+        blockers.append("global_extrinsic_not_initialized")
 elif agreement_required and not raw_relative_nonzero:
-    blockers.append("swarm_lio2_relative_transform_adapter_zero_rate")
+    if mutual_debug_blocker in allowed_mutual_blockers:
+        blockers.append(mutual_debug_blocker)
+    else:
+        blockers.append("global_extrinsic_not_initialized")
 elif agreement_required and not swarm_relative_available:
     blockers.append(str(swarm_relative_transform.get("blocker") or "swarm_lio2_relative_transform_bridge_zero_rate"))
 elif agreement_required and not agreement_accepted:
@@ -538,6 +558,17 @@ primary = {
     "ros2_swarm_relative_transform": swarm_relative_transform,
     "t_swarm_a_b_available": swarm_relative_available,
     "t_loop_a_b_available": t_loop_available,
+    "mutual_state_debug": mutual_debug,
+    "udp_bridge_running": bool(mutual_debug.get("udp_bridge_running", False)),
+    "ros_direct_peer_subscription": bool(mutual_debug.get("ros_direct_peer_subscription", False)),
+    "teammate_state_received": bool(mutual_debug.get("teammate_state_received", False)),
+    "teammate_array_length": int(mutual_debug.get("teammate_array_length") or 0),
+    "extrinsic_array_length": int(mutual_debug.get("extrinsic_array_length") or 0),
+    "connected_teammate_ids": mutual_debug.get("connected_teammate_ids", {}),
+    "traj_matching_ids": mutual_debug.get("traj_matching_ids", {}),
+    "mutual_observation_triggered": bool(mutual_debug.get("mutual_observation_triggered", False)),
+    "global_extrinsic_initialized": bool(mutual_debug.get("global_extrinsic_initialized", False)),
+    "mutual_state_debug_blocker": mutual_debug_blocker,
     "bridge_contract": contract,
     "pass": primary_pass,
     "blocker": ";".join(dict.fromkeys(b for b in blockers if b)),
@@ -563,6 +594,17 @@ agreement_log = {
     "ros2_swarm_relative_transform": swarm_relative_transform,
     "t_swarm_a_b_available": swarm_relative_available,
     "t_loop_a_b_available": t_loop_available,
+    "mutual_state_debug": mutual_debug,
+    "udp_bridge_running": bool(mutual_debug.get("udp_bridge_running", False)),
+    "ros_direct_peer_subscription": bool(mutual_debug.get("ros_direct_peer_subscription", False)),
+    "teammate_state_received": bool(mutual_debug.get("teammate_state_received", False)),
+    "teammate_array_length": int(mutual_debug.get("teammate_array_length") or 0),
+    "extrinsic_array_length": int(mutual_debug.get("extrinsic_array_length") or 0),
+    "connected_teammate_ids": mutual_debug.get("connected_teammate_ids", {}),
+    "traj_matching_ids": mutual_debug.get("traj_matching_ids", {}),
+    "mutual_observation_triggered": bool(mutual_debug.get("mutual_observation_triggered", False)),
+    "global_extrinsic_initialized": bool(mutual_debug.get("global_extrinsic_initialized", False)),
+    "mutual_state_debug_blocker": mutual_debug_blocker,
     "swarm_loop_agreement_required": agreement_required,
     "swarm_loop_agreement_gate_pass": agreement_accepted,
     "swarm_loop_agreement_reason": agreement_reason,
@@ -587,6 +629,14 @@ agreement_log = {
         f"- native_global_extrinsic_has_entries: `{native_global_extrinsic_has_entries}`",
         f"- native_quadstate_has_teammate_entries: `{native_quadstate_has_teammate_entries}`",
         f"- ros2_swarm_relative_transform_rate_hz: `{ros2_relative_rate}`",
+        f"- udp_bridge_running: `{bool(mutual_debug.get('udp_bridge_running', False))}`",
+        f"- ros_direct_peer_subscription: `{bool(mutual_debug.get('ros_direct_peer_subscription', False))}`",
+        f"- teammate_state_received: `{bool(mutual_debug.get('teammate_state_received', False))}`",
+        f"- teammate_array_length: `{int(mutual_debug.get('teammate_array_length') or 0)}`",
+        f"- extrinsic_array_length: `{int(mutual_debug.get('extrinsic_array_length') or 0)}`",
+        f"- mutual_observation_triggered: `{bool(mutual_debug.get('mutual_observation_triggered', False))}`",
+        f"- global_extrinsic_initialized: `{bool(mutual_debug.get('global_extrinsic_initialized', False))}`",
+        f"- mutual_state_debug_blocker: `{mutual_debug_blocker}`",
         f"- t_swarm_a_b_available: `{swarm_relative_available}`",
         f"- t_loop_a_b_available: `{t_loop_available}`",
         f"- swarm_loop_agreement_gate_pass: `{agreement_accepted}`",
@@ -623,6 +673,14 @@ agreement_log = {
         f"- native_global_extrinsic_has_entries: `{native_global_extrinsic_has_entries}`",
         f"- native_quadstate_has_teammate_entries: `{native_quadstate_has_teammate_entries}`",
         f"- ros2_swarm_relative_transform_rate_hz: `{ros2_relative_rate}`",
+        f"- udp_bridge_running: `{bool(mutual_debug.get('udp_bridge_running', False))}`",
+        f"- ros_direct_peer_subscription: `{bool(mutual_debug.get('ros_direct_peer_subscription', False))}`",
+        f"- teammate_state_received: `{bool(mutual_debug.get('teammate_state_received', False))}`",
+        f"- teammate_array_length: `{int(mutual_debug.get('teammate_array_length') or 0)}`",
+        f"- extrinsic_array_length: `{int(mutual_debug.get('extrinsic_array_length') or 0)}`",
+        f"- mutual_observation_triggered: `{bool(mutual_debug.get('mutual_observation_triggered', False))}`",
+        f"- global_extrinsic_initialized: `{bool(mutual_debug.get('global_extrinsic_initialized', False))}`",
+        f"- mutual_state_debug_blocker: `{mutual_debug_blocker}`",
         f"- t_swarm_a_b_available: `{swarm_relative_available}`",
         f"- t_loop_a_b_available: `{t_loop_available}`",
         f"- swarm_loop_agreement_gate_pass: `{agreement_accepted}`",

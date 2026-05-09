@@ -11,7 +11,7 @@
 - native_swarm_lio2_cloud_body_nonzero_rate: `True`
 - native_swarm_lio2_shadow_output_nonzero_rate: `True`
 - native_mutual_nonzero_rate_topics: `/quadstate_to_teammate,/global_extrinsic_to_teammate`
-- native_mutual_topic_rates: `{'/quadstate_to_teammate': 21.562, '/quadstate_from_teammate': 0.0, '/global_extrinsic_to_teammate': 20.764, '/global_extrinsic_from_teammate': 0.0}`
+- native_mutual_topic_rates: `{'/quadstate_to_teammate': 20.825, '/quadstate_from_teammate': 0.0, '/global_extrinsic_to_teammate': 25.262, '/global_extrinsic_from_teammate': 0.0}`
 - native_global_extrinsic_has_entries: `False`
 - native_global_extrinsic_topics_with_entries: ``
 - native_quadstate_has_teammate_entries: `False`

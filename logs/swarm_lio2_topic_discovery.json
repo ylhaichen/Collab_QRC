@@ -2,33 +2,33 @@
   "blocker": "",
   "candidate_results": [
     {
-      "echo_raw_tail": "  position: \n      x: -0.2001230654416483\n      y: 0.05904498942204395\n      z: 6.317254533365863\n    orientation: \n      x: -0.03190716125787398\n      y: -0.025799953576345794\n      z: -0.00050483645940941\n      w: 0.9991576655343598\n  covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\ntwist: \n  twist: \n    linear: \n      x: -0.03561947177539528\n      y: 0.05082421967877602\n      z: 0.09594724248138346\n    angular: \n      x: 0.0\n      y: 0.0\n      z: 0.0\n  covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\n---",
+      "echo_raw_tail": "sition: \n      x: -0.7388269147128276\n      y: -0.7673235172569243\n      z: 3.6283832095389856\n    orientation: \n      x: -0.0014035403182472849\n      y: -0.011833670215278942\n      z: 0.9239092904726496\n      w: -0.3824259631642918\n  covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\ntwist: \n  twist: \n    linear: \n      x: -0.10539935550181229\n      y: -0.28612485350720634\n      z: -0.18861696848962875\n    angular: \n      x: 0.0\n      y: 0.0\n      z: 0.0\n  covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\n---",
       "echo_received": true,
-      "hz_raw_tail": "subscribed to [/quad1/lidar_slam/odom]\naverage rate: 10.939\n\tmin: 0.072s max: 0.108s std dev: 0.01072s window: 11\naverage rate: 10.858\n\tmin: 0.001s max: 0.179s std dev: 0.02904s window: 22\naverage rate: 10.996\n\tmin: 0.001s max: 0.179s std dev: 0.02462s window: 33\naverage rate: 10.955\n\tmin: 0.001s max: 0.179s std dev: 0.02158s window: 44\naverage rate: 10.945\n\tmin: 0.001s max: 0.179s std dev: 0.01996s window: 52",
-      "info_raw_tail": "Type: nav_msgs/Odometry\n\nPublishers: \n * /laserMapping_quad1 (http://127.0.0.1:43113/)\n\nSubscribers: \n * /swarm_lio2_robot_a_odom_raw (http://127.0.0.1:32903/)",
+      "hz_raw_tail": "subscribed to [/quad1/lidar_slam/odom]\naverage rate: 11.053\n\tmin: 0.002s max: 0.162s std dev: 0.03878s window: 10\naverage rate: 11.000\n\tmin: 0.001s max: 0.274s std dev: 0.05710s window: 21\naverage rate: 11.080\n\tmin: 0.001s max: 0.274s std dev: 0.05083s window: 32\naverage rate: 11.039\n\tmin: 0.001s max: 0.274s std dev: 0.04390s window: 43\naverage rate: 10.997\n\tmin: 0.001s max: 0.274s std dev: 0.04104s window: 50",
+      "info_raw_tail": "Type: nav_msgs/Odometry\n\nPublishers: \n * /laserMapping_quad1 (http://127.0.0.1:42469/)\n\nSubscribers: \n * /swarm_lio2_robot_a_odom_raw (http://127.0.0.1:43073/)",
       "listed": true,
       "publishers": [
-        "/laserMapping_quad1 (http://127.0.0.1:43113/)"
+        "/laserMapping_quad1 (http://127.0.0.1:42469/)"
       ],
-      "rate_hz": 10.939,
+      "rate_hz": 11.053,
       "subscribers": [
-        "/swarm_lio2_robot_a_odom_raw (http://127.0.0.1:32903/)"
+        "/swarm_lio2_robot_a_odom_raw (http://127.0.0.1:43073/)"
       ],
       "topic": "/quad1/lidar_slam/odom",
       "type": "nav_msgs/Odometry"
     },
     {
-      "echo_raw_tail": ": \n    position: \n      x: -73.95148831043859\n      y: -67.02651320872249\n      z: -4.729921991854298\n    orientation: \n      x: 0.04183928552152859\n      y: -0.02591353956758936\n      z: 0.517671212033246\n      w: 0.8541630282833349\n  covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\ntwist: \n  twist: \n    linear: \n      x: 0.042193967285947084\n      y: -1.5238178651168925\n      z: -0.19854406777575517\n    angular: \n      x: 0.0\n      y: 0.0\n      z: 0.0\n  covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\n---",
+      "echo_raw_tail": "e: \n    position: \n      x: -1037.4581819133966\n      y: -127.78976533107368\n      z: -566.9889186555527\n    orientation: \n      x: -0.6629652776360131\n      y: -0.20956528949618702\n      z: 0.6863555364991126\n      w: 0.21324987128811698\n  covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\ntwist: \n  twist: \n    linear: \n      x: -140.3851300227521\n      y: -8.757566126540356\n      z: -95.81247634969762\n    angular: \n      x: 0.0\n      y: 0.0\n      z: 0.0\n  covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\n---",
       "echo_received": true,
-      "hz_raw_tail": "subscribed to [/quad2/lidar_slam/odom]\naverage rate: 7.203\n\tmin: 0.007s max: 0.257s std dev: 0.08166s window: 7\naverage rate: 8.750\n\tmin: 0.005s max: 0.257s std dev: 0.06525s window: 17\naverage rate: 8.831\n\tmin: 0.005s max: 0.257s std dev: 0.05668s window: 26\naverage rate: 9.152\n\tmin: 0.005s max: 0.257s std dev: 0.04996s window: 36\naverage rate: 8.958\n\tmin: 0.005s max: 0.257s std dev: 0.04990s window: 41",
-      "info_raw_tail": "Type: nav_msgs/Odometry\n\nPublishers: \n * /laserMapping_quad2 (http://127.0.0.1:41799/)\n\nSubscribers: \n * /swarm_lio2_robot_b_odom_raw (http://127.0.0.1:34161/)",
+      "hz_raw_tail": "subscribed to [/quad2/lidar_slam/odom]\naverage rate: 9.781\n\tmin: 0.084s max: 0.169s std dev: 0.02426s window: 10\naverage rate: 8.862\n\tmin: 0.076s max: 0.201s std dev: 0.03926s window: 18\naverage rate: 8.599\n\tmin: 0.067s max: 0.257s std dev: 0.05239s window: 26\naverage rate: 8.948\n\tmin: 0.067s max: 0.257s std dev: 0.04684s window: 36\naverage rate: 8.973\n\tmin: 0.067s max: 0.257s std dev: 0.04545s window: 42",
+      "info_raw_tail": "Type: nav_msgs/Odometry\n\nPublishers: \n * /laserMapping_quad2 (http://127.0.0.1:39405/)\n\nSubscribers: \n * /swarm_lio2_robot_b_odom_raw (http://127.0.0.1:35177/)",
       "listed": true,
       "publishers": [
-        "/laserMapping_quad2 (http://127.0.0.1:41799/)"
+        "/laserMapping_quad2 (http://127.0.0.1:39405/)"
       ],
-      "rate_hz": 7.203,
+      "rate_hz": 9.781,
       "subscribers": [
-        "/swarm_lio2_robot_b_odom_raw (http://127.0.0.1:34161/)"
+        "/swarm_lio2_robot_b_odom_raw (http://127.0.0.1:35177/)"
       ],
       "topic": "/quad2/lidar_slam/odom",
       "type": "nav_msgs/Odometry"
@@ -37,12 +37,12 @@
       "echo_raw_tail": "skipped_no_publishers",
       "echo_received": true,
       "hz_raw_tail": "skipped_no_publishers",
-      "info_raw_tail": "Type: nav_msgs/Odometry\n\nPublishers: None\n\nSubscribers: \n * /laserMapping_quad1 (http://127.0.0.1:43113/)",
+      "info_raw_tail": "Type: nav_msgs/Odometry\n\nPublishers: None\n\nSubscribers: \n * /laserMapping_quad1 (http://127.0.0.1:42469/)",
       "listed": true,
       "publishers": [],
       "rate_hz": 0.0,
       "subscribers": [
-        "/laserMapping_quad1 (http://127.0.0.1:43113/)"
+        "/laserMapping_quad1 (http://127.0.0.1:42469/)"
       ],
       "topic": "/quad_1/lidar_slam/odom",
       "type": "nav_msgs/Odometry"
@@ -51,140 +51,140 @@
       "echo_raw_tail": "skipped_no_publishers",
       "echo_received": true,
       "hz_raw_tail": "skipped_no_publishers",
-      "info_raw_tail": "Type: nav_msgs/Odometry\n\nPublishers: None\n\nSubscribers: \n * /laserMapping_quad2 (http://127.0.0.1:41799/)",
+      "info_raw_tail": "Type: nav_msgs/Odometry\n\nPublishers: None\n\nSubscribers: \n * /laserMapping_quad2 (http://127.0.0.1:39405/)",
       "listed": true,
       "publishers": [],
       "rate_hz": 0.0,
       "subscribers": [
-        "/laserMapping_quad2 (http://127.0.0.1:41799/)"
+        "/laserMapping_quad2 (http://127.0.0.1:39405/)"
       ],
       "topic": "/quad_2/lidar_slam/odom",
       "type": "nav_msgs/Odometry"
     },
     {
-      "echo_raw_tail": " 36, 94, 62, 39, 247, 42, 63, 227, 131, 132, 192, 190, 20, 20, 62, 0, 0, 128, 161, 82, 130, 132, 192, 254, 18, 20, 62, 164, 249, 225, 61, 192, 128, 132, 192, 61, 17, 20, 62, 4, 32, 98, 62, 46, 127, 132, 192, 124, 15, 20, 62, 110, 201, 169, 62, 154, 125, 132, 192, 184, 13, 20, 62, 136, 191, 226, 62, 3, 124, 132, 192, 241, 11, 20, 62, 195, 3, 14, 63, 106, 122, 132, 192, 40, 10, 20, 62, 139, 219, 42, 63, 82, 136, 132, 192, 38, 14, 148, 61, 0, 0, 128, 33, 193, 134, 132, 192, 102, 12, 148, 61, 196, 230, 225, 61, 48, 133, 132, 192, 165, 10, 148, 61, 34, 13, 98, 62, 157, 131, 132, 192, 228, 8, 148, 61, 64, 187, 169, 62, 9, 130, 132, 192, 32, 7, 148, 61, 152, 172, 226, 62, 115, 128, 132, 192, 90, 5, 148, 61, 231, 247, 13, 63, 217, 126, 132, 192, 145, 3, 148, 61, 70, 205, 42, 63]\nis_dense: True\n---",
+      "echo_raw_tail": " 42, 169, 203, 60, 178, 189, 156, 61, 74, 197, 20, 192, 246, 62, 166, 61, 0, 0, 148, 33, 33, 196, 20, 192, 171, 61, 166, 61, 2, 179, 125, 61, 248, 194, 20, 192, 95, 60, 166, 61, 30, 223, 253, 61, 135, 71, 219, 190, 119, 9, 117, 60, 47, 127, 12, 61, 163, 192, 20, 192, 196, 57, 166, 61, 69, 148, 126, 62, 118, 191, 20, 192, 115, 56, 166, 61, 181, 114, 159, 62, 71, 190, 20, 192, 33, 55, 166, 61, 178, 213, 191, 62, 249, 92, 19, 192, 122, 159, 36, 61, 0, 0, 70, 33, 214, 91, 19, 192, 53, 158, 36, 61, 46, 47, 123, 61, 178, 90, 19, 192, 240, 156, 36, 61, 223, 90, 251, 61, 142, 89, 19, 192, 169, 155, 36, 61, 221, 187, 60, 62, 105, 88, 19, 192, 97, 154, 36, 61, 68, 14, 124, 62, 66, 87, 19, 192, 24, 153, 36, 61, 30, 222, 157, 62, 25, 86, 19, 192, 204, 151, 36, 61, 240, 238, 189, 62]\nis_dense: True\n---",
       "echo_received": true,
-      "hz_raw_tail": "subscribed to [/quad1_pcl_render_node/sensor_cloud]\naverage rate: 10.816\n\tmin: 0.084s max: 0.107s std dev: 0.00638s window: 11\naverage rate: 10.914\n\tmin: 0.060s max: 0.107s std dev: 0.01045s window: 22\naverage rate: 10.961\n\tmin: 0.060s max: 0.107s std dev: 0.00898s window: 33\naverage rate: 10.992\n\tmin: 0.060s max: 0.107s std dev: 0.00931s window: 44\naverage rate: 10.999\n\tmin: 0.060s max: 0.107s std dev: 0.00933s window: 52",
-      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /robot_a_lidar_to_swarm_lio2 (http://127.0.0.1:34157/)\n\nSubscribers: \n * /laserMapping_quad1 (http://127.0.0.1:43113/)",
+      "hz_raw_tail": "subscribed to [/quad1_pcl_render_node/sensor_cloud]\naverage rate: 10.866\n\tmin: 0.080s max: 0.102s std dev: 0.00815s window: 11\naverage rate: 10.966\n\tmin: 0.075s max: 0.108s std dev: 0.00871s window: 22\naverage rate: 10.981\n\tmin: 0.075s max: 0.108s std dev: 0.00828s window: 33\naverage rate: 10.993\n\tmin: 0.075s max: 0.108s std dev: 0.00796s window: 44\naverage rate: 10.985\n\tmin: 0.068s max: 0.108s std dev: 0.00893s window: 51",
+      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /robot_a_lidar_to_swarm_lio2 (http://127.0.0.1:46577/)\n\nSubscribers: \n * /laserMapping_quad1 (http://127.0.0.1:42469/)",
       "listed": true,
       "publishers": [
-        "/robot_a_lidar_to_swarm_lio2 (http://127.0.0.1:34157/)"
+        "/robot_a_lidar_to_swarm_lio2 (http://127.0.0.1:46577/)"
       ],
-      "rate_hz": 10.816,
+      "rate_hz": 10.866,
       "subscribers": [
-        "/laserMapping_quad1 (http://127.0.0.1:43113/)"
+        "/laserMapping_quad1 (http://127.0.0.1:42469/)"
       ],
       "topic": "/quad1_pcl_render_node/sensor_cloud",
       "type": "sensor_msgs/PointCloud2"
     },
     {
-      "echo_raw_tail": "200, 250, 190, 34, 136, 127, 192, 136, 73, 180, 62, 34, 250, 251, 190, 51, 115, 128, 192, 248, 62, 168, 62, 228, 48, 253, 190, 1, 36, 129, 192, 102, 22, 156, 62, 45, 109, 254, 190, 132, 214, 129, 192, 36, 207, 143, 62, 26, 175, 255, 190, 199, 138, 130, 192, 128, 104, 131, 62, 98, 123, 0, 191, 212, 64, 131, 192, 132, 195, 109, 62, 37, 34, 1, 191, 181, 248, 131, 192, 92, 116, 84, 62, 228, 203, 1, 191, 117, 178, 132, 192, 3, 226, 58, 62, 175, 120, 2, 191, 32, 110, 133, 192, 236, 10, 33, 62, 148, 40, 3, 191, 192, 43, 134, 192, 125, 237, 6, 62, 165, 219, 3, 191, 98, 235, 134, 192, 36, 16, 217, 61, 241, 145, 4, 191, 18, 173, 135, 192, 244, 177, 163, 61, 139, 75, 5, 191, 221, 112, 136, 192, 223, 121, 91, 61, 130, 8, 6, 191, 206, 54, 137, 192, 12, 182, 220, 60, 234, 200, 6, 191]\nis_dense: True\n---",
+      "echo_raw_tail": "211, 146, 69, 62, 218, 202, 94, 191, 145, 48, 51, 60, 107, 220, 218, 189, 135, 132, 97, 191, 179, 97, 53, 60, 170, 172, 117, 189, 41, 74, 100, 191, 114, 156, 55, 60, 149, 88, 73, 188, 90, 32, 103, 191, 132, 228, 57, 60, 122, 143, 21, 61, 34, 12, 106, 191, 243, 61, 60, 60, 59, 179, 177, 61, 24, 19, 109, 191, 63, 173, 62, 60, 65, 46, 14, 62, 150, 59, 112, 191, 129, 55, 65, 60, 133, 209, 69, 62, 17, 18, 95, 191, 8, 104, 179, 59, 14, 31, 219, 189, 117, 205, 97, 191, 133, 154, 181, 59, 97, 248, 117, 189, 217, 148, 100, 191, 169, 214, 183, 59, 103, 151, 73, 188, 222, 108, 103, 191, 45, 32, 186, 59, 184, 190, 21, 61, 141, 90, 106, 191, 29, 123, 188, 59, 18, 236, 177, 61, 131, 99, 109, 191, 254, 235, 190, 59, 82, 92, 14, 62, 28, 142, 112, 191, 236, 119, 193, 59, 120, 18, 70, 62]\nis_dense: True\n---",
       "echo_received": true,
-      "hz_raw_tail": "subscribed to [/quad2_pcl_render_node/sensor_cloud]\naverage rate: 11.040\n\tmin: 0.075s max: 0.117s std dev: 0.01159s window: 9\naverage rate: 10.390\n\tmin: 0.075s max: 0.160s std dev: 0.01787s window: 19\naverage rate: 10.273\n\tmin: 0.075s max: 0.178s std dev: 0.02115s window: 30\naverage rate: 10.199\n\tmin: 0.072s max: 0.184s std dev: 0.02360s window: 40\naverage rate: 10.150\n\tmin: 0.072s max: 0.184s std dev: 0.02426s window: 46",
-      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /robot_b_lidar_to_swarm_lio2 (http://127.0.0.1:45885/)\n\nSubscribers: \n * /laserMapping_quad2 (http://127.0.0.1:41799/)",
+      "hz_raw_tail": "subscribed to [/quad2_pcl_render_node/sensor_cloud]\naverage rate: 8.727\n\tmin: 0.068s max: 0.186s std dev: 0.03542s window: 9\naverage rate: 9.425\n\tmin: 0.068s max: 0.186s std dev: 0.02827s window: 19\naverage rate: 9.622\n\tmin: 0.068s max: 0.186s std dev: 0.02676s window: 29\naverage rate: 9.462\n\tmin: 0.068s max: 0.197s std dev: 0.03014s window: 38\naverage rate: 9.455\n\tmin: 0.068s max: 0.197s std dev: 0.02964s window: 44",
+      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /robot_b_lidar_to_swarm_lio2 (http://127.0.0.1:45291/)\n\nSubscribers: \n * /laserMapping_quad2 (http://127.0.0.1:39405/)",
       "listed": true,
       "publishers": [
-        "/robot_b_lidar_to_swarm_lio2 (http://127.0.0.1:45885/)"
+        "/robot_b_lidar_to_swarm_lio2 (http://127.0.0.1:45291/)"
       ],
-      "rate_hz": 11.04,
+      "rate_hz": 8.727,
       "subscribers": [
-        "/laserMapping_quad2 (http://127.0.0.1:41799/)"
+        "/laserMapping_quad2 (http://127.0.0.1:39405/)"
       ],
       "topic": "/quad2_pcl_render_node/sensor_cloud",
       "type": "sensor_msgs/PointCloud2"
     },
     {
-      "echo_raw_tail": "header: \n  seq: 9527\n  stamp: \n    secs: 114\n    nsecs: 697999999\n  frame_id: \"imu\"\norientation: \n  x: 0.0\n  y: 0.0\n  z: 0.0\n  w: 1.0\norientation_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\nangular_velocity: \n  x: 1.1767920299404097e-06\n  y: -0.004840249490097976\n  z: 2.9278639553945185e-07\nangular_velocity_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\nlinear_acceleration: \n  x: -0.10146277275070778\n  y: 1.487055644544428e-05\n  z: 8.894927167892742\nlinear_acceleration_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\n---",
+      "echo_raw_tail": "header: \n  seq: 11299\n  stamp: \n    secs: 137\n    nsecs: 153999999\n  frame_id: \"imu\"\norientation: \n  x: 0.0\n  y: 0.0\n  z: 0.0\n  w: 1.0\norientation_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\nangular_velocity: \n  x: 0.00012459880649196432\n  y: -0.0028510879528603978\n  z: -0.0004069667513871916\nangular_velocity_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\nlinear_acceleration: \n  x: 0.011796487858665964\n  y: -0.007175368650569405\n  z: 8.192036857621368\nlinear_acceleration_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\n---",
       "echo_received": true,
-      "hz_raw_tail": "subscribed to [/quad_1/imu]\naverage rate: 84.965\n\tmin: 0.000s max: 0.092s std dev: 0.02498s window: 71\naverage rate: 58.395\n\tmin: 0.000s max: 0.185s std dev: 0.03538s window: 108\naverage rate: 61.021\n\tmin: 0.000s max: 0.185s std dev: 0.03332s window: 178\naverage rate: 61.457\n\tmin: 0.000s max: 0.185s std dev: 0.03257s window: 236\naverage rate: 59.103\n\tmin: 0.000s max: 0.185s std dev: 0.03278s window: 270",
-      "info_raw_tail": "Type: sensor_msgs/Imu\n\nPublishers: \n * /robot_a_imu_to_swarm_lio2 (http://127.0.0.1:35693/)\n\nSubscribers: \n * /laserMapping_quad1 (http://127.0.0.1:43113/)",
+      "hz_raw_tail": "subscribed to [/quad_1/imu]\naverage rate: 67.384\n\tmin: 0.000s max: 0.093s std dev: 0.02887s window: 63\naverage rate: 59.567\n\tmin: 0.000s max: 0.179s std dev: 0.03280s window: 110\naverage rate: 53.416\n\tmin: 0.000s max: 0.179s std dev: 0.03612s window: 157\naverage rate: 61.204\n\tmin: 0.000s max: 0.179s std dev: 0.03401s window: 241\naverage rate: 60.989\n\tmin: 0.000s max: 0.180s std dev: 0.03435s window: 279",
+      "info_raw_tail": "Type: sensor_msgs/Imu\n\nPublishers: \n * /robot_a_imu_to_swarm_lio2 (http://127.0.0.1:45305/)\n\nSubscribers: \n * /laserMapping_quad1 (http://127.0.0.1:42469/)",
       "listed": true,
       "publishers": [
-        "/robot_a_imu_to_swarm_lio2 (http://127.0.0.1:35693/)"
+        "/robot_a_imu_to_swarm_lio2 (http://127.0.0.1:45305/)"
       ],
-      "rate_hz": 84.965,
+      "rate_hz": 67.384,
       "subscribers": [
-        "/laserMapping_quad1 (http://127.0.0.1:43113/)"
+        "/laserMapping_quad1 (http://127.0.0.1:42469/)"
       ],
       "topic": "/quad_1/imu",
       "type": "sensor_msgs/Imu"
     },
     {
-      "echo_raw_tail": "header: \n  seq: 9858\n  stamp: \n    secs: 119\n    nsecs: 611999999\n  frame_id: \"b_imu\"\norientation: \n  x: 0.0\n  y: 0.0\n  z: 0.0\n  w: 1.0\norientation_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\nangular_velocity: \n  x: 0.0002504118791448467\n  y: 0.015265090242608725\n  z: 4.6046596348223515e-05\nangular_velocity_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\nlinear_acceleration: \n  x: 0.010651636754340759\n  y: 0.0021058030426158213\n  z: 10.438881590804888\nlinear_acceleration_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\n---",
+      "echo_raw_tail": "header: \n  seq: 11729\n  stamp: \n    secs: 141\n    nsecs: 915999999\n  frame_id: \"b_imu\"\norientation: \n  x: 0.0\n  y: 0.0\n  z: 0.0\n  w: 1.0\norientation_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\nangular_velocity: \n  x: 3.924653790212659e-06\n  y: -0.013123885323160797\n  z: -8.955656260113548e-06\nangular_velocity_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\nlinear_acceleration: \n  x: 0.13067436635899116\n  y: -0.00029927710786455916\n  z: 10.866288180154264\nlinear_acceleration_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\n---",
       "echo_received": true,
-      "hz_raw_tail": "subscribed to [/quad_2/imu]\naverage rate: 38.270\n\tmin: 0.001s max: 0.090s std dev: 0.03692s window: 36\naverage rate: 50.446\n\tmin: 0.001s max: 0.091s std dev: 0.03297s window: 93\naverage rate: 44.597\n\tmin: 0.001s max: 0.279s std dev: 0.04435s window: 131\naverage rate: 42.647\n\tmin: 0.001s max: 0.279s std dev: 0.04282s window: 168\naverage rate: 43.065\n\tmin: 0.000s max: 0.279s std dev: 0.04271s window: 197",
-      "info_raw_tail": "Type: sensor_msgs/Imu\n\nPublishers: \n * /robot_b_imu_to_swarm_lio2 (http://127.0.0.1:41501/)\n\nSubscribers: \n * /laserMapping_quad2 (http://127.0.0.1:41799/)",
+      "hz_raw_tail": "subscribed to [/quad_2/imu]\naverage rate: 63.166\n\tmin: 0.000s max: 0.185s std dev: 0.03804s window: 59\naverage rate: 72.697\n\tmin: 0.000s max: 0.185s std dev: 0.03164s window: 140\naverage rate: 62.670\n\tmin: 0.000s max: 0.212s std dev: 0.03846s window: 184\naverage rate: 71.179\n\tmin: 0.000s max: 0.212s std dev: 0.03596s window: 280\naverage rate: 68.561\n\tmin: 0.000s max: 0.212s std dev: 0.03646s window: 314",
+      "info_raw_tail": "Type: sensor_msgs/Imu\n\nPublishers: \n * /robot_b_imu_to_swarm_lio2 (http://127.0.0.1:42273/)\n\nSubscribers: \n * /laserMapping_quad2 (http://127.0.0.1:39405/)",
       "listed": true,
       "publishers": [
-        "/robot_b_imu_to_swarm_lio2 (http://127.0.0.1:41501/)"
+        "/robot_b_imu_to_swarm_lio2 (http://127.0.0.1:42273/)"
       ],
-      "rate_hz": 38.27,
+      "rate_hz": 63.166,
       "subscribers": [
-        "/laserMapping_quad2 (http://127.0.0.1:41799/)"
+        "/laserMapping_quad2 (http://127.0.0.1:39405/)"
       ],
       "topic": "/quad_2/imu",
       "type": "sensor_msgs/Imu"
     },
     {
-      "echo_raw_tail": "0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 208, 8, 0, 232, 209, 117, 0, 0, 77, 32, 155, 63, 247, 64, 248, 191, 0, 0, 128, 32, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 208, 8, 0, 232, 209, 117, 0, 0, 154, 130, 132, 192, 222, 233, 18, 166, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 208, 8, 0, 232, 209, 117, 0, 0, 149, 35, 149, 63, 126, 53, 248, 191, 0, 0, 128, 160, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 208, 8, 0, 232, 209, 117, 0, 0, 48, 71, 143, 63, 55, 42, 248, 191, 149, 125, 55, 62, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 208, 8, 0, 232, 209, 117, 0, 0]\nis_dense: True\n---",
+      "echo_raw_tail": " 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 208, 8, 0, 172, 91, 113, 0, 0, 148, 190, 47, 64, 100, 226, 35, 192, 30, 198, 204, 61, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 208, 8, 0, 172, 91, 113, 0, 0, 227, 218, 47, 64, 60, 210, 41, 192, 147, 140, 29, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 208, 8, 0, 172, 91, 113, 0, 0, 53, 160, 47, 64, 145, 153, 41, 192, 242, 85, 156, 62, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 208, 8, 0, 172, 91, 113, 0, 0, 109, 102, 47, 64, 197, 97, 41, 192, 0, 0, 128, 163, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 208, 8, 0, 172, 91, 113, 0, 0]\nis_dense: True\n---",
       "echo_received": true,
-      "hz_raw_tail": "subscribed to [/quad1/cloud_registered_body]\naverage rate: 11.037\n\tmin: 0.077s max: 0.101s std dev: 0.00702s window: 11\naverage rate: 11.053\n\tmin: 0.073s max: 0.102s std dev: 0.00741s window: 22\naverage rate: 10.917\n\tmin: 0.073s max: 0.121s std dev: 0.00884s window: 33\naverage rate: 11.020\n\tmin: 0.071s max: 0.121s std dev: 0.00929s window: 44\naverage rate: 11.021\n\tmin: 0.071s max: 0.121s std dev: 0.00922s window: 52",
-      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /laserMapping_quad1 (http://127.0.0.1:43113/)\n\nSubscribers: \n * /swarm_lio2_robot_a_static_raw (http://127.0.0.1:40635/)",
+      "hz_raw_tail": "subscribed to [/quad1/cloud_registered_body]\naverage rate: 11.196\n\tmin: 0.076s max: 0.110s std dev: 0.01010s window: 11\naverage rate: 10.680\n\tmin: 0.076s max: 0.124s std dev: 0.01226s window: 22\naverage rate: 10.979\n\tmin: 0.034s max: 0.161s std dev: 0.02162s window: 33\naverage rate: 10.974\n\tmin: 0.034s max: 0.161s std dev: 0.01927s window: 44\naverage rate: 10.894\n\tmin: 0.034s max: 0.161s std dev: 0.01858s window: 51",
+      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /laserMapping_quad1 (http://127.0.0.1:42469/)\n\nSubscribers: \n * /swarm_lio2_robot_a_static_raw (http://127.0.0.1:39317/)",
       "listed": true,
       "publishers": [
-        "/laserMapping_quad1 (http://127.0.0.1:43113/)"
+        "/laserMapping_quad1 (http://127.0.0.1:42469/)"
       ],
-      "rate_hz": 11.037,
+      "rate_hz": 11.196,
       "subscribers": [
-        "/swarm_lio2_robot_a_static_raw (http://127.0.0.1:40635/)"
+        "/swarm_lio2_robot_a_static_raw (http://127.0.0.1:39317/)"
       ],
       "topic": "/quad1/cloud_registered_body",
       "type": "sensor_msgs/PointCloud2"
     },
     {
-      "echo_raw_tail": ", 93, 62, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 175, 213, 63, 81, 113, 137, 192, 158, 11, 130, 189, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 238, 159, 237, 62, 133, 187, 155, 191, 59, 3, 43, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 109, 15, 245, 62, 4, 155, 160, 191, 98, 80, 221, 62, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 141, 103, 1, 64, 183, 157, 169, 192, 232, 186, 89, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]\nis_dense: True\n---",
+      "echo_raw_tail": "219, 189, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 29, 227, 10, 64, 51, 51, 145, 192, 167, 98, 244, 62, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 25, 174, 137, 63, 35, 240, 15, 192, 201, 204, 45, 190, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 170, 43, 10, 64, 78, 208, 146, 192, 172, 93, 246, 62, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 166, 239, 136, 63, 134, 128, 17, 192, 96, 42, 47, 190, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]\nis_dense: True\n---",
       "echo_received": true,
-      "hz_raw_tail": "subscribed to [/quad2/cloud_registered_body]\naverage rate: 9.816\n\tmin: 0.003s max: 0.263s std dev: 0.07597s window: 10\naverage rate: 9.989\n\tmin: 0.003s max: 0.263s std dev: 0.05612s window: 20\naverage rate: 9.960\n\tmin: 0.003s max: 0.266s std dev: 0.05795s window: 30\naverage rate: 9.723\n\tmin: 0.003s max: 0.266s std dev: 0.05424s window: 39\naverage rate: 9.850\n\tmin: 0.003s max: 0.266s std dev: 0.05055s window: 45",
-      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /laserMapping_quad2 (http://127.0.0.1:41799/)\n\nSubscribers: \n * /swarm_lio2_robot_b_static_raw (http://127.0.0.1:40119/)",
+      "hz_raw_tail": "subscribed to [/quad2/cloud_registered_body]\naverage rate: 8.633\n\tmin: 0.088s max: 0.181s std dev: 0.03077s window: 9\naverage rate: 8.406\n\tmin: 0.088s max: 0.185s std dev: 0.03526s window: 16\naverage rate: 8.076\n\tmin: 0.084s max: 0.237s std dev: 0.04514s window: 24\naverage rate: 7.892\n\tmin: 0.004s max: 0.237s std dev: 0.05001s window: 32\naverage rate: 7.792\n\tmin: 0.004s max: 0.237s std dev: 0.05018s window: 36",
+      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /laserMapping_quad2 (http://127.0.0.1:39405/)\n\nSubscribers: \n * /swarm_lio2_robot_b_static_raw (http://127.0.0.1:33451/)",
       "listed": true,
       "publishers": [
-        "/laserMapping_quad2 (http://127.0.0.1:41799/)"
+        "/laserMapping_quad2 (http://127.0.0.1:39405/)"
       ],
-      "rate_hz": 9.816,
+      "rate_hz": 8.633,
       "subscribers": [
-        "/swarm_lio2_robot_b_static_raw (http://127.0.0.1:40119/)"
+        "/swarm_lio2_robot_b_static_raw (http://127.0.0.1:33451/)"
       ],
       "topic": "/quad2/cloud_registered_body",
       "type": "sensor_msgs/PointCloud2"
     },
     {
-      "echo_raw_tail": " 213, 64, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 84, 101, 64, 211, 208, 193, 64, 31, 219, 214, 64, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 21, 147, 131, 64, 138, 190, 193, 64, 19, 139, 216, 64, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 54, 98, 243, 64, 70, 57, 188, 64, 130, 189, 220, 64, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 131, 40, 29, 192, 108, 22, 195, 64, 239, 136, 202, 64, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]\nis_dense: True\n---",
+      "echo_raw_tail": ", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 33, 83, 178, 64, 0, 0, 128, 63, 100, 94, 125, 192, 125, 204, 138, 64, 243, 106, 219, 64, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 137, 11, 177, 64, 0, 0, 128, 63, 229, 88, 20, 64, 213, 140, 195, 64, 194, 12, 198, 64, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 171, 57, 186, 64, 0, 0, 128, 63, 112, 208, 54, 64, 172, 154, 195, 64, 202, 177, 196, 64, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 211, 43, 168, 64, 0, 0, 128, 63, 148, 13, 82, 64, 73, 166, 195, 64, 83, 175, 195, 64, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 91, 155, 168, 64, 0, 0, 128, 63]\nis_dense: True\n---",
       "echo_received": true,
-      "hz_raw_tail": "subscribed to [/quad1/cloud_registered]\naverage rate: 10.851\n\tmin: 0.087s max: 0.102s std dev: 0.00475s window: 11\naverage rate: 10.954\n\tmin: 0.079s max: 0.102s std dev: 0.00553s window: 22\naverage rate: 10.950\n\tmin: 0.079s max: 0.105s std dev: 0.00555s window: 33\naverage rate: 10.946\n\tmin: 0.069s max: 0.118s std dev: 0.00787s window: 44\naverage rate: 10.964\n\tmin: 0.001s max: 0.184s std dev: 0.01985s window: 51",
-      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /laserMapping_quad1 (http://127.0.0.1:43113/)\n\nSubscribers: \n * /swarm_lio2_robot_a_map_raw (http://127.0.0.1:37541/)",
+      "hz_raw_tail": "subscribed to [/quad1/cloud_registered]\naverage rate: 11.192\n\tmin: 0.074s max: 0.115s std dev: 0.01128s window: 11\naverage rate: 11.055\n\tmin: 0.039s max: 0.165s std dev: 0.02563s window: 23\naverage rate: 11.027\n\tmin: 0.039s max: 0.165s std dev: 0.02172s window: 34\naverage rate: 11.016\n\tmin: 0.039s max: 0.165s std dev: 0.01942s window: 45\naverage rate: 11.041\n\tmin: 0.039s max: 0.165s std dev: 0.01915s window: 52",
+      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /laserMapping_quad1 (http://127.0.0.1:42469/)\n\nSubscribers: \n * /swarm_lio2_robot_a_map_raw (http://127.0.0.1:36401/)",
       "listed": true,
       "publishers": [
-        "/laserMapping_quad1 (http://127.0.0.1:43113/)"
+        "/laserMapping_quad1 (http://127.0.0.1:42469/)"
       ],
-      "rate_hz": 10.851,
+      "rate_hz": 11.192,
       "subscribers": [
-        "/swarm_lio2_robot_a_map_raw (http://127.0.0.1:37541/)"
+        "/swarm_lio2_robot_a_map_raw (http://127.0.0.1:36401/)"
       ],
       "topic": "/quad1/cloud_registered",
       "type": "sensor_msgs/PointCloud2"
     },
     {
-      "echo_raw_tail": "0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 80, 210, 106, 192, 73, 117, 0, 0, 120, 149, 82, 194, 173, 218, 191, 194, 183, 236, 228, 192, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0, 0, 7, 0, 0, 0, 190, 94, 81, 194, 222, 91, 191, 194, 190, 214, 227, 192, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 146, 124, 80, 194, 57, 255, 190, 194, 251, 214, 226, 192, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 13, 0, 0, 0, 122, 53, 79, 194, 212, 120, 190, 194, 71, 36, 225, 192, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0, 0, 7, 0, 0, 0]\nis_dense: True\n---",
+      "echo_raw_tail": " 0, 0, 0, 0, 0, 0, 0, 0, 0, 137, 181, 119, 178, 97, 13, 240, 190, 206, 240, 131, 198, 159, 101, 70, 69, 70, 15, 131, 198, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 102, 60, 192, 58, 210, 100, 30, 63, 220, 236, 131, 198, 20, 115, 70, 69, 50, 17, 131, 198, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 247, 133, 43, 173, 23, 213, 148, 63, 189, 236, 131, 198, 145, 115, 70, 69, 99, 16, 131, 198, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 212, 77, 223, 246, 1, 53, 237, 190, 107, 236, 131, 198, 66, 110, 70, 69, 233, 15, 131, 198, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 80, 115, 41, 163, 203, 155, 32, 63]\nis_dense: True\n---",
       "echo_received": true,
-      "hz_raw_tail": "subscribed to [/quad2/cloud_registered]\naverage rate: 9.924\n\tmin: 0.076s max: 0.181s std dev: 0.02926s window: 10\naverage rate: 10.014\n\tmin: 0.075s max: 0.181s std dev: 0.02772s window: 20\naverage rate: 9.936\n\tmin: 0.075s max: 0.181s std dev: 0.02725s window: 29\naverage rate: 9.754\n\tmin: 0.072s max: 0.184s std dev: 0.02995s window: 39\naverage rate: 9.901\n\tmin: 0.072s max: 0.184s std dev: 0.02795s window: 46",
-      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /laserMapping_quad2 (http://127.0.0.1:41799/)\n\nSubscribers: \n * /swarm_lio2_robot_b_map_raw (http://127.0.0.1:44151/)",
+      "hz_raw_tail": "subscribed to [/quad2/cloud_registered]\naverage rate: 8.876\n\tmin: 0.082s max: 0.166s std dev: 0.03148s window: 9\naverage rate: 9.408\n\tmin: 0.041s max: 0.169s std dev: 0.03381s window: 19\naverage rate: 9.866\n\tmin: 0.041s max: 0.169s std dev: 0.02880s window: 28\naverage rate: 9.456\n\tmin: 0.041s max: 0.264s std dev: 0.03822s window: 38\naverage rate: 9.469\n\tmin: 0.041s max: 0.264s std dev: 0.03721s window: 44",
+      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /laserMapping_quad2 (http://127.0.0.1:39405/)\n\nSubscribers: \n * /swarm_lio2_robot_b_map_raw (http://127.0.0.1:45149/)",
       "listed": true,
       "publishers": [
-        "/laserMapping_quad2 (http://127.0.0.1:41799/)"
+        "/laserMapping_quad2 (http://127.0.0.1:39405/)"
       ],
-      "rate_hz": 9.924,
+      "rate_hz": 8.876,
       "subscribers": [
-        "/swarm_lio2_robot_b_map_raw (http://127.0.0.1:44151/)"
+        "/swarm_lio2_robot_b_map_raw (http://127.0.0.1:45149/)"
       ],
       "topic": "/quad2/cloud_registered",
       "type": "sensor_msgs/PointCloud2"
@@ -193,10 +193,10 @@
       "echo_raw_tail": "",
       "echo_received": false,
       "hz_raw_tail": "subscribed to [/quad1/downsampled_map]\nno new messages\nno new messages\nno new messages\nno new messages\nno new messages",
-      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /laserMapping_quad1 (http://127.0.0.1:43113/)\n\nSubscribers: None",
+      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /laserMapping_quad1 (http://127.0.0.1:42469/)\n\nSubscribers: None",
       "listed": true,
       "publishers": [
-        "/laserMapping_quad1 (http://127.0.0.1:43113/)"
+        "/laserMapping_quad1 (http://127.0.0.1:42469/)"
       ],
       "rate_hz": 0.0,
       "subscribers": [],
@@ -207,10 +207,10 @@
       "echo_raw_tail": "",
       "echo_received": false,
       "hz_raw_tail": "subscribed to [/quad2/downsampled_map]\nno new messages\nno new messages\nno new messages\nno new messages\nno new messages",
-      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /laserMapping_quad2 (http://127.0.0.1:41799/)\n\nSubscribers: None",
+      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /laserMapping_quad2 (http://127.0.0.1:39405/)\n\nSubscribers: None",
       "listed": true,
       "publishers": [
-        "/laserMapping_quad2 (http://127.0.0.1:41799/)"
+        "/laserMapping_quad2 (http://127.0.0.1:39405/)"
       ],
       "rate_hz": 0.0,
       "subscribers": [],
@@ -218,47 +218,47 @@
       "type": "sensor_msgs/PointCloud2"
     },
     {
-      "echo_raw_tail": "   w: 0.9986577431950432\n  - \n    header: \n      seq: 0\n      stamp: \n        secs: 151\n        nsecs: 455999999\n      frame_id: \"quad1/world\"\n    pose: \n      position: \n        x: -0.20991907275881638\n        y: 0.07149876451641263\n        z: 6.416521511037395\n      orientation: \n        x: -0.039112893634290304\n        y: -0.02990271747752898\n        z: -0.001064721573333508\n        w: 0.9987867016570571\n  - \n    header: \n      seq: 0\n      stamp: \n        secs: 151\n        nsecs: 485999999\n      frame_id: \"quad1/world\"\n    pose: \n      position: \n        x: -0.21054678767828863\n        y: 0.07121967993911273\n        z: 6.42257280855627\n      orientation: \n        x: -0.04067116932749522\n        y: -0.029798006840696976\n        z: -0.0013951750526822405\n        w: 0.9987271841000566\n---",
+      "echo_raw_tail": "5062060805774\n        w: 0.4650751613121849\n  - \n    header: \n      seq: 0\n      stamp: \n        secs: 195\n        nsecs: 214000000\n      frame_id: \"quad1/world\"\n    pose: \n      position: \n        x: 0.1259662059667706\n        y: 2.7680814824351514\n        z: 4.041693093930668\n      orientation: \n        x: 0.0473325526975713\n        y: -0.05224539838568207\n        z: 0.8774496207134931\n        w: 0.47445991496901\n  - \n    header: \n      seq: 0\n      stamp: \n        secs: 195\n        nsecs: 328000000\n      frame_id: \"quad1/world\"\n    pose: \n      position: \n        x: 0.0942818108390217\n        y: 2.83242807373196\n        z: 3.986574962263748\n      orientation: \n        x: -0.013814058200855272\n        y: -0.03381368881831095\n        z: 0.8791310552540588\n        w: 0.4751782759474664\n---",
       "echo_received": true,
-      "hz_raw_tail": "subscribed to [/quad1/path]\naverage rate: 13.589\n\tmin: 0.000s max: 0.211s std dev: 0.06688s window: 12\naverage rate: 12.700\n\tmin: 0.000s max: 0.211s std dev: 0.05583s window: 24\naverage rate: 12.495\n\tmin: 0.000s max: 0.211s std dev: 0.04769s window: 36\naverage rate: 12.344\n\tmin: 0.000s max: 0.211s std dev: 0.04331s window: 48\naverage rate: 12.365\n\tmin: 0.000s max: 0.211s std dev: 0.04168s window: 56",
-      "info_raw_tail": "Type: nav_msgs/Path\n\nPublishers: \n * /laserMapping_quad1 (http://127.0.0.1:43113/)\n\nSubscribers: None",
+      "hz_raw_tail": "subscribed to [/quad1/path]\naverage rate: 12.874\n\tmin: 0.000s max: 0.167s std dev: 0.04674s window: 12\naverage rate: 12.387\n\tmin: 0.000s max: 0.167s std dev: 0.03759s window: 24\naverage rate: 12.239\n\tmin: 0.000s max: 0.167s std dev: 0.03422s window: 36\naverage rate: 12.164\n\tmin: 0.000s max: 0.167s std dev: 0.03270s window: 48\naverage rate: 12.199\n\tmin: 0.000s max: 0.167s std dev: 0.03250s window: 56",
+      "info_raw_tail": "Type: nav_msgs/Path\n\nPublishers: \n * /laserMapping_quad1 (http://127.0.0.1:42469/)\n\nSubscribers: None",
       "listed": true,
       "publishers": [
-        "/laserMapping_quad1 (http://127.0.0.1:43113/)"
+        "/laserMapping_quad1 (http://127.0.0.1:42469/)"
       ],
-      "rate_hz": 13.589,
+      "rate_hz": 12.874,
       "subscribers": [],
       "topic": "/quad1/path",
       "type": "nav_msgs/Path"
     },
     {
-      "echo_raw_tail": "1\n        w: 0.04343424182522815\n  - \n    header: \n      seq: 0\n      stamp: \n        secs: 155\n        nsecs: 118000000\n      frame_id: \"quad2/world\"\n    pose: \n      position: \n        x: -55.24780425264022\n        y: -32.6256470260727\n        z: -7.069678394324996\n      orientation: \n        x: 0.005862221533954544\n        y: -0.09723666056596778\n        z: 0.9942753179651453\n        w: 0.04390054995071019\n  - \n    header: \n      seq: 0\n      stamp: \n        secs: 155\n        nsecs: 178000000\n      frame_id: \"quad2/world\"\n    pose: \n      position: \n        x: -54.938891583198156\n        y: -32.467917499375375\n        z: -7.077033844470853\n      orientation: \n        x: 0.0012686864848231493\n        y: -0.10437304869996537\n        z: 0.9926112990870984\n        w: 0.06186651812006829\n---",
+      "echo_raw_tail": "736\n        w: -0.3538892485148807\n  - \n    header: \n      seq: 0\n      stamp: \n        secs: 200\n        nsecs: 364000000\n      frame_id: \"quad2/world\"\n    pose: \n      position: \n        x: -39581.632705744014\n        y: 18307.431188172715\n        z: -45322.89893416363\n      orientation: \n        x: -0.21131966152492374\n        y: 0.19871718983169603\n        z: 0.8892555989749714\n        w: -0.3536664513493616\n  - \n    header: \n      seq: 0\n      stamp: \n        secs: 200\n        nsecs: 484000000\n      frame_id: \"quad2/world\"\n    pose: \n      position: \n        x: -39660.930707360225\n        y: 18366.656391468365\n        z: -45417.1451465033\n      orientation: \n        x: -0.21340818536104084\n        y: 0.19732813365798457\n        z: 0.8897813228436298\n        w: -0.35186325697151766\n---",
       "echo_received": true,
-      "hz_raw_tail": "subscribed to [/quad2/path]\naverage rate: 12.244\n\tmin: 0.000s max: 0.100s std dev: 0.02973s window: 10\naverage rate: 10.904\n\tmin: 0.000s max: 0.258s std dev: 0.05645s window: 21\naverage rate: 10.583\n\tmin: 0.000s max: 0.258s std dev: 0.05390s window: 31\naverage rate: 10.439\n\tmin: 0.000s max: 0.258s std dev: 0.05197s window: 41\naverage rate: 9.898\n\tmin: 0.000s max: 0.258s std dev: 0.05410s window: 46",
-      "info_raw_tail": "Type: nav_msgs/Path\n\nPublishers: \n * /laserMapping_quad2 (http://127.0.0.1:41799/)\n\nSubscribers: None",
+      "hz_raw_tail": "subscribed to [/quad2/path]\naverage rate: 11.080\n\tmin: 0.000s max: 0.160s std dev: 0.03704s window: 11\naverage rate: 11.045\n\tmin: 0.000s max: 0.166s std dev: 0.03729s window: 21\naverage rate: 11.037\n\tmin: 0.000s max: 0.170s std dev: 0.04178s window: 33\naverage rate: 11.033\n\tmin: 0.000s max: 0.188s std dev: 0.04149s window: 44\naverage rate: 10.998\n\tmin: 0.000s max: 0.188s std dev: 0.04284s window: 50",
+      "info_raw_tail": "Type: nav_msgs/Path\n\nPublishers: \n * /laserMapping_quad2 (http://127.0.0.1:39405/)\n\nSubscribers: None",
       "listed": true,
       "publishers": [
-        "/laserMapping_quad2 (http://127.0.0.1:41799/)"
+        "/laserMapping_quad2 (http://127.0.0.1:39405/)"
       ],
-      "rate_hz": 12.244,
+      "rate_hz": 11.08,
       "subscribers": [],
       "topic": "/quad2/path",
       "type": "nav_msgs/Path"
     },
     {
-      "echo_raw_tail": ": ''\n  pose: \n    position: \n      x: -0.1998106518986497\n      y: 0.07117028166422214\n      z: 6.41832065618678\n    orientation: \n      x: -0.03931500462423599\n      y: -0.036312257426402345\n      z: -0.0009374357025503307\n      w: 0.9985664082004254\npose_cov: [2.4560034944443032e-05, 1.9389792669244343e-06, 7.912461228443135e-07, 2.497881905583199e-05, 7.242069273161178e-07, 5.679984269590932e-07, 4.810103746422101e-06, -1.0028758197222487e-06, -3.5270459193270653e-06, 3.9232272683875635e-06, 4.20570859205327e-06, 5.2844676247332245e-05]\ngyr: [-0.0005651747924275696, -0.01853279210627079, -6.606775423279032e-05]\nvel: [-0.02700350433588028, 0.027460696175694466, 0.035317715257406235]\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nswarmlio_start_time: 5.393999999\ndegenerated: True\nteammate: []\n---",
+      "echo_raw_tail": "frame_id: ''\n  pose: \n    position: \n      x: -0.613445571451407\n      y: 4.4995805734630245\n      z: 3.86220599535106\n    orientation: \n      x: -0.009942919684092418\n      y: 0.003284666688206016\n      z: 0.06801291797996066\n      w: 0.9976294864832104\npose_cov: [9.45022766245529e-05, -9.297680662712082e-06, 3.4145709832955617e-06, 0.00010369178926339373, 3.6716594422614435e-06, 1.6887925085029565e-06, 1.5410658306791447e-05, 1.6965761915344046e-06, -2.5045726488315267e-06, 1.2611003512574825e-05, -8.491469998261891e-06, 0.00012533202243503183]\ngyr: [-0.19362233579158783, 0.36558666825294495, -1.015998125076294]\nvel: [0.038213007152080536, -0.25844812393188477, -0.23898355662822723]\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nswarmlio_start_time: 5.485999999\ndegenerated: True\nteammate: []\n---",
       "echo_received": true,
-      "hz_raw_tail": "subscribed to [/quadstate_to_teammate]\naverage rate: 21.562\n\tmin: 0.005s max: 0.105s std dev: 0.03958s window: 21\naverage rate: 21.354\n\tmin: 0.000s max: 0.105s std dev: 0.03974s window: 42\naverage rate: 20.544\n\tmin: 0.000s max: 0.196s std dev: 0.04685s window: 61\naverage rate: 20.391\n\tmin: 0.000s max: 0.196s std dev: 0.04503s window: 81\naverage rate: 20.178\n\tmin: 0.000s max: 0.196s std dev: 0.04412s window: 93",
-      "info_raw_tail": "Type: swarm_msgs/QuadStatePub\n\nPublishers: \n * /laserMapping_quad1 (http://127.0.0.1:43113/)\n * /laserMapping_quad2 (http://127.0.0.1:41799/)\n\nSubscribers: \n * /laserMapping_quad1 (http://127.0.0.1:43113/)\n * /laserMapping_quad2 (http://127.0.0.1:41799/)",
+      "hz_raw_tail": "subscribed to [/quadstate_to_teammate]\naverage rate: 20.825\n\tmin: 0.002s max: 0.098s std dev: 0.03835s window: 20\naverage rate: 20.234\n\tmin: 0.000s max: 0.181s std dev: 0.04407s window: 40\naverage rate: 19.873\n\tmin: 0.000s max: 0.181s std dev: 0.04290s window: 59\naverage rate: 19.523\n\tmin: 0.000s max: 0.181s std dev: 0.04287s window: 78\naverage rate: 19.781\n\tmin: 0.000s max: 0.181s std dev: 0.04210s window: 91",
+      "info_raw_tail": "Type: swarm_msgs/QuadStatePub\n\nPublishers: \n * /laserMapping_quad1 (http://127.0.0.1:42469/)\n * /laserMapping_quad2 (http://127.0.0.1:39405/)\n\nSubscribers: \n * /laserMapping_quad1 (http://127.0.0.1:42469/)\n * /laserMapping_quad2 (http://127.0.0.1:39405/)",
       "listed": true,
       "publishers": [
-        "/laserMapping_quad1 (http://127.0.0.1:43113/)",
-        "/laserMapping_quad2 (http://127.0.0.1:41799/)"
+        "/laserMapping_quad1 (http://127.0.0.1:42469/)",
+        "/laserMapping_quad2 (http://127.0.0.1:39405/)"
       ],
-      "rate_hz": 21.562,
+      "rate_hz": 20.825,
       "subscribers": [
-        "/laserMapping_quad1 (http://127.0.0.1:43113/)",
-        "/laserMapping_quad2 (http://127.0.0.1:41799/)"
+        "/laserMapping_quad1 (http://127.0.0.1:42469/)",
+        "/laserMapping_quad2 (http://127.0.0.1:39405/)"
       ],
       "topic": "/quadstate_to_teammate",
       "type": "swarm_msgs/QuadStatePub"
@@ -267,32 +267,32 @@
       "echo_raw_tail": "skipped_no_publishers",
       "echo_received": true,
       "hz_raw_tail": "skipped_no_publishers",
-      "info_raw_tail": "Type: swarm_msgs/QuadStatePub\n\nPublishers: None\n\nSubscribers: \n * /laserMapping_quad1 (http://127.0.0.1:43113/)\n * /laserMapping_quad2 (http://127.0.0.1:41799/)",
+      "info_raw_tail": "Type: swarm_msgs/QuadStatePub\n\nPublishers: None\n\nSubscribers: \n * /laserMapping_quad1 (http://127.0.0.1:42469/)\n * /laserMapping_quad2 (http://127.0.0.1:39405/)",
       "listed": true,
       "publishers": [],
       "rate_hz": 0.0,
       "subscribers": [
-        "/laserMapping_quad1 (http://127.0.0.1:43113/)",
-        "/laserMapping_quad2 (http://127.0.0.1:41799/)"
+        "/laserMapping_quad1 (http://127.0.0.1:42469/)",
+        "/laserMapping_quad2 (http://127.0.0.1:39405/)"
       ],
       "topic": "/quadstate_from_teammate",
       "type": "swarm_msgs/QuadStatePub"
     },
     {
-      "echo_raw_tail": "header: \n  seq: 2752\n  stamp: \n    secs: 162\n    nsecs: 158000000\n  frame_id: \"quad1/world\"\ndrone_id: 1\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nextrinsic: []\n---",
+      "echo_raw_tail": "header: \n  seq: 2771\n  stamp: \n    secs: 210\n    nsecs:  90000000\n  frame_id: \"quad1/world\"\ndrone_id: 1\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nextrinsic: []\n---",
       "echo_received": true,
-      "hz_raw_tail": "subscribed to [/global_extrinsic_to_teammate]\naverage rate: 20.764\n\tmin: 0.002s max: 0.102s std dev: 0.03808s window: 20\naverage rate: 20.975\n\tmin: 0.002s max: 0.102s std dev: 0.03754s window: 41\naverage rate: 20.823\n\tmin: 0.002s max: 0.102s std dev: 0.03797s window: 62\naverage rate: 20.952\n\tmin: 0.000s max: 0.167s std dev: 0.04074s window: 83\naverage rate: 20.806\n\tmin: 0.000s max: 0.167s std dev: 0.04079s window: 96",
-      "info_raw_tail": "Type: swarm_msgs/GlobalExtrinsicStatus\n\nPublishers: \n * /laserMapping_quad1 (http://127.0.0.1:43113/)\n * /laserMapping_quad2 (http://127.0.0.1:41799/)\n\nSubscribers: \n * /laserMapping_quad1 (http://127.0.0.1:43113/)\n * /laserMapping_quad2 (http://127.0.0.1:41799/)\n * /swarm_lio2_global_extrinsic_to_tf (http://127.0.0.1:38417/)",
+      "hz_raw_tail": "subscribed to [/global_extrinsic_to_teammate]\naverage rate: 25.262\n\tmin: 0.000s max: 0.102s std dev: 0.04153s window: 22\naverage rate: 23.251\n\tmin: 0.000s max: 0.102s std dev: 0.03788s window: 43\naverage rate: 22.181\n\tmin: 0.000s max: 0.111s std dev: 0.03871s window: 62\naverage rate: 21.543\n\tmin: 0.000s max: 0.111s std dev: 0.03875s window: 83\naverage rate: 21.563\n\tmin: 0.000s max: 0.111s std dev: 0.03897s window: 97",
+      "info_raw_tail": "Type: swarm_msgs/GlobalExtrinsicStatus\n\nPublishers: \n * /laserMapping_quad1 (http://127.0.0.1:42469/)\n * /laserMapping_quad2 (http://127.0.0.1:39405/)\n\nSubscribers: \n * /laserMapping_quad1 (http://127.0.0.1:42469/)\n * /laserMapping_quad2 (http://127.0.0.1:39405/)\n * /swarm_lio2_global_extrinsic_to_tf (http://127.0.0.1:34525/)",
       "listed": true,
       "publishers": [
-        "/laserMapping_quad1 (http://127.0.0.1:43113/)",
-        "/laserMapping_quad2 (http://127.0.0.1:41799/)"
+        "/laserMapping_quad1 (http://127.0.0.1:42469/)",
+        "/laserMapping_quad2 (http://127.0.0.1:39405/)"
       ],
-      "rate_hz": 20.764,
+      "rate_hz": 25.262,
       "subscribers": [
-        "/laserMapping_quad1 (http://127.0.0.1:43113/)",
-        "/laserMapping_quad2 (http://127.0.0.1:41799/)",
-        "/swarm_lio2_global_extrinsic_to_tf (http://127.0.0.1:38417/)"
+        "/laserMapping_quad1 (http://127.0.0.1:42469/)",
+        "/laserMapping_quad2 (http://127.0.0.1:39405/)",
+        "/swarm_lio2_global_extrinsic_to_tf (http://127.0.0.1:34525/)"
       ],
       "topic": "/global_extrinsic_to_teammate",
       "type": "swarm_msgs/GlobalExtrinsicStatus"
@@ -301,116 +301,116 @@
       "echo_raw_tail": "skipped_no_publishers",
       "echo_received": true,
       "hz_raw_tail": "skipped_no_publishers",
-      "info_raw_tail": "Type: swarm_msgs/GlobalExtrinsicStatus\n\nPublishers: None\n\nSubscribers: \n * /laserMapping_quad1 (http://127.0.0.1:43113/)\n * /laserMapping_quad2 (http://127.0.0.1:41799/)\n * /swarm_lio2_global_extrinsic_to_tf (http://127.0.0.1:38417/)",
+      "info_raw_tail": "Type: swarm_msgs/GlobalExtrinsicStatus\n\nPublishers: None\n\nSubscribers: \n * /laserMapping_quad1 (http://127.0.0.1:42469/)\n * /laserMapping_quad2 (http://127.0.0.1:39405/)\n * /swarm_lio2_global_extrinsic_to_tf (http://127.0.0.1:34525/)",
       "listed": true,
       "publishers": [],
       "rate_hz": 0.0,
       "subscribers": [
-        "/laserMapping_quad1 (http://127.0.0.1:43113/)",
-        "/laserMapping_quad2 (http://127.0.0.1:41799/)",
-        "/swarm_lio2_global_extrinsic_to_tf (http://127.0.0.1:38417/)"
+        "/laserMapping_quad1 (http://127.0.0.1:42469/)",
+        "/laserMapping_quad2 (http://127.0.0.1:39405/)",
+        "/swarm_lio2_global_extrinsic_to_tf (http://127.0.0.1:34525/)"
       ],
       "topic": "/global_extrinsic_from_teammate",
       "type": "swarm_msgs/GlobalExtrinsicStatus"
     },
     {
-      "echo_raw_tail": "osition: \n      x: -0.20208065605413164\n      y: 0.06851697921768667\n      z: 6.398764404040778\n    orientation: \n      x: -0.04125620017765103\n      y: -0.03503744706531222\n      z: -0.0011788880410201106\n      w: 0.9985333812512398\n  covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\ntwist: \n  twist: \n    linear: \n      x: -0.022948796292749225\n      y: 0.02854192926716424\n      z: 0.01594573465379933\n    angular: \n      x: 0.0\n      y: 0.0\n      z: 0.0\n  covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\n---",
+      "echo_raw_tail": "  position: \n      x: -0.33665504811115277\n      y: 3.6727672680116585\n      z: 1.6665618358023035\n    orientation: \n      x: -0.013081170211355663\n      y: 0.054179107652559295\n      z: 0.9819699154802094\n      w: 0.18063386274911047\n  covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\ntwist: \n  twist: \n    linear: \n      x: 0.013448741066864504\n      y: -0.03695236222132244\n      z: 0.4360049668251646\n    angular: \n      x: 0.0\n      y: 0.0\n      z: 0.0\n  covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\n---",
       "echo_received": true,
-      "hz_raw_tail": "subscribed to [/robot_a/swarm_lio2_raw/Odometry]\naverage rate: 11.002\n\tmin: 0.068s max: 0.107s std dev: 0.01051s window: 11\naverage rate: 11.013\n\tmin: 0.068s max: 0.107s std dev: 0.01005s window: 22\naverage rate: 10.998\n\tmin: 0.068s max: 0.112s std dev: 0.00949s window: 33\naverage rate: 11.025\n\tmin: 0.068s max: 0.112s std dev: 0.00931s window: 44\naverage rate: 11.051\n\tmin: 0.068s max: 0.112s std dev: 0.00901s window: 51",
-      "info_raw_tail": "Type: nav_msgs/Odometry\n\nPublishers: \n * /ros_bridge (http://127.0.0.1:46553/)\n * /swarm_lio2_robot_a_odom_raw (http://127.0.0.1:32903/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:46553/)",
+      "hz_raw_tail": "subscribed to [/robot_a/swarm_lio2_raw/Odometry]\naverage rate: 10.906\n\tmin: 0.074s max: 0.120s std dev: 0.01259s window: 11\naverage rate: 11.188\n\tmin: 0.001s max: 0.169s std dev: 0.02752s window: 22\naverage rate: 11.104\n\tmin: 0.001s max: 0.169s std dev: 0.02380s window: 33\naverage rate: 11.161\n\tmin: 0.001s max: 0.169s std dev: 0.02113s window: 44\naverage rate: 11.118\n\tmin: 0.001s max: 0.169s std dev: 0.01988s window: 52",
+      "info_raw_tail": "Type: nav_msgs/Odometry\n\nPublishers: \n * /ros_bridge (http://127.0.0.1:36585/)\n * /swarm_lio2_robot_a_odom_raw (http://127.0.0.1:43073/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:36585/)",
       "listed": true,
       "publishers": [
-        "/ros_bridge (http://127.0.0.1:46553/)",
-        "/swarm_lio2_robot_a_odom_raw (http://127.0.0.1:32903/)"
+        "/ros_bridge (http://127.0.0.1:36585/)",
+        "/swarm_lio2_robot_a_odom_raw (http://127.0.0.1:43073/)"
       ],
-      "rate_hz": 11.002,
+      "rate_hz": 10.906,
       "subscribers": [
-        "/ros_bridge (http://127.0.0.1:46553/)"
+        "/ros_bridge (http://127.0.0.1:36585/)"
       ],
       "topic": "/robot_a/swarm_lio2_raw/Odometry",
       "type": "nav_msgs/Odometry"
     },
     {
-      "echo_raw_tail": " pose: \n    position: \n      x: -65.1180699774206\n      y: -54.836502264353065\n      z: -7.8233671788055\n    orientation: \n      x: 0.051308946936072526\n      y: 0.1096862305632107\n      z: -0.6517207072901979\n      w: 0.7487298861928177\n  covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\ntwist: \n  twist: \n    linear: \n      x: 1.13004845177721\n      y: -1.0694420874841886\n      z: -0.05211447250049239\n    angular: \n      x: 0.0\n      y: 0.0\n      z: 0.0\n  covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\n---",
+      "echo_raw_tail": "ose: \n    position: \n      x: -55904.143541781916\n      y: 29354.176623967873\n      z: -63303.28423956087\n    orientation: \n      x: -0.5557258484675305\n      y: -0.09013479466786797\n      z: 0.8263719858950177\n      w: 0.012403268244677858\n  covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\ntwist: \n  twist: \n    linear: \n      x: -835.951099543576\n      y: 497.5372395381513\n      z: -863.0759929916459\n    angular: \n      x: 0.0\n      y: 0.0\n      z: 0.0\n  covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\n---",
       "echo_received": true,
-      "hz_raw_tail": "subscribed to [/robot_b/swarm_lio2_raw/Odometry]\naverage rate: 8.806\n\tmin: 0.005s max: 0.192s std dev: 0.05997s window: 9\naverage rate: 9.428\n\tmin: 0.005s max: 0.192s std dev: 0.04487s window: 19\naverage rate: 9.663\n\tmin: 0.002s max: 0.192s std dev: 0.05137s window: 29\naverage rate: 9.538\n\tmin: 0.002s max: 0.192s std dev: 0.04797s window: 39\naverage rate: 9.506\n\tmin: 0.002s max: 0.192s std dev: 0.04626s window: 45",
-      "info_raw_tail": "Type: nav_msgs/Odometry\n\nPublishers: \n * /ros_bridge (http://127.0.0.1:46553/)\n * /swarm_lio2_robot_b_odom_raw (http://127.0.0.1:34161/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:46553/)",
+      "hz_raw_tail": "subscribed to [/robot_b/swarm_lio2_raw/Odometry]\naverage rate: 9.881\n\tmin: 0.075s max: 0.169s std dev: 0.02539s window: 10\naverage rate: 9.942\n\tmin: 0.075s max: 0.169s std dev: 0.02396s window: 20\naverage rate: 9.970\n\tmin: 0.074s max: 0.169s std dev: 0.02319s window: 30\naverage rate: 9.970\n\tmin: 0.074s max: 0.169s std dev: 0.02252s window: 40\naverage rate: 9.914\n\tmin: 0.074s max: 0.169s std dev: 0.02316s window: 46",
+      "info_raw_tail": "Type: nav_msgs/Odometry\n\nPublishers: \n * /ros_bridge (http://127.0.0.1:36585/)\n * /swarm_lio2_robot_b_odom_raw (http://127.0.0.1:35177/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:36585/)",
       "listed": true,
       "publishers": [
-        "/ros_bridge (http://127.0.0.1:46553/)",
-        "/swarm_lio2_robot_b_odom_raw (http://127.0.0.1:34161/)"
+        "/ros_bridge (http://127.0.0.1:36585/)",
+        "/swarm_lio2_robot_b_odom_raw (http://127.0.0.1:35177/)"
       ],
-      "rate_hz": 8.806,
+      "rate_hz": 9.881,
       "subscribers": [
-        "/ros_bridge (http://127.0.0.1:46553/)"
+        "/ros_bridge (http://127.0.0.1:36585/)"
       ],
       "topic": "/robot_b/swarm_lio2_raw/Odometry",
       "type": "nav_msgs/Odometry"
     },
     {
-      "echo_raw_tail": "0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 208, 8, 0, 220, 209, 117, 0, 0, 49, 35, 149, 63, 216, 52, 248, 191, 120, 162, 119, 62, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 208, 8, 0, 220, 209, 117, 0, 0, 54, 35, 149, 63, 225, 52, 248, 191, 152, 193, 118, 61, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 208, 8, 0, 220, 209, 117, 0, 0, 215, 70, 143, 63, 157, 41, 248, 191, 243, 14, 117, 62, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 208, 8, 0, 220, 209, 117, 0, 0, 220, 70, 143, 63, 165, 41, 248, 191, 106, 48, 116, 61, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 208, 8, 0, 220, 209, 117, 0, 0]\nis_dense: True\n---",
+      "echo_raw_tail": "62, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 229, 68, 135, 62, 209, 121, 216, 62, 134, 168, 103, 62, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 175, 127, 135, 62, 230, 215, 216, 62, 228, 162, 141, 62, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 158, 192, 135, 62, 209, 63, 217, 62, 207, 240, 169, 62, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 174, 9, 136, 62, 188, 180, 217, 62, 28, 140, 201, 62, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]\nis_dense: True\n---",
       "echo_received": true,
-      "hz_raw_tail": "subscribed to [/robot_a/swarm_lio2_raw/cloud_static]\naverage rate: 10.971\n\tmin: 0.081s max: 0.102s std dev: 0.00865s window: 11\naverage rate: 11.019\n\tmin: 0.075s max: 0.102s std dev: 0.00834s window: 22\naverage rate: 10.968\n\tmin: 0.075s max: 0.102s std dev: 0.00710s window: 33\naverage rate: 11.003\n\tmin: 0.075s max: 0.102s std dev: 0.00648s window: 44\naverage rate: 10.995\n\tmin: 0.075s max: 0.103s std dev: 0.00633s window: 51",
-      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /ros_bridge (http://127.0.0.1:46553/)\n * /swarm_lio2_robot_a_static_raw (http://127.0.0.1:40635/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:46553/)",
+      "hz_raw_tail": "subscribed to [/robot_a/swarm_lio2_raw/cloud_static]\naverage rate: 11.106\n\tmin: 0.072s max: 0.112s std dev: 0.00973s window: 11\naverage rate: 11.055\n\tmin: 0.067s max: 0.124s std dev: 0.01369s window: 22\naverage rate: 10.935\n\tmin: 0.067s max: 0.124s std dev: 0.01205s window: 33\naverage rate: 10.973\n\tmin: 0.002s max: 0.264s std dev: 0.03499s window: 44\naverage rate: 10.976\n\tmin: 0.002s max: 0.264s std dev: 0.03268s window: 51",
+      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /ros_bridge (http://127.0.0.1:36585/)\n * /swarm_lio2_robot_a_static_raw (http://127.0.0.1:39317/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:36585/)",
       "listed": true,
       "publishers": [
-        "/ros_bridge (http://127.0.0.1:46553/)",
-        "/swarm_lio2_robot_a_static_raw (http://127.0.0.1:40635/)"
+        "/ros_bridge (http://127.0.0.1:36585/)",
+        "/swarm_lio2_robot_a_static_raw (http://127.0.0.1:39317/)"
       ],
-      "rate_hz": 10.971,
+      "rate_hz": 11.106,
       "subscribers": [
-        "/ros_bridge (http://127.0.0.1:46553/)"
+        "/ros_bridge (http://127.0.0.1:36585/)"
       ],
       "topic": "/robot_a/swarm_lio2_raw/cloud_static",
       "type": "sensor_msgs/PointCloud2"
     },
     {
-      "echo_raw_tail": ", 195, 188, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 220, 140, 192, 63, 40, 25, 30, 191, 96, 254, 5, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 116, 230, 198, 63, 228, 79, 35, 191, 242, 239, 128, 62, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 219, 88, 205, 63, 0, 155, 40, 191, 157, 195, 195, 188, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 216, 191, 63, 189, 87, 32, 191, 155, 217, 5, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]\nis_dense: True\n---",
+      "echo_raw_tail": " 62, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 35, 184, 80, 63, 187, 186, 214, 191, 188, 131, 106, 190, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 246, 165, 13, 64, 44, 22, 148, 192, 17, 109, 84, 62, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 168, 57, 79, 63, 234, 164, 216, 191, 224, 227, 107, 190, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 167, 240, 12, 64, 165, 193, 149, 192, 149, 46, 86, 62, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]\nis_dense: True\n---",
       "echo_received": true,
-      "hz_raw_tail": "subscribed to [/robot_b/swarm_lio2_raw/cloud_static]\naverage rate: 9.874\n\tmin: 0.081s max: 0.179s std dev: 0.02821s window: 10\naverage rate: 9.957\n\tmin: 0.075s max: 0.179s std dev: 0.02813s window: 20\naverage rate: 9.976\n\tmin: 0.075s max: 0.179s std dev: 0.02597s window: 30\naverage rate: 9.706\n\tmin: 0.075s max: 0.190s std dev: 0.02977s window: 39\naverage rate: 9.678\n\tmin: 0.074s max: 0.190s std dev: 0.03055s window: 45",
-      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /ros_bridge (http://127.0.0.1:46553/)\n * /swarm_lio2_robot_b_static_raw (http://127.0.0.1:40119/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:46553/)",
+      "hz_raw_tail": "subscribed to [/robot_b/swarm_lio2_raw/cloud_static]\naverage rate: 9.991\n\tmin: 0.068s max: 0.172s std dev: 0.02870s window: 10\naverage rate: 9.469\n\tmin: 0.068s max: 0.259s std dev: 0.04309s window: 19\naverage rate: 9.599\n\tmin: 0.068s max: 0.259s std dev: 0.03699s window: 28\naverage rate: 9.733\n\tmin: 0.068s max: 0.259s std dev: 0.03296s window: 39\naverage rate: 9.603\n\tmin: 0.068s max: 0.259s std dev: 0.03277s window: 43",
+      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /ros_bridge (http://127.0.0.1:36585/)\n * /swarm_lio2_robot_b_static_raw (http://127.0.0.1:33451/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:36585/)",
       "listed": true,
       "publishers": [
-        "/ros_bridge (http://127.0.0.1:46553/)",
-        "/swarm_lio2_robot_b_static_raw (http://127.0.0.1:40119/)"
+        "/ros_bridge (http://127.0.0.1:36585/)",
+        "/swarm_lio2_robot_b_static_raw (http://127.0.0.1:33451/)"
       ],
-      "rate_hz": 9.874,
+      "rate_hz": 9.991,
       "subscribers": [
-        "/ros_bridge (http://127.0.0.1:46553/)"
+        "/ros_bridge (http://127.0.0.1:36585/)"
       ],
       "topic": "/robot_b/swarm_lio2_raw/cloud_static",
       "type": "sensor_msgs/PointCloud2"
     },
     {
-      "echo_raw_tail": ", 220, 64, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 215, 246, 163, 64, 233, 5, 194, 64, 107, 153, 222, 64, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 41, 59, 176, 64, 136, 255, 193, 64, 217, 47, 224, 64, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 45, 244, 32, 192, 241, 72, 195, 64, 211, 65, 200, 64, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 86, 60, 10, 192, 115, 47, 195, 64, 87, 204, 200, 64, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]\nis_dense: True\n---",
+      "echo_raw_tail": "220, 239, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 160, 48, 59, 192, 45, 248, 193, 64, 49, 238, 6, 64, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 153, 23, 105, 192, 142, 25, 176, 64, 229, 5, 21, 64, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 115, 95, 99, 192, 133, 235, 187, 64, 148, 240, 22, 64, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 39, 136, 83, 192, 247, 21, 194, 64, 186, 20, 17, 64, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]\nis_dense: True\n---",
       "echo_received": true,
-      "hz_raw_tail": "subscribed to [/robot_a/swarm_lio2_raw/cloud_map]\naverage rate: 11.099\n\tmin: 0.075s max: 0.106s std dev: 0.00791s window: 11\naverage rate: 10.946\n\tmin: 0.075s max: 0.106s std dev: 0.00755s window: 22\naverage rate: 11.066\n\tmin: 0.001s max: 0.178s std dev: 0.02942s window: 33\naverage rate: 11.005\n\tmin: 0.001s max: 0.178s std dev: 0.02568s window: 44\naverage rate: 10.995\n\tmin: 0.001s max: 0.178s std dev: 0.02388s window: 51",
-      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /ros_bridge (http://127.0.0.1:46553/)\n * /swarm_lio2_robot_a_map_raw (http://127.0.0.1:37541/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:46553/)",
+      "hz_raw_tail": "subscribed to [/robot_a/swarm_lio2_raw/cloud_map]\naverage rate: 11.281\n\tmin: 0.069s max: 0.100s std dev: 0.00954s window: 11\naverage rate: 10.946\n\tmin: 0.069s max: 0.112s std dev: 0.01206s window: 22\naverage rate: 10.996\n\tmin: 0.069s max: 0.112s std dev: 0.01115s window: 33\naverage rate: 11.026\n\tmin: 0.066s max: 0.123s std dev: 0.01220s window: 44\naverage rate: 11.023\n\tmin: 0.066s max: 0.123s std dev: 0.01179s window: 51",
+      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /ros_bridge (http://127.0.0.1:36585/)\n * /swarm_lio2_robot_a_map_raw (http://127.0.0.1:36401/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:36585/)",
       "listed": true,
       "publishers": [
-        "/ros_bridge (http://127.0.0.1:46553/)",
-        "/swarm_lio2_robot_a_map_raw (http://127.0.0.1:37541/)"
+        "/ros_bridge (http://127.0.0.1:36585/)",
+        "/swarm_lio2_robot_a_map_raw (http://127.0.0.1:36401/)"
       ],
-      "rate_hz": 11.099,
+      "rate_hz": 11.281,
       "subscribers": [
-        "/ros_bridge (http://127.0.0.1:46553/)"
+        "/ros_bridge (http://127.0.0.1:36585/)"
       ],
       "topic": "/robot_a/swarm_lio2_raw/cloud_map",
       "type": "sensor_msgs/PointCloud2"
     },
     {
-      "echo_raw_tail": "3, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 245, 255, 149, 194, 107, 30, 83, 194, 46, 146, 252, 192, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 132, 174, 150, 194, 63, 45, 82, 194, 172, 31, 255, 192, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 72, 29, 151, 194, 45, 120, 81, 194, 93, 38, 0, 193, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 210, 134, 155, 194, 215, 39, 100, 194, 198, 255, 251, 192, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]\nis_dense: True\n---",
+      "echo_raw_tail": ", 0, 0, 0, 0, 0, 80, 115, 41, 163, 203, 155, 32, 63, 35, 166, 158, 199, 123, 110, 37, 71, 169, 115, 173, 199, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 221, 100, 113, 2, 178, 123, 146, 191, 252, 165, 158, 199, 133, 109, 37, 71, 183, 116, 173, 199, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 125, 63, 176, 112, 17, 99, 229, 190, 233, 165, 158, 199, 253, 109, 37, 71, 181, 116, 173, 199, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 188, 225, 14, 255, 57, 26, 30, 191, 178, 165, 158, 199, 35, 110, 37, 71, 172, 116, 173, 199, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 185, 203, 110, 244, 121, 221, 145, 191]\nis_dense: True\n---",
       "echo_received": true,
-      "hz_raw_tail": "subscribed to [/robot_b/swarm_lio2_raw/cloud_map]\naverage rate: 9.956\n\tmin: 0.073s max: 0.181s std dev: 0.03049s window: 10\naverage rate: 9.943\n\tmin: 0.073s max: 0.181s std dev: 0.02720s window: 20\naverage rate: 9.988\n\tmin: 0.073s max: 0.181s std dev: 0.02721s window: 30\naverage rate: 10.001\n\tmin: 0.002s max: 0.181s std dev: 0.03291s window: 40\naverage rate: 9.713\n\tmin: 0.002s max: 0.258s std dev: 0.03863s window: 46",
-      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /ros_bridge (http://127.0.0.1:46553/)\n * /swarm_lio2_robot_b_map_raw (http://127.0.0.1:44151/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:46553/)",
+      "hz_raw_tail": "subscribed to [/robot_b/swarm_lio2_raw/cloud_map]\naverage rate: 7.660\n\tmin: 0.004s max: 0.306s std dev: 0.08903s window: 8\naverage rate: 8.945\n\tmin: 0.004s max: 0.306s std dev: 0.06104s window: 18\naverage rate: 9.295\n\tmin: 0.004s max: 0.306s std dev: 0.05122s window: 28\naverage rate: 9.235\n\tmin: 0.004s max: 0.306s std dev: 0.04756s window: 37\naverage rate: 9.178\n\tmin: 0.004s max: 0.306s std dev: 0.04565s window: 42",
+      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /ros_bridge (http://127.0.0.1:36585/)\n * /swarm_lio2_robot_b_map_raw (http://127.0.0.1:45149/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:36585/)",
       "listed": true,
       "publishers": [
-        "/ros_bridge (http://127.0.0.1:46553/)",
-        "/swarm_lio2_robot_b_map_raw (http://127.0.0.1:44151/)"
+        "/ros_bridge (http://127.0.0.1:36585/)",
+        "/swarm_lio2_robot_b_map_raw (http://127.0.0.1:45149/)"
       ],
-      "rate_hz": 9.956,
+      "rate_hz": 7.66,
       "subscribers": [
-        "/ros_bridge (http://127.0.0.1:46553/)"
+        "/ros_bridge (http://127.0.0.1:36585/)"
       ],
       "topic": "/robot_b/swarm_lio2_raw/cloud_map",
       "type": "sensor_msgs/PointCloud2"
@@ -419,15 +419,15 @@
       "echo_raw_tail": "",
       "echo_received": false,
       "hz_raw_tail": "subscribed to [/robot_a/swarm_lio2_raw/relative_transform]\nno new messages\nno new messages\nno new messages\nno new messages\nno new messages",
-      "info_raw_tail": "Type: geometry_msgs/TransformStamped\n\nPublishers: \n * /ros_bridge (http://127.0.0.1:46553/)\n * /swarm_lio2_global_extrinsic_to_tf (http://127.0.0.1:38417/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:46553/)",
+      "info_raw_tail": "Type: geometry_msgs/TransformStamped\n\nPublishers: \n * /ros_bridge (http://127.0.0.1:36585/)\n * /swarm_lio2_global_extrinsic_to_tf (http://127.0.0.1:34525/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:36585/)",
       "listed": true,
       "publishers": [
-        "/ros_bridge (http://127.0.0.1:46553/)",
-        "/swarm_lio2_global_extrinsic_to_tf (http://127.0.0.1:38417/)"
+        "/ros_bridge (http://127.0.0.1:36585/)",
+        "/swarm_lio2_global_extrinsic_to_tf (http://127.0.0.1:34525/)"
       ],
       "rate_hz": 0.0,
       "subscribers": [
-        "/ros_bridge (http://127.0.0.1:46553/)"
+        "/ros_bridge (http://127.0.0.1:36585/)"
       ],
       "topic": "/robot_a/swarm_lio2_raw/relative_transform",
       "type": "geometry_msgs/TransformStamped"
@@ -436,80 +436,80 @@
       "echo_raw_tail": "",
       "echo_received": false,
       "hz_raw_tail": "subscribed to [/robot_b/swarm_lio2_raw/relative_transform]\nno new messages\nno new messages\nno new messages\nno new messages\nno new messages",
-      "info_raw_tail": "Type: geometry_msgs/TransformStamped\n\nPublishers: \n * /ros_bridge (http://127.0.0.1:46553/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:46553/)",
+      "info_raw_tail": "Type: geometry_msgs/TransformStamped\n\nPublishers: \n * /ros_bridge (http://127.0.0.1:36585/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:36585/)",
       "listed": true,
       "publishers": [
-        "/ros_bridge (http://127.0.0.1:46553/)"
+        "/ros_bridge (http://127.0.0.1:36585/)"
       ],
       "rate_hz": 0.0,
       "subscribers": [
-        "/ros_bridge (http://127.0.0.1:46553/)"
+        "/ros_bridge (http://127.0.0.1:36585/)"
       ],
       "topic": "/robot_b/swarm_lio2_raw/relative_transform",
       "type": "geometry_msgs/TransformStamped"
     },
     {
-      "echo_raw_tail": ", 5, 0, 0, 0, 219, 82, 132, 192, 244, 221, 19, 62, 135, 168, 42, 63, 0, 0, 0, 0, 199, 97, 27, 70, 5, 0, 0, 0, 205, 91, 132, 192, 106, 220, 147, 61, 0, 0, 0, 0, 0, 0, 0, 0, 227, 208, 27, 70, 2, 0, 0, 0, 14, 91, 132, 192, 149, 219, 147, 61, 71, 156, 225, 61, 0, 0, 0, 0, 227, 208, 27, 70, 3, 0, 0, 0, 79, 90, 132, 192, 191, 218, 147, 61, 253, 195, 97, 62, 0, 0, 0, 0, 227, 208, 27, 70, 3, 0, 0, 0, 143, 89, 132, 192, 232, 217, 147, 61, 98, 133, 169, 62, 0, 0, 0, 0, 227, 208, 27, 70, 4, 0, 0, 0, 206, 88, 132, 192, 17, 217, 147, 61, 17, 102, 226, 62, 0, 0, 0, 0, 227, 208, 27, 70, 4, 0, 0, 0, 13, 88, 132, 192, 57, 216, 147, 61, 158, 204, 13, 63, 0, 0, 0, 0, 227, 208, 27, 70, 5, 0, 0, 0, 74, 87, 132, 192, 95, 215, 147, 61, 71, 154, 42, 63, 0, 0, 0, 0, 227, 208, 27, 70, 5, 0, 0, 0]\nis_dense: True\n---",
+      "echo_raw_tail": " 208, 27, 70, 12, 0, 0, 0, 143, 60, 68, 191, 121, 56, 91, 60, 58, 76, 231, 62, 0, 0, 0, 0, 227, 208, 27, 70, 12, 0, 0, 0, 252, 60, 68, 191, 243, 56, 91, 60, 94, 155, 245, 62, 0, 0, 0, 0, 227, 208, 27, 70, 13, 0, 0, 0, 109, 61, 68, 191, 113, 57, 91, 60, 91, 51, 2, 63, 0, 0, 0, 0, 227, 208, 27, 70, 13, 0, 0, 0, 226, 61, 68, 191, 244, 57, 91, 60, 44, 221, 9, 63, 0, 0, 0, 0, 227, 208, 27, 70, 14, 0, 0, 0, 91, 62, 68, 191, 123, 58, 91, 60, 210, 209, 17, 63, 0, 0, 0, 0, 227, 208, 27, 70, 14, 0, 0, 0, 217, 62, 68, 191, 8, 59, 91, 60, 184, 24, 26, 63, 0, 0, 0, 0, 227, 208, 27, 70, 15, 0, 0, 0, 93, 63, 68, 191, 155, 59, 91, 60, 41, 186, 34, 63, 0, 0, 0, 0, 227, 208, 27, 70, 15, 0, 0, 0, 231, 63, 68, 191, 53, 60, 91, 60, 104, 191, 43, 63, 0, 0, 0, 0, 227, 208, 27, 70, 16, 0, 0, 0]\nis_dense: True\n---",
       "echo_received": true,
-      "hz_raw_tail": "subscribed to [/robot_a/velodyne_points]\naverage rate: 10.846\n\tmin: 0.078s max: 0.107s std dev: 0.00754s window: 11\naverage rate: 10.972\n\tmin: 0.078s max: 0.107s std dev: 0.00693s window: 22\naverage rate: 11.007\n\tmin: 0.068s max: 0.108s std dev: 0.00821s window: 33\naverage rate: 10.963\n\tmin: 0.068s max: 0.108s std dev: 0.00733s window: 44\naverage rate: 11.017\n\tmin: 0.068s max: 0.108s std dev: 0.00717s window: 53",
-      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /ros_bridge (http://127.0.0.1:46553/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:46553/)",
+      "hz_raw_tail": "subscribed to [/robot_a/velodyne_points]\naverage rate: 11.135\n\tmin: 0.081s max: 0.103s std dev: 0.00679s window: 11\naverage rate: 10.964\n\tmin: 0.079s max: 0.103s std dev: 0.00680s window: 22\naverage rate: 11.012\n\tmin: 0.069s max: 0.115s std dev: 0.00999s window: 33\naverage rate: 10.963\n\tmin: 0.069s max: 0.115s std dev: 0.00916s window: 44\naverage rate: 11.001\n\tmin: 0.069s max: 0.115s std dev: 0.00947s window: 51",
+      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /ros_bridge (http://127.0.0.1:36585/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:36585/)",
       "listed": true,
       "publishers": [
-        "/ros_bridge (http://127.0.0.1:46553/)"
+        "/ros_bridge (http://127.0.0.1:36585/)"
       ],
-      "rate_hz": 10.846,
+      "rate_hz": 11.135,
       "subscribers": [
-        "/ros_bridge (http://127.0.0.1:46553/)"
+        "/ros_bridge (http://127.0.0.1:36585/)"
       ],
       "topic": "/robot_a/velodyne_points",
       "type": "sensor_msgs/PointCloud2"
     },
     {
-      "echo_raw_tail": "0, 0, 200, 27, 70, 3, 0, 0, 0, 105, 6, 254, 191, 80, 79, 204, 60, 227, 138, 121, 190, 0, 0, 0, 0, 0, 240, 27, 70, 0, 0, 0, 0, 219, 201, 0, 192, 167, 42, 207, 60, 179, 76, 12, 190, 0, 0, 0, 0, 0, 240, 27, 70, 1, 0, 0, 0, 233, 153, 2, 192, 31, 21, 210, 60, 208, 95, 230, 188, 0, 0, 0, 0, 0, 240, 27, 70, 2, 0, 0, 0, 125, 118, 4, 192, 189, 19, 213, 60, 138, 110, 171, 61, 0, 0, 0, 0, 0, 240, 27, 70, 3, 0, 0, 0, 152, 49, 252, 191, 51, 212, 74, 60, 150, 186, 119, 190, 0, 0, 0, 0, 0, 24, 28, 70, 0, 0, 0, 0, 175, 177, 255, 191, 227, 164, 77, 60, 9, 68, 11, 190, 0, 0, 0, 0, 0, 24, 28, 70, 1, 0, 0, 0, 16, 162, 1, 192, 85, 132, 80, 60, 40, 167, 228, 188, 0, 0, 0, 0, 0, 24, 28, 70, 2, 0, 0, 0, 135, 119, 3, 192, 121, 119, 83, 60, 254, 33, 170, 61, 0, 0, 0, 0, 0, 24, 28, 70, 3, 0, 0, 0]\nis_dense: True\n---",
+      "echo_raw_tail": " 0, 0, 240, 27, 70, 5, 0, 0, 0, 14, 17, 113, 191, 50, 227, 65, 60, 77, 129, 70, 62, 0, 0, 0, 0, 0, 240, 27, 70, 6, 0, 0, 0, 75, 182, 95, 191, 27, 236, 179, 59, 95, 192, 219, 189, 0, 0, 0, 0, 0, 24, 28, 70, 0, 0, 0, 0, 21, 121, 98, 191, 141, 36, 182, 59, 86, 179, 118, 189, 0, 0, 0, 0, 0, 24, 28, 70, 1, 0, 0, 0, 36, 72, 101, 191, 220, 102, 184, 59, 134, 53, 74, 188, 0, 0, 0, 0, 0, 24, 28, 70, 2, 0, 0, 0, 37, 40, 104, 191, 204, 182, 186, 59, 230, 55, 22, 61, 0, 0, 0, 0, 0, 24, 28, 70, 3, 0, 0, 0, 51, 30, 107, 191, 120, 24, 189, 59, 156, 128, 178, 61, 0, 0, 0, 0, 0, 24, 28, 70, 4, 0, 0, 0, 255, 47, 110, 191, 116, 144, 191, 59, 244, 214, 14, 62, 0, 0, 0, 0, 0, 24, 28, 70, 5, 0, 0, 0, 253, 99, 113, 191, 240, 35, 194, 59, 148, 194, 70, 62, 0, 0, 0, 0, 0, 24, 28, 70, 6, 0, 0, 0]\nis_dense: True\n---",
       "echo_received": true,
-      "hz_raw_tail": "subscribed to [/robot_b/velodyne_points]\naverage rate: 9.778\n\tmin: 0.079s max: 0.179s std dev: 0.02853s window: 10\naverage rate: 9.459\n\tmin: 0.079s max: 0.179s std dev: 0.03236s window: 19\naverage rate: 9.658\n\tmin: 0.075s max: 0.179s std dev: 0.03056s window: 29\naverage rate: 9.763\n\tmin: 0.075s max: 0.186s std dev: 0.03032s window: 39\naverage rate: 9.903\n\tmin: 0.075s max: 0.186s std dev: 0.02822s window: 46",
-      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /ros_bridge (http://127.0.0.1:46553/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:46553/)",
+      "hz_raw_tail": "subscribed to [/robot_b/velodyne_points]\naverage rate: 10.014\n\tmin: 0.085s max: 0.161s std dev: 0.02200s window: 10\naverage rate: 9.471\n\tmin: 0.080s max: 0.172s std dev: 0.02610s window: 19\naverage rate: 9.279\n\tmin: 0.080s max: 0.184s std dev: 0.02792s window: 28\naverage rate: 9.458\n\tmin: 0.080s max: 0.184s std dev: 0.02660s window: 38\naverage rate: 9.401\n\tmin: 0.080s max: 0.192s std dev: 0.02875s window: 43",
+      "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /ros_bridge (http://127.0.0.1:36585/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:36585/)",
       "listed": true,
       "publishers": [
-        "/ros_bridge (http://127.0.0.1:46553/)"
+        "/ros_bridge (http://127.0.0.1:36585/)"
       ],
-      "rate_hz": 9.778,
+      "rate_hz": 10.014,
       "subscribers": [
-        "/ros_bridge (http://127.0.0.1:46553/)"
+        "/ros_bridge (http://127.0.0.1:36585/)"
       ],
       "topic": "/robot_b/velodyne_points",
       "type": "sensor_msgs/PointCloud2"
     },
     {
-      "echo_raw_tail": "header: \n  seq: 18453\n  stamp: \n    secs: 208\n    nsecs: 772000000\n  frame_id: \"imu\"\norientation: \n  x: 0.0\n  y: 0.0\n  z: 0.0\n  w: 1.0\norientation_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\nangular_velocity: \n  x: 5.835339392270345e-07\n  y: 0.000951018512340365\n  z: 2.0376111170474773e-08\nangular_velocity_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\nlinear_acceleration: \n  x: -0.16204828447644495\n  y: -1.6849429855216455e-05\n  z: 10.520356361552562\nlinear_acceleration_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\n---",
+      "echo_raw_tail": "header: \n  seq: 23667\n  stamp: \n    secs: 273\n    nsecs: 528000000\n  frame_id: \"imu\"\norientation: \n  x: 0.0\n  y: 0.0\n  z: 0.0\n  w: 1.0\norientation_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\nangular_velocity: \n  x: 7.827949675485122e-06\n  y: 0.05225525498802402\n  z: -8.83175870064364e-06\nangular_velocity_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\nlinear_acceleration: \n  x: -0.349030828252935\n  y: 0.0003893950746933696\n  z: 11.34225260693519\nlinear_acceleration_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\n---",
       "echo_received": true,
-      "hz_raw_tail": "subscribed to [/robot_a/imu/data]\naverage rate: 57.963\n\tmin: 0.001s max: 0.269s std dev: 0.04347s window: 54\naverage rate: 43.934\n\tmin: 0.001s max: 0.269s std dev: 0.04954s window: 86\naverage rate: 36.014\n\tmin: 0.001s max: 0.269s std dev: 0.05467s window: 106\naverage rate: 38.063\n\tmin: 0.001s max: 0.269s std dev: 0.04970s window: 150\naverage rate: 43.322\n\tmin: 0.001s max: 0.269s std dev: 0.04537s window: 202",
-      "info_raw_tail": "Type: sensor_msgs/Imu\n\nPublishers: \n * /ros_bridge (http://127.0.0.1:46553/)\n\nSubscribers: \n * /robot_a_imu_to_swarm_lio2 (http://127.0.0.1:35693/)\n * /ros_bridge (http://127.0.0.1:46553/)",
+      "hz_raw_tail": "subscribed to [/robot_a/imu/data]\naverage rate: 51.703\n\tmin: 0.000s max: 0.250s std dev: 0.04339s window: 48\naverage rate: 46.103\n\tmin: 0.000s max: 0.269s std dev: 0.04850s window: 89\naverage rate: 55.006\n\tmin: 0.000s max: 0.269s std dev: 0.04263s window: 161\naverage rate: 60.375\n\tmin: 0.000s max: 0.269s std dev: 0.03850s window: 237\naverage rate: 57.955\n\tmin: 0.000s max: 0.269s std dev: 0.03904s window: 265",
+      "info_raw_tail": "Type: sensor_msgs/Imu\n\nPublishers: \n * /ros_bridge (http://127.0.0.1:36585/)\n\nSubscribers: \n * /robot_a_imu_to_swarm_lio2 (http://127.0.0.1:45305/)\n * /ros_bridge (http://127.0.0.1:36585/)",
       "listed": true,
       "publishers": [
-        "/ros_bridge (http://127.0.0.1:46553/)"
+        "/ros_bridge (http://127.0.0.1:36585/)"
       ],
-      "rate_hz": 57.963,
+      "rate_hz": 51.703,
       "subscribers": [
-        "/robot_a_imu_to_swarm_lio2 (http://127.0.0.1:35693/)",
-        "/ros_bridge (http://127.0.0.1:46553/)"
+        "/robot_a_imu_to_swarm_lio2 (http://127.0.0.1:45305/)",
+        "/ros_bridge (http://127.0.0.1:36585/)"
       ],
       "topic": "/robot_a/imu/data",
       "type": "sensor_msgs/Imu"
     },
     {
-      "echo_raw_tail": "header: \n  seq: 18686\n  stamp: \n    secs: 212\n    nsecs:  92000000\n  frame_id: \"b_imu\"\norientation: \n  x: 0.0\n  y: 0.0\n  z: 0.0\n  w: 1.0\norientation_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\nangular_velocity: \n  x: -0.0007451897356482312\n  y: 0.03082521049036582\n  z: 0.0004114885069281322\nangular_velocity_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\nlinear_acceleration: \n  x: 0.057154969833971406\n  y: -0.011644155568740766\n  z: 9.201315594499455\nlinear_acceleration_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\n---",
+      "echo_raw_tail": "header: \n  seq: 24127\n  stamp: \n    secs: 278\n    nsecs:  66000000\n  frame_id: \"b_imu\"\norientation: \n  x: 0.0\n  y: 0.0\n  z: 0.0\n  w: 1.0\norientation_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\nangular_velocity: \n  x: -1.9756383372624477e-05\n  y: 0.03102766285536914\n  z: 3.990749212023088e-05\nangular_velocity_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\nlinear_acceleration: \n  x: -0.14963452928076929\n  y: -0.00023178978384247323\n  z: 9.881595984690968\nlinear_acceleration_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\n---",
       "echo_received": true,
-      "hz_raw_tail": "subscribed to [/robot_b/imu/data]\naverage rate: 83.576\n\tmin: 0.000s max: 0.089s std dev: 0.02562s window: 78\naverage rate: 70.175\n\tmin: 0.000s max: 0.089s std dev: 0.02848s window: 136\naverage rate: 58.184\n\tmin: 0.000s max: 0.098s std dev: 0.03164s window: 171\naverage rate: 49.335\n\tmin: 0.000s max: 0.183s std dev: 0.03672s window: 190\naverage rate: 44.972\n\tmin: 0.000s max: 0.183s std dev: 0.03977s window: 206",
-      "info_raw_tail": "Type: sensor_msgs/Imu\n\nPublishers: \n * /ros_bridge (http://127.0.0.1:46553/)\n\nSubscribers: \n * /robot_b_imu_to_swarm_lio2 (http://127.0.0.1:41501/)\n * /ros_bridge (http://127.0.0.1:46553/)",
+      "hz_raw_tail": "subscribed to [/robot_b/imu/data]\naverage rate: 56.443\n\tmin: 0.000s max: 0.092s std dev: 0.03188s window: 57\naverage rate: 44.812\n\tmin: 0.000s max: 0.184s std dev: 0.04260s window: 87\naverage rate: 34.946\n\tmin: 0.000s max: 0.281s std dev: 0.05260s window: 103\naverage rate: 42.108\n\tmin: 0.000s max: 0.281s std dev: 0.04680s window: 166\naverage rate: 41.533\n\tmin: 0.000s max: 0.281s std dev: 0.04733s window: 194",
+      "info_raw_tail": "Type: sensor_msgs/Imu\n\nPublishers: \n * /ros_bridge (http://127.0.0.1:36585/)\n\nSubscribers: \n * /robot_b_imu_to_swarm_lio2 (http://127.0.0.1:42273/)\n * /ros_bridge (http://127.0.0.1:36585/)",
       "listed": true,
       "publishers": [
-        "/ros_bridge (http://127.0.0.1:46553/)"
+        "/ros_bridge (http://127.0.0.1:36585/)"
       ],
-      "rate_hz": 83.576,
+      "rate_hz": 56.443,
       "subscribers": [
-        "/robot_b_imu_to_swarm_lio2 (http://127.0.0.1:41501/)",
-        "/ros_bridge (http://127.0.0.1:46553/)"
+        "/robot_b_imu_to_swarm_lio2 (http://127.0.0.1:42273/)",
+        "/ros_bridge (http://127.0.0.1:36585/)"
       ],
       "topic": "/robot_b/imu/data",
       "type": "sensor_msgs/Imu"
@@ -518,14 +518,14 @@
       "echo_raw_tail": "",
       "echo_received": false,
       "hz_raw_tail": "subscribed to [/robot_a/imu]\nno new messages\nno new messages\nno new messages\nno new messages\nno new messages",
-      "info_raw_tail": "Type: sensor_msgs/Imu\n\nPublishers: \n * /ros_bridge (http://127.0.0.1:46553/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:46553/)",
+      "info_raw_tail": "Type: sensor_msgs/Imu\n\nPublishers: \n * /ros_bridge (http://127.0.0.1:36585/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:36585/)",
       "listed": true,
       "publishers": [
-        "/ros_bridge (http://127.0.0.1:46553/)"
+        "/ros_bridge (http://127.0.0.1:36585/)"
       ],
       "rate_hz": 0.0,
       "subscribers": [
-        "/ros_bridge (http://127.0.0.1:46553/)"
+        "/ros_bridge (http://127.0.0.1:36585/)"
       ],
       "topic": "/robot_a/imu",
       "type": "sensor_msgs/Imu"
@@ -534,14 +534,14 @@
       "echo_raw_tail": "",
       "echo_received": false,
       "hz_raw_tail": "subscribed to [/robot_b/imu]\nno new messages\nno new messages\nno new messages\nno new messages\nno new messages",
-      "info_raw_tail": "Type: sensor_msgs/Imu\n\nPublishers: \n * /ros_bridge (http://127.0.0.1:46553/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:46553/)",
+      "info_raw_tail": "Type: sensor_msgs/Imu\n\nPublishers: \n * /ros_bridge (http://127.0.0.1:36585/)\n\nSubscribers: \n * /ros_bridge (http://127.0.0.1:36585/)",
       "listed": true,
       "publishers": [
-        "/ros_bridge (http://127.0.0.1:46553/)"
+        "/ros_bridge (http://127.0.0.1:36585/)"
       ],
       "rate_hz": 0.0,
       "subscribers": [
-        "/ros_bridge (http://127.0.0.1:46553/)"
+        "/ros_bridge (http://127.0.0.1:36585/)"
       ],
       "topic": "/robot_b/imu",
       "type": "sensor_msgs/Imu"
@@ -565,9 +565,9 @@
   ],
   "native_mutual_topic_rates": {
     "/global_extrinsic_from_teammate": 0.0,
-    "/global_extrinsic_to_teammate": 20.764,
+    "/global_extrinsic_to_teammate": 25.262,
     "/quadstate_from_teammate": 0.0,
-    "/quadstate_to_teammate": 21.562
+    "/quadstate_to_teammate": 20.825
   },
   "native_mutual_topic_types": {
     "/global_extrinsic_from_teammate": "swarm_msgs/GlobalExtrinsicStatus",
@@ -668,5 +668,5 @@
   "rostopic_list_available": true,
   "rostopic_list_raw_tail": "eammate_traj/UAV9\n/quad2/temp_tracker\n/quad2/traj\n/quad2/uav_mesh_visualization\n/quad2/uav_visualization\n/quad2_pcl_render_node/sensor_cloud\n/quad_1/imu\n/quad_1/lidar_slam/odom\n/quad_2/imu\n/quad_2/lidar_slam/odom\n/quadstate_from_teammate\n/quadstate_to_teammate\n/robot_a/dynamic_lio/cloud_dynamic\n/robot_a/dynamic_lio/cloud_static\n/robot_a/imu\n/robot_a/imu/data\n/robot_a/swarm_lio2_raw/Odometry\n/robot_a/swarm_lio2_raw/cloud_dynamic\n/robot_a/swarm_lio2_raw/cloud_map\n/robot_a/swarm_lio2_raw/cloud_static\n/robot_a/swarm_lio2_raw/relative_transform\n/robot_a/velodyne_points\n/robot_b/dynamic_lio/cloud_dynamic\n/robot_b/dynamic_lio/cloud_static\n/robot_b/imu\n/robot_b/imu/data\n/robot_b/swarm_lio2_raw/Odometry\n/robot_b/swarm_lio2_raw/cloud_dynamic\n/robot_b/swarm_lio2_raw/cloud_map\n/robot_b/swarm_lio2_raw/cloud_static\n/robot_b/swarm_lio2_raw/relative_transform\n/robot_b/velodyne_points\n/rosout\n/rosout_agg\n/team_slam/cleaned_static_map\n/team_slam/erasor_metrics\n/team_slam/erasor_removed_dynamic_cloud\n/tf",
   "schema": "swarm_lio2_topic_discovery/v1",
-  "updated_utc": "2026-05-09T00:42:34Z"
+  "updated_utc": "2026-05-09T01:25:28Z"
 }

@@ -1,17 +1,558 @@
 {
-  "blocker": "/team_slam/swarm_lio2_relative_transform:rate<0.1;swarm_lio2_global_extrinsic_status_empty;swarm_lio2_quadstate_teammate_empty;overlap_alignment_not_accepted_with_swarm_agreement;no_overlap_scene_not_run_after_primary_blocker",
+  "blocker": "/team_slam/swarm_lio2_relative_transform:rate<0.1;mutual_observation_not_triggered;overlap_alignment_not_accepted_with_swarm_agreement;no_overlap_scene_not_run_after_primary_blocker",
+  "connected_teammate_ids": {
+    "quad1": [],
+    "quad2": []
+  },
+  "extrinsic_array_length": 0,
+  "global_extrinsic_initialized": false,
   "gt_used_runtime": false,
   "merged_map_agreement_gated": true,
   "merged_map_opened": false,
+  "mutual_observation_triggered": false,
+  "mutual_state_debug": {
+    "blocker": "mutual_observation_not_triggered",
+    "blocker_detail": "ROS direct peer state is present, but Swarm-LIO2 did not populate teammate[]; current sim did not trigger mutual observation / trajectory matching.",
+    "connected_teammate_ids": {
+      "quad1": [],
+      "quad2": []
+    },
+    "connected_teammate_num": {
+      "quad1": [
+        0,
+        0,
+        0
+      ],
+      "quad2": [
+        0,
+        0,
+        0
+      ]
+    },
+    "expected_nodes_active": true,
+    "extrinsic_array_length": 0,
+    "global_extrinsic_drone_ids": [
+      1,
+      2
+    ],
+    "global_extrinsic_initialized": false,
+    "mode": "docker",
+    "mutual_observation_triggered": false,
+    "mutual_topic_samples": {
+      "/global_extrinsic_from_teammate": {
+        "echo_raw_tail": "",
+        "echo_returncode": 124,
+        "hz_raw_tail": "subscribed to [/global_extrinsic_from_teammate]\nno new messages\nno new messages\nno new messages\nno new messages\nno new messages",
+        "info_raw_tail": "Type: swarm_msgs/GlobalExtrinsicStatus\n\nPublishers: None\n\nSubscribers: \n * /laserMapping_quad1 (http://127.0.0.1:42469/)\n * /laserMapping_quad2 (http://127.0.0.1:39405/)\n * /swarm_lio2_global_extrinsic_to_tf (http://127.0.0.1:34525/)",
+        "messages": [],
+        "publishers": [],
+        "rate_hz": 0.0,
+        "subscribers": [
+          "/laserMapping_quad1 (http://127.0.0.1:42469/)",
+          "/laserMapping_quad2 (http://127.0.0.1:39405/)",
+          "/swarm_lio2_global_extrinsic_to_tf (http://127.0.0.1:34525/)"
+        ],
+        "topic": "/global_extrinsic_from_teammate",
+        "type": "swarm_msgs/GlobalExtrinsicStatus"
+      },
+      "/global_extrinsic_to_teammate": {
+        "echo_raw_tail": "rld\"\ndrone_id: 1\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nextrinsic: []\n---\nheader: \n  seq: 3832\n  stamp: \n    secs: 306\n    nsecs: 456000000\n  frame_id: \"quad2/world\"\ndrone_id: 2\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nextrinsic: []\n---\nheader: \n  seq: 4573\n  stamp: \n    secs: 306\n    nsecs: 476000000\n  frame_id: \"quad1/world\"\ndrone_id: 1\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nextrinsic: []\n---\nheader: \n  seq: 3833\n  stamp: \n    secs: 306\n    nsecs: 486000000\n  frame_id: \"quad2/world\"\ndrone_id: 2\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nextrinsic: []\n---\nheader: \n  seq: 4574\n  stamp: \n    secs: 306\n    nsecs: 552000000\n  frame_id: \"quad1/world\"\ndrone_id: 1\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nextrinsic: []\n---\nheader: \n  seq: 3834\n  stamp: \n    secs: 306\n    nsecs: 552000000\n  frame_id: \"quad2/world\"\ndrone_id: 2\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nextrinsic: []\n---\nheader: \n  seq: 4575\n  stamp: \n    secs: 306\n    nsecs: 562000000\n  frame_id: \"quad1/world\"\ndrone_id: 1\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nextrinsic: []\n---\nheader: \n  seq: 3835\n  stamp: \n    secs: 306\n    nsecs: 562000000\n  frame_id: \"quad2/world\"\ndrone_id: 2\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nextrinsic: []\n---",
+        "echo_returncode": 0,
+        "hz_raw_tail": "subscribed to [/global_extrinsic_to_teammate]\naverage rate: 22.162\n\tmin: 0.000s max: 0.093s std dev: 0.03934s window: 19\naverage rate: 21.626\n\tmin: 0.000s max: 0.093s std dev: 0.03815s window: 40\naverage rate: 21.462\n\tmin: 0.000s max: 0.099s std dev: 0.03860s window: 61\naverage rate: 20.715\n\tmin: 0.000s max: 0.110s std dev: 0.03886s window: 80\naverage rate: 20.553\n\tmin: 0.000s max: 0.110s std dev: 0.03898s window: 94",
+        "info_raw_tail": "Type: swarm_msgs/GlobalExtrinsicStatus\n\nPublishers: \n * /laserMapping_quad1 (http://127.0.0.1:42469/)\n * /laserMapping_quad2 (http://127.0.0.1:39405/)\n\nSubscribers: \n * /laserMapping_quad1 (http://127.0.0.1:42469/)\n * /laserMapping_quad2 (http://127.0.0.1:39405/)\n * /swarm_lio2_global_extrinsic_to_tf (http://127.0.0.1:34525/)",
+        "messages": [
+          "header: \n  seq: 4572\n  stamp: \n    secs: 306\n    nsecs: 456000000\n  frame_id: \"quad1/world\"\ndrone_id: 1\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nextrinsic: []",
+          "header: \n  seq: 3832\n  stamp: \n    secs: 306\n    nsecs: 456000000\n  frame_id: \"quad2/world\"\ndrone_id: 2\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nextrinsic: []",
+          "header: \n  seq: 4573\n  stamp: \n    secs: 306\n    nsecs: 476000000\n  frame_id: \"quad1/world\"\ndrone_id: 1\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nextrinsic: []",
+          "header: \n  seq: 3833\n  stamp: \n    secs: 306\n    nsecs: 486000000\n  frame_id: \"quad2/world\"\ndrone_id: 2\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nextrinsic: []",
+          "header: \n  seq: 4574\n  stamp: \n    secs: 306\n    nsecs: 552000000\n  frame_id: \"quad1/world\"\ndrone_id: 1\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nextrinsic: []",
+          "header: \n  seq: 3834\n  stamp: \n    secs: 306\n    nsecs: 552000000\n  frame_id: \"quad2/world\"\ndrone_id: 2\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nextrinsic: []",
+          "header: \n  seq: 4575\n  stamp: \n    secs: 306\n    nsecs: 562000000\n  frame_id: \"quad1/world\"\ndrone_id: 1\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nextrinsic: []",
+          "header: \n  seq: 3835\n  stamp: \n    secs: 306\n    nsecs: 562000000\n  frame_id: \"quad2/world\"\ndrone_id: 2\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nextrinsic: []"
+        ],
+        "publishers": [
+          "/laserMapping_quad1 (http://127.0.0.1:42469/)",
+          "/laserMapping_quad2 (http://127.0.0.1:39405/)"
+        ],
+        "rate_hz": 22.162,
+        "subscribers": [
+          "/laserMapping_quad1 (http://127.0.0.1:42469/)",
+          "/laserMapping_quad2 (http://127.0.0.1:39405/)",
+          "/swarm_lio2_global_extrinsic_to_tf (http://127.0.0.1:34525/)"
+        ],
+        "topic": "/global_extrinsic_to_teammate",
+        "type": "swarm_msgs/GlobalExtrinsicStatus"
+      },
+      "/quadstate_from_teammate": {
+        "echo_raw_tail": "",
+        "echo_returncode": 124,
+        "hz_raw_tail": "subscribed to [/quadstate_from_teammate]\nno new messages\nno new messages\nno new messages\nno new messages\nno new messages",
+        "info_raw_tail": "Type: swarm_msgs/QuadStatePub\n\nPublishers: None\n\nSubscribers: \n * /laserMapping_quad1 (http://127.0.0.1:42469/)\n * /laserMapping_quad2 (http://127.0.0.1:39405/)",
+        "messages": [],
+        "publishers": [],
+        "rate_hz": 0.0,
+        "subscribers": [
+          "/laserMapping_quad1 (http://127.0.0.1:42469/)",
+          "/laserMapping_quad2 (http://127.0.0.1:39405/)"
+        ],
+        "topic": "/quadstate_from_teammate",
+        "type": "swarm_msgs/QuadStatePub"
+      },
+      "/quadstate_to_teammate": {
+        "echo_raw_tail": "-0.04148811846971512]\nvel: [-1343.0047607421875, 898.328125, -1565.9251708984375]\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nswarmlio_start_time: 5.497999999\ndegenerated: True\nteammate: []\n---\nheader: \n  seq: 4359\n  stamp: \n    secs: 297\n    nsecs: 314000000\n  frame_id: \"quad1/world\"\nchild_frame_id: \"quad1_aft_mapped\"\ndrone_id: 1\npose: \n  header: \n    seq: 0\n    stamp: \n      secs: 0\n      nsecs:         0\n    frame_id: ''\n  pose: \n    position: \n      x: 1776.8679843474342\n      y: -330.5038779452625\n      z: -2598.387950237791\n    orientation: \n      x: 0.5801077636530431\n      y: -0.2352506062318782\n      z: -0.22498685013938632\n      w: 0.746667966422396\npose_cov: [0.0003676327469293028, 1.2830448213208001e-05, 2.874441179301357e-06, 0.0003274850605521351, 3.86321607948048e-06, 0.00021438395197037607, 0.0003872221277561039, 0.0004879859334323555, -0.0001087453929358162, 0.000806046708021313, -0.00015834043733775616, 9.842560393735766e-05]\ngyr: [-0.007971521466970444, -0.04230653494596481, -0.028793781995773315]\nvel: [65.14836120605469, -132.73672485351562, -187.33619689941406]\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nswarmlio_start_time: 5.485999999\ndegenerated: True\nteammate: []\n---",
+        "echo_returncode": 0,
+        "hz_raw_tail": "subscribed to [/quadstate_to_teammate]\naverage rate: 22.140\n\tmin: 0.001s max: 0.100s std dev: 0.03932s window: 23\naverage rate: 20.540\n\tmin: 0.000s max: 0.104s std dev: 0.03993s window: 42\naverage rate: 20.360\n\tmin: 0.000s max: 0.104s std dev: 0.03983s window: 62\naverage rate: 20.319\n\tmin: 0.000s max: 0.104s std dev: 0.03937s window: 82\naverage rate: 20.295\n\tmin: 0.000s max: 0.104s std dev: 0.03928s window: 95",
+        "info_raw_tail": "Type: swarm_msgs/QuadStatePub\n\nPublishers: \n * /laserMapping_quad1 (http://127.0.0.1:42469/)\n * /laserMapping_quad2 (http://127.0.0.1:39405/)\n\nSubscribers: \n * /laserMapping_quad1 (http://127.0.0.1:42469/)\n * /laserMapping_quad2 (http://127.0.0.1:39405/)",
+        "messages": [
+          "header: \n  seq: 4355\n  stamp: \n    secs: 297\n    nsecs: 124000000\n  frame_id: \"quad1/world\"\nchild_frame_id: \"quad1_aft_mapped\"\ndrone_id: 1\npose: \n  header: \n    seq: 0\n    stamp: \n      secs: 0\n      nsecs:         0\n    frame_id: ''\n  pose: \n    position: \n      x: 1764.3792048987975\n      y: -305.41381538482347\n      z: -2562.933232179295\n    orientation: \n      x: 0.5816380388544321\n      y: -0.23222141790381917\n      z: -0.218709132305987\n      w: 0.748289195612413\npose_cov: [0.0002245934447273612, 4.064816948812222e-06, 6.727808568030014e-07, 0.0001643565046833828, 3.1843680972087895e-06, 8.99420483619906e-05, 0.00033406325383111835, 0.00039948945050127804, -0.00010056468454422429, 0.000531202822457999, -0.00012882573355454952, 5.051981133874506e-05]\ngyr: [-0.00795221608132124, -0.05466734990477562, -0.028775859624147415]\nvel: [66.3075180053711, -131.3817901611328, -185.86563110351562]\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nswarmlio_start_time: 5.485999999\ndegenerated: True\nteammate: []",
+          "header: \n  seq: 4356\n  stamp: \n    secs: 297\n    nsecs: 124000000\n  frame_id: \"quad1/world\"\nchild_frame_id: \"quad1_aft_mapped\"\ndrone_id: 1\npose: \n  header: \n    seq: 0\n    stamp: \n      secs: 0\n      nsecs:         0\n    frame_id: ''\n  pose: \n    position: \n      x: 1764.3793271129098\n      y: -305.4134209041269\n      z: -2562.9334818950983\n    orientation: \n      x: 0.581364616189598\n      y: -0.23253215263942015\n      z: -0.2192884264984553\n      w: 0.7482356360368239\npose_cov: [0.00015442784933838993, 1.2393104043439962e-05, 4.638057362171821e-06, 0.00011449774319771677, 3.771218189285719e-06, 3.0556961974070873e-06, 0.00031077372841537, 0.0003702812537085265, -0.00010031731653725728, 0.00048041969421319664, -0.00012681401858571917, 4.6375156671274453e-05]\ngyr: [-0.00795221608132124, -0.05466734990477562, -0.028775859624147415]\nvel: [66.3065414428711, -131.38075256347656, -185.86618041992188]\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nswarmlio_start_time: 5.485999999\ndegenerated: True\nteammate: []",
+          "header: \n  seq: 3657\n  stamp: \n    secs: 297\n    nsecs: 124000000\n  frame_id: \"quad2/world\"\nchild_frame_id: \"quad2_aft_mapped\"\ndrone_id: 2\npose: \n  header: \n    seq: 0\n    stamp: \n      secs: 0\n      nsecs:         0\n    frame_id: ''\n  pose: \n    position: \n      x: -142245.43858459924\n      y: 76061.69137062423\n      z: -156268.61429961026\n    orientation: \n      x: -0.15446879230624486\n      y: -0.3420036629811185\n      z: -0.7332485744134722\n      w: 0.5670268202047926\npose_cov: [0.00010386518260929734, 3.93875048132486e-08, 7.520561666751746e-07, 0.0001041714203893207, 2.628632387313701e-07, 0.000102262943983078, 1.908000558614731e-05, 3.103926928815781e-07, -2.862139467652014e-07, 2.070379014185164e-05, 2.910022203650442e-06, 1.666670141275972e-05]\ngyr: [-0.003547796979546547, 0.023076586425304413, -0.041507866233587265]\nvel: [-1342.7442626953125, 897.6698608398438, -1565.6268310546875]\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nswarmlio_start_time: 5.497999999\ndegenerated: True\nteammate: []",
+          "header: \n  seq: 3658\n  stamp: \n    secs: 297\n    nsecs: 174000000\n  frame_id: \"quad2/world\"\nchild_frame_id: \"quad2_aft_mapped\"\ndrone_id: 2\npose: \n  header: \n    seq: 0\n    stamp: \n      secs: 0\n      nsecs:         0\n    frame_id: ''\n  pose: \n    position: \n      x: -142312.579016464\n      y: 76106.58288481935\n      z: -156346.89956270056\n    orientation: \n      x: -0.15338953345372536\n      y: -0.3414988998216417\n      z: -0.7340295712814877\n      w: 0.5666133963574921\npose_cov: [0.00015429966151714325, 3.826114181038065e-08, 7.576089160465926e-07, 0.00015460990834981203, 2.657160962371563e-07, 0.00015269836876541376, 2.950899761344772e-05, 5.983542337162362e-07, 8.813662688567092e-09, 2.9820077543263324e-05, 2.7310693440085743e-06, 2.5465151338721626e-05]\ngyr: [-0.003549089888110757, 0.025043485686182976, -0.041507840156555176]\nvel: [-1342.8740234375, 897.9947509765625, -1565.779296875]\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nswarmlio_start_time: 5.497999999\ndegenerated: True\nteammate: []",
+          "header: \n  seq: 4357\n  stamp: \n    secs: 297\n    nsecs: 174000000\n  frame_id: \"quad1/world\"\nchild_frame_id: \"quad1_aft_mapped\"\ndrone_id: 1\npose: \n  header: \n    seq: 0\n    stamp: \n      secs: 0\n      nsecs:         0\n    frame_id: ''\n  pose: \n    position: \n      x: 1767.6875124989058\n      y: -311.9910386063935\n      z: -2572.2365795932433\n    orientation: \n      x: 0.5811938239396224\n      y: -0.2327142877469285\n      z: -0.2203736772752498\n      w: 0.7479928085597236\npose_cov: [0.0002049951726803556, 1.250205150427064e-05, 4.394031748233829e-06, 0.0001650151825742796, 3.814338242591475e-06, 5.314798909239471e-05, 0.0003288119041826576, 0.000400696910219267, -0.00010375914280302823, 0.0005497407400980592, -0.00013616525393445045, 5.373511157813482e-05]\ngyr: [-0.007964149117469788, -0.05104581266641617, -0.028790023177862167]\nvel: [66.01473999023438, -131.72708129882812, -186.256591796875]\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nswarmlio_start_time: 5.485999999\ndegenerated: True\nteammate: []",
+          "header: \n  seq: 4358\n  stamp: \n    secs: 297\n    nsecs: 224000000\n  frame_id: \"quad1/world\"\nchild_frame_id: \"quad1_aft_mapped\"\ndrone_id: 1\npose: \n  header: \n    seq: 0\n    stamp: \n      secs: 0\n      nsecs:         0\n    frame_id: ''\n  pose: \n    position: \n      x: 1770.9800598723507\n      y: -318.5866505602217\n      z: -2581.558969860765\n    orientation: \n      x: 0.580771885111093\n      y: -0.2337415169630808\n      z: -0.22211575882505089\n      w: 0.7474847894063644\npose_cov: [0.0002557708357926458, 1.2620097550097853e-05, 3.804463631240651e-06, 0.00021572437253780663, 3.8286248127406e-06, 0.00010341259621782228, 0.0003478984290268272, 0.0004319115832913667, -0.00010639917309163138, 0.0006299428059719503, -0.00014507060404866934, 6.451736408052966e-05]\ngyr: [-0.007972552441060543, -0.0926775187253952, -0.028794851154088974]\nvel: [65.68831634521484, -132.09893798828125, -186.63868713378906]\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nswarmlio_start_time: 5.485999999\ndegenerated: True\nteammate: []",
+          "header: \n  seq: 3659\n  stamp: \n    secs: 297\n    nsecs: 224000000\n  frame_id: \"quad2/world\"\nchild_frame_id: \"quad2_aft_mapped\"\ndrone_id: 2\npose: \n  header: \n    seq: 0\n    stamp: \n      secs: 0\n      nsecs:         0\n    frame_id: ''\n  pose: \n    position: \n      x: -142379.72593098445\n      y: 76151.49066165513\n      z: -156425.1924399965\n    orientation: \n      x: -0.15235788420302598\n      y: -0.3410304599104985\n      z: -0.7347988638575036\n      w: 0.566176589244145\npose_cov: [0.00020492258772719651, 3.7158201848797034e-08, 7.629546985299385e-07, 0.00020523667626548558, 2.685691242731991e-07, 0.00020332212443463504, 4.397369048092514e-05, 1.0207673994955258e-06, 4.870980205851083e-07, 4.222323696012609e-05, 2.1155140075279633e-06, 3.7616195186274126e-05]\ngyr: [-0.0035565823782235384, 0.02963046170771122, -0.04148811846971512]\nvel: [-1343.0047607421875, 898.328125, -1565.9251708984375]\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nswarmlio_start_time: 5.497999999\ndegenerated: True\nteammate: []",
+          "header: \n  seq: 4359\n  stamp: \n    secs: 297\n    nsecs: 314000000\n  frame_id: \"quad1/world\"\nchild_frame_id: \"quad1_aft_mapped\"\ndrone_id: 1\npose: \n  header: \n    seq: 0\n    stamp: \n      secs: 0\n      nsecs:         0\n    frame_id: ''\n  pose: \n    position: \n      x: 1776.8679843474342\n      y: -330.5038779452625\n      z: -2598.387950237791\n    orientation: \n      x: 0.5801077636530431\n      y: -0.2352506062318782\n      z: -0.22498685013938632\n      w: 0.746667966422396\npose_cov: [0.0003676327469293028, 1.2830448213208001e-05, 2.874441179301357e-06, 0.0003274850605521351, 3.86321607948048e-06, 0.00021438395197037607, 0.0003872221277561039, 0.0004879859334323555, -0.0001087453929358162, 0.000806046708021313, -0.00015834043733775616, 9.842560393735766e-05]\ngyr: [-0.007971521466970444, -0.04230653494596481, -0.028793781995773315]\nvel: [65.14836120605469, -132.73672485351562, -187.33619689941406]\nworld_to_gravity_deg: [0.0, -0.0, 0.0]\nswarmlio_start_time: 5.485999999\ndegenerated: True\nteammate: []"
+        ],
+        "publishers": [
+          "/laserMapping_quad1 (http://127.0.0.1:42469/)",
+          "/laserMapping_quad2 (http://127.0.0.1:39405/)"
+        ],
+        "rate_hz": 22.14,
+        "subscribers": [
+          "/laserMapping_quad1 (http://127.0.0.1:42469/)",
+          "/laserMapping_quad2 (http://127.0.0.1:39405/)"
+        ],
+        "topic": "/quadstate_to_teammate",
+        "type": "swarm_msgs/QuadStatePub"
+      }
+    },
+    "node_infos": {
+      "/laserMapping_quad1": {
+        "raw_tail": "tatePub]\n * /quadstate_to_teammate [swarm_msgs/QuadStatePub]\n\nServices: \n * /laserMapping_quad1/get_loggers\n * /laserMapping_quad1/set_logger_level\n\n\ncontacting node http://127.0.0.1:42469/ ...\nPid: 58\nConnections:\n * topic: /rosout\n    * to: /rosout\n    * direction: outbound (50023 - 127.0.0.1:37920) [24]\n    * transport: TCPROS\n * topic: /quadstate_to_teammate\n    * to: /laserMapping_quad1\n    * direction: outbound\n    * transport: INTRAPROCESS\n * topic: /quadstate_to_teammate\n    * to: /laserMapping_quad2\n    * direction: outbound (50023 - 127.0.0.1:37928) [25]\n    * transport: TCPROS\n * topic: /global_extrinsic_to_teammate\n    * to: /laserMapping_quad1\n    * direction: outbound\n    * transport: INTRAPROCESS\n * topic: /global_extrinsic_to_teammate\n    * to: /swarm_lio2_global_extrinsic_to_tf\n    * direction: outbound (50023 - 127.0.0.1:37908) [23]\n    * transport: TCPROS\n * topic: /global_extrinsic_to_teammate\n    * to: /laserMapping_quad2\n    * direction: outbound (50023 - 127.0.0.1:37936) [15]\n    * transport: TCPROS\n * topic: /quad1/cloud_registered\n    * to: /swarm_lio2_robot_a_map_raw\n    * direction: outbound (50023 - 127.0.0.1:37942) [10]\n    * transport: TCPROS\n * topic: /quad1/cloud_registered_body\n    * to: /swarm_lio2_robot_a_static_raw\n    * direction: outbound (50023 - 127.0.0.1:37948) [11]\n    * transport: TCPROS\n * topic: /quad1/lidar_slam/odom\n    * to: /swarm_lio2_robot_a_odom_raw\n    * direction: outbound (50023 - 127.0.0.1:37950) [14]\n    * transport: TCPROS\n * topic: /quadstate_to_teammate\n    * to: /laserMapping_quad1 (http://127.0.0.1:42469/)\n    * direction: inbound\n    * transport: INTRAPROCESS\n * topic: /quadstate_to_teammate\n    * to: /laserMapping_quad2 (http://127.0.0.1:39405/)\n    * direction: inbound (50408 - 127.0.0.1:59709) [12]\n    * transport: TCPROS\n * topic: /global_extrinsic_to_teammate\n    * to: /laserMapping_quad1 (http://127.0.0.1:42469/)\n    * direction: inbound\n    * transport: INTRAPROCESS\n * topic: /global_extrinsic_to_teammate\n    * to: /laserMapping_quad2 (http://127.0.0.1:39405/)\n    * direction: inbound (50416 - 127.0.0.1:59709) [26]\n    * transport: TCPROS\n * topic: /quad1_pcl_render_node/sensor_cloud\n    * to: /robot_a_lidar_to_swarm_lio2 (http://127.0.0.1:46577/)\n    * direction: inbound (37380 - 127.0.0.1:51431) [21]\n    * transport: TCPROS\n * topic: /quad_1/imu\n    * to: /robot_a_imu_to_swarm_lio2 (http://127.0.0.1:45305/)\n    * direction: inbound (51216 - 127.0.0.1:59943) [27]\n    * transport: TCPROS",
+        "returncode": 0
+      },
+      "/laserMapping_quad2": {
+        "raw_tail": "tatePub]\n * /quadstate_to_teammate [swarm_msgs/QuadStatePub]\n\nServices: \n * /laserMapping_quad2/get_loggers\n * /laserMapping_quad2/set_logger_level\n\n\ncontacting node http://127.0.0.1:39405/ ...\nPid: 59\nConnections:\n * topic: /rosout\n    * to: /rosout\n    * direction: outbound (59709 - 127.0.0.1:50402) [24]\n    * transport: TCPROS\n * topic: /quadstate_to_teammate\n    * to: /laserMapping_quad2\n    * direction: outbound\n    * transport: INTRAPROCESS\n * topic: /quadstate_to_teammate\n    * to: /laserMapping_quad1\n    * direction: outbound (59709 - 127.0.0.1:50408) [25]\n    * transport: TCPROS\n * topic: /global_extrinsic_to_teammate\n    * to: /laserMapping_quad2\n    * direction: outbound\n    * transport: INTRAPROCESS\n * topic: /global_extrinsic_to_teammate\n    * to: /swarm_lio2_global_extrinsic_to_tf\n    * direction: outbound (59709 - 127.0.0.1:50386) [23]\n    * transport: TCPROS\n * topic: /global_extrinsic_to_teammate\n    * to: /laserMapping_quad1\n    * direction: outbound (59709 - 127.0.0.1:50416) [27]\n    * transport: TCPROS\n * topic: /quad2/cloud_registered\n    * to: /swarm_lio2_robot_b_map_raw\n    * direction: outbound (59709 - 127.0.0.1:50424) [10]\n    * transport: TCPROS\n * topic: /quad2/cloud_registered_body\n    * to: /swarm_lio2_robot_b_static_raw\n    * direction: outbound (59709 - 127.0.0.1:50434) [11]\n    * transport: TCPROS\n * topic: /quad2/lidar_slam/odom\n    * to: /swarm_lio2_robot_b_odom_raw\n    * direction: outbound (59709 - 127.0.0.1:50448) [14]\n    * transport: TCPROS\n * topic: /quadstate_to_teammate\n    * to: /laserMapping_quad2 (http://127.0.0.1:39405/)\n    * direction: inbound\n    * transport: INTRAPROCESS\n * topic: /quadstate_to_teammate\n    * to: /laserMapping_quad1 (http://127.0.0.1:42469/)\n    * direction: inbound (37928 - 127.0.0.1:50023) [12]\n    * transport: TCPROS\n * topic: /global_extrinsic_to_teammate\n    * to: /laserMapping_quad2 (http://127.0.0.1:39405/)\n    * direction: inbound\n    * transport: INTRAPROCESS\n * topic: /global_extrinsic_to_teammate\n    * to: /laserMapping_quad1 (http://127.0.0.1:42469/)\n    * direction: inbound (37936 - 127.0.0.1:50023) [26]\n    * transport: TCPROS\n * topic: /quad2_pcl_render_node/sensor_cloud\n    * to: /robot_b_lidar_to_swarm_lio2 (http://127.0.0.1:45291/)\n    * direction: inbound (34374 - 127.0.0.1:56029) [20]\n    * transport: TCPROS\n * topic: /quad_2/imu\n    * to: /robot_b_imu_to_swarm_lio2 (http://127.0.0.1:42273/)\n    * direction: inbound (54238 - 127.0.0.1:41177) [22]\n    * transport: TCPROS",
+        "returncode": 0
+      },
+      "/udp_online": {
+        "raw_tail": "--------------------------------------------------------------------------------\nNode [/udp_online]\nPublications: None\n\nSubscriptions: None\n\nServices: None\n\n\ncannot contact [/udp_online]: unknown node",
+        "returncode": 0
+      },
+      "/udp_soft_time_sync": {
+        "raw_tail": "--------------------------------------------------------------------------------\nNode [/udp_soft_time_sync]\nPublications: None\n\nSubscriptions: None\n\nServices: None\n\n\ncannot contact [/udp_soft_time_sync]: unknown node",
+        "returncode": 0
+      }
+    },
+    "nodes": [
+      "/laserMapping_quad1",
+      "/laserMapping_quad2",
+      "/robot_a_imu_to_swarm_lio2",
+      "/robot_a_lidar_to_swarm_lio2",
+      "/robot_b_imu_to_swarm_lio2",
+      "/robot_b_lidar_to_swarm_lio2",
+      "/ros_bridge",
+      "/rosout",
+      "/swarm_lio2_global_extrinsic_to_tf",
+      "/swarm_lio2_robot_a_map_raw",
+      "/swarm_lio2_robot_a_odom_raw",
+      "/swarm_lio2_robot_a_static_raw",
+      "/swarm_lio2_robot_b_map_raw",
+      "/swarm_lio2_robot_b_odom_raw",
+      "/swarm_lio2_robot_b_static_raw"
+    ],
+    "observation_topic_nonzero": true,
+    "observation_topic_rates": {
+      "/quad1/cluster_input": 0.0,
+      "/quad1/cluster_visualization": 12.305,
+      "/quad1/high_intensity_input": 0.0,
+      "/quad1/temp_tracker": 0.0,
+      "/quad2/cluster_input": 0.0,
+      "/quad2/cluster_visualization": 9.522,
+      "/quad2/high_intensity_input": 0.0,
+      "/quad2/temp_tracker": 0.0
+    },
+    "quadstate_drone_ids": [
+      1,
+      2
+    ],
+    "ros_direct_peer_subscription": true,
+    "ros_master_uri": "http://127.0.0.1:11312",
+    "rosnode_list_available": true,
+    "rostopic_list_available": true,
+    "schema": "swarm_lio2_mutual_state_debug/v1",
+    "state_topic_samples": {
+      "/quad1/cluster_input": {
+        "echo_raw_tail": "",
+        "echo_returncode": 124,
+        "hz_raw_tail": "subscribed to [/quad1/cluster_input]\nno new messages\nno new messages\nno new messages\nno new messages\nno new messages",
+        "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /laserMapping_quad1 (http://127.0.0.1:42469/)\n\nSubscribers: None",
+        "messages": [],
+        "publishers": [
+          "/laserMapping_quad1 (http://127.0.0.1:42469/)"
+        ],
+        "rate_hz": 0.0,
+        "subscribers": [],
+        "topic": "/quad1/cluster_input",
+        "type": "sensor_msgs/PointCloud2"
+      },
+      "/quad1/cluster_visualization": {
+        "echo_raw_tail": "ation: \n    x: 0.0\n    y: 0.0\n    z: 0.0\n    w: 0.0\nscale: \n  x: 0.0\n  y: 0.0\n  z: 0.0\ncolor: \n  r: 0.0\n  g: 0.0\n  b: 0.0\n  a: 0.0\nlifetime: \n  secs: 0\n  nsecs:         0\nframe_locked: False\npoints: []\ncolors: []\ntext: ''\nmesh_resource: ''\nmesh_use_embedded_materials: False\n---\nheader: \n  seq: 53\n  stamp: \n    secs: 368\n    nsecs: 214000001\n  frame_id: \"quad1/world\"\nns: ''\nid: 0\ntype: 0\naction: 3\npose: \n  position: \n    x: 0.0\n    y: 0.0\n    z: 0.0\n  orientation: \n    x: 0.0\n    y: 0.0\n    z: 0.0\n    w: 0.0\nscale: \n  x: 0.0\n  y: 0.0\n  z: 0.0\ncolor: \n  r: 0.0\n  g: 0.0\n  b: 0.0\n  a: 0.0\nlifetime: \n  secs: 0\n  nsecs:         0\nframe_locked: False\npoints: []\ncolors: []\ntext: ''\nmesh_resource: ''\nmesh_use_embedded_materials: False\n---\nheader: \n  seq: 54\n  stamp: \n    secs: 368\n    nsecs: 294000001\n  frame_id: \"quad1/world\"\nns: ''\nid: 0\ntype: 0\naction: 3\npose: \n  position: \n    x: 0.0\n    y: 0.0\n    z: 0.0\n  orientation: \n    x: 0.0\n    y: 0.0\n    z: 0.0\n    w: 0.0\nscale: \n  x: 0.0\n  y: 0.0\n  z: 0.0\ncolor: \n  r: 0.0\n  g: 0.0\n  b: 0.0\n  a: 0.0\nlifetime: \n  secs: 0\n  nsecs:         0\nframe_locked: False\npoints: []\ncolors: []\ntext: ''\nmesh_resource: ''\nmesh_use_embedded_materials: False\n---",
+        "echo_returncode": 0,
+        "hz_raw_tail": "subscribed to [/quad1/cluster_visualization]\naverage rate: 12.305\n\tmin: 0.001s max: 0.107s std dev: 0.02718s window: 12\naverage rate: 11.648\n\tmin: 0.001s max: 0.107s std dev: 0.02047s window: 23\naverage rate: 11.402\n\tmin: 0.001s max: 0.118s std dev: 0.01957s window: 34\naverage rate: 11.297\n\tmin: 0.001s max: 0.164s std dev: 0.02479s window: 45\naverage rate: 11.206\n\tmin: 0.001s max: 0.164s std dev: 0.02322s window: 52",
+        "info_raw_tail": "Type: visualization_msgs/Marker\n\nPublishers: \n * /laserMapping_quad1 (http://127.0.0.1:42469/)\n\nSubscribers: None",
+        "messages": [
+          "header: \n  seq: 52\n  stamp: \n    secs: 368\n    nsecs: 170000001\n  frame_id: \"quad1/world\"\nns: ''\nid: 0\ntype: 0\naction: 3\npose: \n  position: \n    x: 0.0\n    y: 0.0\n    z: 0.0\n  orientation: \n    x: 0.0\n    y: 0.0\n    z: 0.0\n    w: 0.0\nscale: \n  x: 0.0\n  y: 0.0\n  z: 0.0\ncolor: \n  r: 0.0\n  g: 0.0\n  b: 0.0\n  a: 0.0\nlifetime: \n  secs: 0\n  nsecs:         0\nframe_locked: False\npoints: []\ncolors: []\ntext: ''\nmesh_resource: ''\nmesh_use_embedded_materials: False",
+          "header: \n  seq: 53\n  stamp: \n    secs: 368\n    nsecs: 214000001\n  frame_id: \"quad1/world\"\nns: ''\nid: 0\ntype: 0\naction: 3\npose: \n  position: \n    x: 0.0\n    y: 0.0\n    z: 0.0\n  orientation: \n    x: 0.0\n    y: 0.0\n    z: 0.0\n    w: 0.0\nscale: \n  x: 0.0\n  y: 0.0\n  z: 0.0\ncolor: \n  r: 0.0\n  g: 0.0\n  b: 0.0\n  a: 0.0\nlifetime: \n  secs: 0\n  nsecs:         0\nframe_locked: False\npoints: []\ncolors: []\ntext: ''\nmesh_resource: ''\nmesh_use_embedded_materials: False",
+          "header: \n  seq: 54\n  stamp: \n    secs: 368\n    nsecs: 294000001\n  frame_id: \"quad1/world\"\nns: ''\nid: 0\ntype: 0\naction: 3\npose: \n  position: \n    x: 0.0\n    y: 0.0\n    z: 0.0\n  orientation: \n    x: 0.0\n    y: 0.0\n    z: 0.0\n    w: 0.0\nscale: \n  x: 0.0\n  y: 0.0\n  z: 0.0\ncolor: \n  r: 0.0\n  g: 0.0\n  b: 0.0\n  a: 0.0\nlifetime: \n  secs: 0\n  nsecs:         0\nframe_locked: False\npoints: []\ncolors: []\ntext: ''\nmesh_resource: ''\nmesh_use_embedded_materials: False"
+        ],
+        "publishers": [
+          "/laserMapping_quad1 (http://127.0.0.1:42469/)"
+        ],
+        "rate_hz": 12.305,
+        "subscribers": [],
+        "topic": "/quad1/cluster_visualization",
+        "type": "visualization_msgs/Marker"
+      },
+      "/quad1/connected_teammate_list": {
+        "echo_raw_tail": "header: \n  seq: 4966\n  stamp: \n    secs: 325\n    nsecs: 118000000\n  frame_id: ''\ndrone_id: 1\nconnected_teammate_id: []\n---\nheader: \n  seq: 4967\n  stamp: \n    secs: 325\n    nsecs: 148000000\n  frame_id: ''\ndrone_id: 1\nconnected_teammate_id: []\n---\nheader: \n  seq: 4968\n  stamp: \n    secs: 325\n    nsecs: 198000000\n  frame_id: ''\ndrone_id: 1\nconnected_teammate_id: []\n---",
+        "echo_returncode": 0,
+        "hz_raw_tail": "subscribed to [/quad1/connected_teammate_list]\naverage rate: 11.136\n\tmin: 0.000s max: 0.153s std dev: 0.03582s window: 11\naverage rate: 10.966\n\tmin: 0.000s max: 0.153s std dev: 0.02531s window: 22\naverage rate: 11.046\n\tmin: 0.000s max: 0.167s std dev: 0.02976s window: 33\naverage rate: 10.972\n\tmin: 0.000s max: 0.167s std dev: 0.02619s window: 44\naverage rate: 10.951\n\tmin: 0.000s max: 0.167s std dev: 0.02495s window: 51",
+        "info_raw_tail": "Type: swarm_msgs/ConnectedTeammateList\n\nPublishers: \n * /laserMapping_quad1 (http://127.0.0.1:42469/)\n\nSubscribers: None",
+        "messages": [
+          "header: \n  seq: 4966\n  stamp: \n    secs: 325\n    nsecs: 118000000\n  frame_id: ''\ndrone_id: 1\nconnected_teammate_id: []",
+          "header: \n  seq: 4967\n  stamp: \n    secs: 325\n    nsecs: 148000000\n  frame_id: ''\ndrone_id: 1\nconnected_teammate_id: []",
+          "header: \n  seq: 4968\n  stamp: \n    secs: 325\n    nsecs: 198000000\n  frame_id: ''\ndrone_id: 1\nconnected_teammate_id: []"
+        ],
+        "publishers": [
+          "/laserMapping_quad1 (http://127.0.0.1:42469/)"
+        ],
+        "rate_hz": 11.136,
+        "subscribers": [],
+        "topic": "/quad1/connected_teammate_list",
+        "type": "swarm_msgs/ConnectedTeammateList"
+      },
+      "/quad1/connected_teammate_num": {
+        "echo_raw_tail": "data: 0\n---\ndata: 0\n---\ndata: 0\n---",
+        "echo_returncode": 0,
+        "hz_raw_tail": "subscribed to [/quad1/connected_teammate_num]\naverage rate: 10.933\n\tmin: 0.082s max: 0.106s std dev: 0.00705s window: 11\naverage rate: 10.980\n\tmin: 0.001s max: 0.184s std dev: 0.02960s window: 22\naverage rate: 10.939\n\tmin: 0.001s max: 0.184s std dev: 0.02466s window: 33\naverage rate: 10.982\n\tmin: 0.001s max: 0.184s std dev: 0.02167s window: 44\naverage rate: 10.967\n\tmin: 0.001s max: 0.184s std dev: 0.02054s window: 51",
+        "info_raw_tail": "Type: std_msgs/Int8\n\nPublishers: \n * /laserMapping_quad1 (http://127.0.0.1:42469/)\n\nSubscribers: None",
+        "messages": [
+          "data: 0",
+          "data: 0",
+          "data: 0"
+        ],
+        "publishers": [
+          "/laserMapping_quad1 (http://127.0.0.1:42469/)"
+        ],
+        "rate_hz": 10.933,
+        "subscribers": [],
+        "topic": "/quad1/connected_teammate_num",
+        "type": "std_msgs/Int8"
+      },
+      "/quad1/high_intensity_input": {
+        "echo_raw_tail": "",
+        "echo_returncode": 124,
+        "hz_raw_tail": "subscribed to [/quad1/high_intensity_input]\nno new messages\nno new messages\nno new messages\nno new messages\nno new messages",
+        "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /laserMapping_quad1 (http://127.0.0.1:42469/)\n\nSubscribers: None",
+        "messages": [],
+        "publishers": [
+          "/laserMapping_quad1 (http://127.0.0.1:42469/)"
+        ],
+        "rate_hz": 0.0,
+        "subscribers": [],
+        "topic": "/quad1/high_intensity_input",
+        "type": "sensor_msgs/PointCloud2"
+      },
+      "/quad1/teammate_id_with_traj_matching": {
+        "echo_raw_tail": "header: \n  seq: 5145\n  stamp: \n    secs: 334\n    nsecs: 358000000\n  frame_id: ''\ndrone_id: 1\nconnected_teammate_id: []\n---\nheader: \n  seq: 5146\n  stamp: \n    secs: 334\n    nsecs: 358000000\n  frame_id: ''\ndrone_id: 1\nconnected_teammate_id: []\n---\nheader: \n  seq: 5147\n  stamp: \n    secs: 334\n    nsecs: 410000000\n  frame_id: ''\ndrone_id: 1\nconnected_teammate_id: []\n---",
+        "echo_returncode": 0,
+        "hz_raw_tail": "subscribed to [/quad1/teammate_id_with_traj_matching]\naverage rate: 10.769\n\tmin: 0.076s max: 0.110s std dev: 0.01270s window: 11\naverage rate: 10.862\n\tmin: 0.076s max: 0.110s std dev: 0.01051s window: 22\naverage rate: 10.943\n\tmin: 0.074s max: 0.110s std dev: 0.00967s window: 33\naverage rate: 10.915\n\tmin: 0.074s max: 0.110s std dev: 0.00922s window: 44\naverage rate: 10.992\n\tmin: 0.072s max: 0.110s std dev: 0.00910s window: 52",
+        "info_raw_tail": "Type: swarm_msgs/ConnectedTeammateList\n\nPublishers: \n * /laserMapping_quad1 (http://127.0.0.1:42469/)\n\nSubscribers: None",
+        "messages": [
+          "header: \n  seq: 5145\n  stamp: \n    secs: 334\n    nsecs: 358000000\n  frame_id: ''\ndrone_id: 1\nconnected_teammate_id: []",
+          "header: \n  seq: 5146\n  stamp: \n    secs: 334\n    nsecs: 358000000\n  frame_id: ''\ndrone_id: 1\nconnected_teammate_id: []",
+          "header: \n  seq: 5147\n  stamp: \n    secs: 334\n    nsecs: 410000000\n  frame_id: ''\ndrone_id: 1\nconnected_teammate_id: []"
+        ],
+        "publishers": [
+          "/laserMapping_quad1 (http://127.0.0.1:42469/)"
+        ],
+        "rate_hz": 10.769,
+        "subscribers": [],
+        "topic": "/quad1/teammate_id_with_traj_matching",
+        "type": "swarm_msgs/ConnectedTeammateList"
+      },
+      "/quad1/temp_tracker": {
+        "echo_raw_tail": "",
+        "echo_returncode": 124,
+        "hz_raw_tail": "subscribed to [/quad1/temp_tracker]\nno new messages\nno new messages\nno new messages\nno new messages\nno new messages",
+        "info_raw_tail": "Type: visualization_msgs/Marker\n\nPublishers: \n * /laserMapping_quad1 (http://127.0.0.1:42469/)\n\nSubscribers: None",
+        "messages": [],
+        "publishers": [
+          "/laserMapping_quad1 (http://127.0.0.1:42469/)"
+        ],
+        "rate_hz": 0.0,
+        "subscribers": [],
+        "topic": "/quad1/temp_tracker",
+        "type": "visualization_msgs/Marker"
+      },
+      "/quad2/cluster_input": {
+        "echo_raw_tail": "",
+        "echo_returncode": 124,
+        "hz_raw_tail": "subscribed to [/quad2/cluster_input]\nno new messages\nno new messages\nno new messages\nno new messages\nno new messages",
+        "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /laserMapping_quad2 (http://127.0.0.1:39405/)\n\nSubscribers: None",
+        "messages": [],
+        "publishers": [
+          "/laserMapping_quad2 (http://127.0.0.1:39405/)"
+        ],
+        "rate_hz": 0.0,
+        "subscribers": [],
+        "topic": "/quad2/cluster_input",
+        "type": "sensor_msgs/PointCloud2"
+      },
+      "/quad2/cluster_visualization": {
+        "echo_raw_tail": "ation: \n    x: 0.0\n    y: 0.0\n    z: 0.0\n    w: 0.0\nscale: \n  x: 0.0\n  y: 0.0\n  z: 0.0\ncolor: \n  r: 0.0\n  g: 0.0\n  b: 0.0\n  a: 0.0\nlifetime: \n  secs: 0\n  nsecs:         0\nframe_locked: False\npoints: []\ncolors: []\ntext: ''\nmesh_resource: ''\nmesh_use_embedded_materials: False\n---\nheader: \n  seq: 43\n  stamp: \n    secs: 373\n    nsecs: 426000001\n  frame_id: \"quad2/world\"\nns: ''\nid: 0\ntype: 0\naction: 3\npose: \n  position: \n    x: 0.0\n    y: 0.0\n    z: 0.0\n  orientation: \n    x: 0.0\n    y: 0.0\n    z: 0.0\n    w: 0.0\nscale: \n  x: 0.0\n  y: 0.0\n  z: 0.0\ncolor: \n  r: 0.0\n  g: 0.0\n  b: 0.0\n  a: 0.0\nlifetime: \n  secs: 0\n  nsecs:         0\nframe_locked: False\npoints: []\ncolors: []\ntext: ''\nmesh_resource: ''\nmesh_use_embedded_materials: False\n---\nheader: \n  seq: 44\n  stamp: \n    secs: 373\n    nsecs: 466000001\n  frame_id: \"quad2/world\"\nns: ''\nid: 0\ntype: 0\naction: 3\npose: \n  position: \n    x: 0.0\n    y: 0.0\n    z: 0.0\n  orientation: \n    x: 0.0\n    y: 0.0\n    z: 0.0\n    w: 0.0\nscale: \n  x: 0.0\n  y: 0.0\n  z: 0.0\ncolor: \n  r: 0.0\n  g: 0.0\n  b: 0.0\n  a: 0.0\nlifetime: \n  secs: 0\n  nsecs:         0\nframe_locked: False\npoints: []\ncolors: []\ntext: ''\nmesh_resource: ''\nmesh_use_embedded_materials: False\n---",
+        "echo_returncode": 0,
+        "hz_raw_tail": "subscribed to [/quad2/cluster_visualization]\naverage rate: 9.522\n\tmin: 0.081s max: 0.202s std dev: 0.03979s window: 8\naverage rate: 9.219\n\tmin: 0.065s max: 0.205s std dev: 0.04146s window: 17\naverage rate: 9.142\n\tmin: 0.065s max: 0.205s std dev: 0.04040s window: 26\naverage rate: 9.637\n\tmin: 0.013s max: 0.205s std dev: 0.04067s window: 37\naverage rate: 9.418\n\tmin: 0.013s max: 0.205s std dev: 0.04161s window: 42",
+        "info_raw_tail": "Type: visualization_msgs/Marker\n\nPublishers: \n * /laserMapping_quad2 (http://127.0.0.1:39405/)\n\nSubscribers: None",
+        "messages": [
+          "header: \n  seq: 42\n  stamp: \n    secs: 373\n    nsecs: 326000001\n  frame_id: \"quad2/world\"\nns: ''\nid: 0\ntype: 0\naction: 3\npose: \n  position: \n    x: 0.0\n    y: 0.0\n    z: 0.0\n  orientation: \n    x: 0.0\n    y: 0.0\n    z: 0.0\n    w: 0.0\nscale: \n  x: 0.0\n  y: 0.0\n  z: 0.0\ncolor: \n  r: 0.0\n  g: 0.0\n  b: 0.0\n  a: 0.0\nlifetime: \n  secs: 0\n  nsecs:         0\nframe_locked: False\npoints: []\ncolors: []\ntext: ''\nmesh_resource: ''\nmesh_use_embedded_materials: False",
+          "header: \n  seq: 43\n  stamp: \n    secs: 373\n    nsecs: 426000001\n  frame_id: \"quad2/world\"\nns: ''\nid: 0\ntype: 0\naction: 3\npose: \n  position: \n    x: 0.0\n    y: 0.0\n    z: 0.0\n  orientation: \n    x: 0.0\n    y: 0.0\n    z: 0.0\n    w: 0.0\nscale: \n  x: 0.0\n  y: 0.0\n  z: 0.0\ncolor: \n  r: 0.0\n  g: 0.0\n  b: 0.0\n  a: 0.0\nlifetime: \n  secs: 0\n  nsecs:         0\nframe_locked: False\npoints: []\ncolors: []\ntext: ''\nmesh_resource: ''\nmesh_use_embedded_materials: False",
+          "header: \n  seq: 44\n  stamp: \n    secs: 373\n    nsecs: 466000001\n  frame_id: \"quad2/world\"\nns: ''\nid: 0\ntype: 0\naction: 3\npose: \n  position: \n    x: 0.0\n    y: 0.0\n    z: 0.0\n  orientation: \n    x: 0.0\n    y: 0.0\n    z: 0.0\n    w: 0.0\nscale: \n  x: 0.0\n  y: 0.0\n  z: 0.0\ncolor: \n  r: 0.0\n  g: 0.0\n  b: 0.0\n  a: 0.0\nlifetime: \n  secs: 0\n  nsecs:         0\nframe_locked: False\npoints: []\ncolors: []\ntext: ''\nmesh_resource: ''\nmesh_use_embedded_materials: False"
+        ],
+        "publishers": [
+          "/laserMapping_quad2 (http://127.0.0.1:39405/)"
+        ],
+        "rate_hz": 9.522,
+        "subscribers": [],
+        "topic": "/quad2/cluster_visualization",
+        "type": "visualization_msgs/Marker"
+      },
+      "/quad2/connected_teammate_list": {
+        "echo_raw_tail": "header: \n  seq: 4240\n  stamp: \n    secs: 329\n    nsecs: 330000000\n  frame_id: ''\ndrone_id: 2\nconnected_teammate_id: []\n---\nheader: \n  seq: 4241\n  stamp: \n    secs: 329\n    nsecs: 420000000\n  frame_id: ''\ndrone_id: 2\nconnected_teammate_id: []\n---\nheader: \n  seq: 4242\n  stamp: \n    secs: 329\n    nsecs: 514000000\n  frame_id: ''\ndrone_id: 2\nconnected_teammate_id: []\n---",
+        "echo_returncode": 0,
+        "hz_raw_tail": "subscribed to [/quad2/connected_teammate_list]\naverage rate: 9.830\n\tmin: 0.080s max: 0.173s std dev: 0.02773s window: 9\naverage rate: 9.871\n\tmin: 0.080s max: 0.173s std dev: 0.02612s window: 19\naverage rate: 9.534\n\tmin: 0.080s max: 0.198s std dev: 0.03134s window: 28\naverage rate: 9.725\n\tmin: 0.006s max: 0.198s std dev: 0.03466s window: 39\naverage rate: 9.805\n\tmin: 0.006s max: 0.198s std dev: 0.03310s window: 43",
+        "info_raw_tail": "Type: swarm_msgs/ConnectedTeammateList\n\nPublishers: \n * /laserMapping_quad2 (http://127.0.0.1:39405/)\n\nSubscribers: None",
+        "messages": [
+          "header: \n  seq: 4240\n  stamp: \n    secs: 329\n    nsecs: 330000000\n  frame_id: ''\ndrone_id: 2\nconnected_teammate_id: []",
+          "header: \n  seq: 4241\n  stamp: \n    secs: 329\n    nsecs: 420000000\n  frame_id: ''\ndrone_id: 2\nconnected_teammate_id: []",
+          "header: \n  seq: 4242\n  stamp: \n    secs: 329\n    nsecs: 514000000\n  frame_id: ''\ndrone_id: 2\nconnected_teammate_id: []"
+        ],
+        "publishers": [
+          "/laserMapping_quad2 (http://127.0.0.1:39405/)"
+        ],
+        "rate_hz": 9.83,
+        "subscribers": [],
+        "topic": "/quad2/connected_teammate_list",
+        "type": "swarm_msgs/ConnectedTeammateList"
+      },
+      "/quad2/connected_teammate_num": {
+        "echo_raw_tail": "data: 0\n---\ndata: 0\n---\ndata: 0\n---",
+        "echo_returncode": 0,
+        "hz_raw_tail": "subscribed to [/quad2/connected_teammate_num]\naverage rate: 8.977\n\tmin: 0.034s max: 0.170s std dev: 0.04482s window: 9\naverage rate: 9.422\n\tmin: 0.002s max: 0.187s std dev: 0.04846s window: 18\naverage rate: 9.255\n\tmin: 0.002s max: 0.187s std dev: 0.04467s window: 27\naverage rate: 9.518\n\tmin: 0.002s max: 0.187s std dev: 0.03993s window: 38\naverage rate: 9.256\n\tmin: 0.002s max: 0.209s std dev: 0.04193s window: 43",
+        "info_raw_tail": "Type: std_msgs/Int8\n\nPublishers: \n * /laserMapping_quad2 (http://127.0.0.1:39405/)\n\nSubscribers: None",
+        "messages": [
+          "data: 0",
+          "data: 0",
+          "data: 0"
+        ],
+        "publishers": [
+          "/laserMapping_quad2 (http://127.0.0.1:39405/)"
+        ],
+        "rate_hz": 8.977,
+        "subscribers": [],
+        "topic": "/quad2/connected_teammate_num",
+        "type": "std_msgs/Int8"
+      },
+      "/quad2/high_intensity_input": {
+        "echo_raw_tail": "",
+        "echo_returncode": 124,
+        "hz_raw_tail": "subscribed to [/quad2/high_intensity_input]\nno new messages\nno new messages\nno new messages\nno new messages\nno new messages",
+        "info_raw_tail": "Type: sensor_msgs/PointCloud2\n\nPublishers: \n * /laserMapping_quad2 (http://127.0.0.1:39405/)\n\nSubscribers: None",
+        "messages": [],
+        "publishers": [
+          "/laserMapping_quad2 (http://127.0.0.1:39405/)"
+        ],
+        "rate_hz": 0.0,
+        "subscribers": [],
+        "topic": "/quad2/high_intensity_input",
+        "type": "sensor_msgs/PointCloud2"
+      },
+      "/quad2/teammate_id_with_traj_matching": {
+        "echo_raw_tail": "header: \n  seq: 4394\n  stamp: \n    secs: 338\n    nsecs: 872000000\n  frame_id: ''\ndrone_id: 2\nconnected_teammate_id: []\n---\nheader: \n  seq: 4395\n  stamp: \n    secs: 339\n    nsecs:  38000000\n  frame_id: ''\ndrone_id: 2\nconnected_teammate_id: []\n---\nheader: \n  seq: 4396\n  stamp: \n    secs: 339\n    nsecs:  48000000\n  frame_id: ''\ndrone_id: 2\nconnected_teammate_id: []\n---",
+        "echo_returncode": 0,
+        "hz_raw_tail": "subscribed to [/quad2/teammate_id_with_traj_matching]\naverage rate: 10.927\n\tmin: 0.012s max: 0.168s std dev: 0.03648s window: 11\naverage rate: 10.358\n\tmin: 0.012s max: 0.170s std dev: 0.03170s window: 21\naverage rate: 9.951\n\tmin: 0.012s max: 0.170s std dev: 0.03287s window: 30\naverage rate: 9.955\n\tmin: 0.012s max: 0.172s std dev: 0.03099s window: 40\naverage rate: 9.688\n\tmin: 0.012s max: 0.190s std dev: 0.03300s window: 46",
+        "info_raw_tail": "Type: swarm_msgs/ConnectedTeammateList\n\nPublishers: \n * /laserMapping_quad2 (http://127.0.0.1:39405/)\n\nSubscribers: None",
+        "messages": [
+          "header: \n  seq: 4394\n  stamp: \n    secs: 338\n    nsecs: 872000000\n  frame_id: ''\ndrone_id: 2\nconnected_teammate_id: []",
+          "header: \n  seq: 4395\n  stamp: \n    secs: 339\n    nsecs:  38000000\n  frame_id: ''\ndrone_id: 2\nconnected_teammate_id: []",
+          "header: \n  seq: 4396\n  stamp: \n    secs: 339\n    nsecs:  48000000\n  frame_id: ''\ndrone_id: 2\nconnected_teammate_id: []"
+        ],
+        "publishers": [
+          "/laserMapping_quad2 (http://127.0.0.1:39405/)"
+        ],
+        "rate_hz": 10.927,
+        "subscribers": [],
+        "topic": "/quad2/teammate_id_with_traj_matching",
+        "type": "swarm_msgs/ConnectedTeammateList"
+      },
+      "/quad2/temp_tracker": {
+        "echo_raw_tail": "",
+        "echo_returncode": 124,
+        "hz_raw_tail": "subscribed to [/quad2/temp_tracker]\nno new messages\nno new messages\nno new messages\nno new messages\nno new messages",
+        "info_raw_tail": "Type: visualization_msgs/Marker\n\nPublishers: \n * /laserMapping_quad2 (http://127.0.0.1:39405/)\n\nSubscribers: None",
+        "messages": [],
+        "publishers": [
+          "/laserMapping_quad2 (http://127.0.0.1:39405/)"
+        ],
+        "rate_hz": 0.0,
+        "subscribers": [],
+        "topic": "/quad2/temp_tracker",
+        "type": "visualization_msgs/Marker"
+      }
+    },
+    "teammate_array_length": 0,
+    "teammate_state_received": true,
+    "topics_tail": [
+      "/quad2/teammate_id_with_traj_matching",
+      "/quad2/teammate_odom/UAV0",
+      "/quad2/teammate_odom/UAV1",
+      "/quad2/teammate_odom/UAV10",
+      "/quad2/teammate_odom/UAV11",
+      "/quad2/teammate_odom/UAV12",
+      "/quad2/teammate_odom/UAV13",
+      "/quad2/teammate_odom/UAV14",
+      "/quad2/teammate_odom/UAV15",
+      "/quad2/teammate_odom/UAV16",
+      "/quad2/teammate_odom/UAV17",
+      "/quad2/teammate_odom/UAV18",
+      "/quad2/teammate_odom/UAV19",
+      "/quad2/teammate_odom/UAV2",
+      "/quad2/teammate_odom/UAV20",
+      "/quad2/teammate_odom/UAV21",
+      "/quad2/teammate_odom/UAV22",
+      "/quad2/teammate_odom/UAV23",
+      "/quad2/teammate_odom/UAV24",
+      "/quad2/teammate_odom/UAV25",
+      "/quad2/teammate_odom/UAV26",
+      "/quad2/teammate_odom/UAV27",
+      "/quad2/teammate_odom/UAV28",
+      "/quad2/teammate_odom/UAV29",
+      "/quad2/teammate_odom/UAV3",
+      "/quad2/teammate_odom/UAV30",
+      "/quad2/teammate_odom/UAV31",
+      "/quad2/teammate_odom/UAV32",
+      "/quad2/teammate_odom/UAV33",
+      "/quad2/teammate_odom/UAV34",
+      "/quad2/teammate_odom/UAV35",
+      "/quad2/teammate_odom/UAV36",
+      "/quad2/teammate_odom/UAV37",
+      "/quad2/teammate_odom/UAV38",
+      "/quad2/teammate_odom/UAV39",
+      "/quad2/teammate_odom/UAV4",
+      "/quad2/teammate_odom/UAV40",
+      "/quad2/teammate_odom/UAV5",
+      "/quad2/teammate_odom/UAV6",
+      "/quad2/teammate_odom/UAV7",
+      "/quad2/teammate_odom/UAV8",
+      "/quad2/teammate_odom/UAV9",
+      "/quad2/teammate_traj/UAV0",
+      "/quad2/teammate_traj/UAV1",
+      "/quad2/teammate_traj/UAV10",
+      "/quad2/teammate_traj/UAV11",
+      "/quad2/teammate_traj/UAV12",
+      "/quad2/teammate_traj/UAV13",
+      "/quad2/teammate_traj/UAV14",
+      "/quad2/teammate_traj/UAV15",
+      "/quad2/teammate_traj/UAV16",
+      "/quad2/teammate_traj/UAV17",
+      "/quad2/teammate_traj/UAV18",
+      "/quad2/teammate_traj/UAV19",
+      "/quad2/teammate_traj/UAV2",
+      "/quad2/teammate_traj/UAV20",
+      "/quad2/teammate_traj/UAV21",
+      "/quad2/teammate_traj/UAV22",
+      "/quad2/teammate_traj/UAV23",
+      "/quad2/teammate_traj/UAV24",
+      "/quad2/teammate_traj/UAV25",
+      "/quad2/teammate_traj/UAV26",
+      "/quad2/teammate_traj/UAV27",
+      "/quad2/teammate_traj/UAV28",
+      "/quad2/teammate_traj/UAV29",
+      "/quad2/teammate_traj/UAV3",
+      "/quad2/teammate_traj/UAV30",
+      "/quad2/teammate_traj/UAV31",
+      "/quad2/teammate_traj/UAV32",
+      "/quad2/teammate_traj/UAV33",
+      "/quad2/teammate_traj/UAV34",
+      "/quad2/teammate_traj/UAV35",
+      "/quad2/teammate_traj/UAV36",
+      "/quad2/teammate_traj/UAV37",
+      "/quad2/teammate_traj/UAV38",
+      "/quad2/teammate_traj/UAV39",
+      "/quad2/teammate_traj/UAV4",
+      "/quad2/teammate_traj/UAV40",
+      "/quad2/teammate_traj/UAV5",
+      "/quad2/teammate_traj/UAV6",
+      "/quad2/teammate_traj/UAV7",
+      "/quad2/teammate_traj/UAV8",
+      "/quad2/teammate_traj/UAV9",
+      "/quad2/temp_tracker",
+      "/quad2/traj",
+      "/quad2/uav_mesh_visualization",
+      "/quad2/uav_visualization",
+      "/quad2_pcl_render_node/sensor_cloud",
+      "/quad_1/imu",
+      "/quad_1/lidar_slam/odom",
+      "/quad_2/imu",
+      "/quad_2/lidar_slam/odom",
+      "/quadstate_from_teammate",
+      "/quadstate_to_teammate",
+      "/robot_a/dynamic_lio/cloud_dynamic",
+      "/robot_a/dynamic_lio/cloud_static",
+      "/robot_a/imu",
+      "/robot_a/imu/data",
+      "/robot_a/swarm_lio2_raw/Odometry",
+      "/robot_a/swarm_lio2_raw/cloud_dynamic",
+      "/robot_a/swarm_lio2_raw/cloud_map",
+      "/robot_a/swarm_lio2_raw/cloud_static",
+      "/robot_a/swarm_lio2_raw/relative_transform",
+      "/robot_a/velodyne_points",
+      "/robot_b/dynamic_lio/cloud_dynamic",
+      "/robot_b/dynamic_lio/cloud_static",
+      "/robot_b/imu",
+      "/robot_b/imu/data",
+      "/robot_b/swarm_lio2_raw/Odometry",
+      "/robot_b/swarm_lio2_raw/cloud_dynamic",
+      "/robot_b/swarm_lio2_raw/cloud_map",
+      "/robot_b/swarm_lio2_raw/cloud_static",
+      "/robot_b/swarm_lio2_raw/relative_transform",
+      "/robot_b/velodyne_points",
+      "/rosout",
+      "/rosout_agg",
+      "/team_slam/cleaned_static_map",
+      "/team_slam/erasor_metrics",
+      "/team_slam/erasor_removed_dynamic_cloud",
+      "/tf"
+    ],
+    "traj_matching_ids": {
+      "quad1": [],
+      "quad2": []
+    },
+    "udp_bridge_required": false,
+    "udp_bridge_running": false,
+    "updated_utc": "2026-05-09T01:28:25Z"
+  },
+  "mutual_state_debug_blocker": "mutual_observation_not_triggered",
   "native_global_extrinsic_has_entries": false,
   "native_global_extrinsic_nonzero_rate": true,
   "native_global_extrinsic_topics_with_entries": [],
-  "native_mutual_topic_rate_hz": 20.764,
+  "native_mutual_topic_rate_hz": 25.262,
   "native_mutual_topic_rates": {
     "/global_extrinsic_from_teammate": 0.0,
-    "/global_extrinsic_to_teammate": 20.764,
+    "/global_extrinsic_to_teammate": 25.262,
     "/quadstate_from_teammate": 0.0,
-    "/quadstate_to_teammate": 21.562
+    "/quadstate_to_teammate": 20.825
   },
   "native_mutual_topic_types": {
     "/global_extrinsic_from_teammate": "swarm_msgs/GlobalExtrinsicStatus",
@@ -34,14 +575,22 @@
     "valid": false
   },
   "ros2_swarm_relative_transform_rate_hz": 0.0,
+  "ros_direct_peer_subscription": true,
   "schema": "swarm_loop_agreement_validation/v1",
   "source": "sim_bridge",
   "swarm_loop_agreement_gate_pass": false,
-  "swarm_loop_agreement_reason": "no_verified_matches",
+  "swarm_loop_agreement_reason": "insufficient_robust_consensus",
   "swarm_loop_agreement_required": true,
   "swarm_loop_translation_error_m": null,
   "swarm_loop_yaw_error_deg": null,
-  "t_loop_a_b_available": false,
+  "t_loop_a_b_available": true,
   "t_swarm_a_b_available": false,
-  "updated_utc": "2026-05-09T00:45:50Z"
+  "teammate_array_length": 0,
+  "teammate_state_received": true,
+  "traj_matching_ids": {
+    "quad1": [],
+    "quad2": []
+  },
+  "udp_bridge_running": false,
+  "updated_utc": "2026-05-09T01:31:39Z"
 }
