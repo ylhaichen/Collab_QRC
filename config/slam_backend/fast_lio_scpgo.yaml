@@ -1,0 +1,12 @@
+local_slam_backend:
+  ros__parameters:
+    local_slam_backend: fast_lio_scpgo
+    default_safe_mode: true
+    point_lio_primary_candidate: false
+    odom_topic: /{robot}/Odometry
+    corrected_odom_topic: /{robot}/corrected_odom
+    nav_odom_topic: /{robot}/odom/nav
+    cloud_registered_body_topic: /{robot}/cloud_registered_body
+    cloud_static_topic: /{robot}/cloud_static
+    cloud_dynamic_topic: /{robot}/cloud_dynamic
+    gt_used_runtime: false

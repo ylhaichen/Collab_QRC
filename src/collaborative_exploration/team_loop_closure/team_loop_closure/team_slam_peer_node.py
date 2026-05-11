@@ -26,6 +26,7 @@ class PeerBridgePolicy:
     descriptor_only_until_candidate: bool = True
     send_cloud_only_on_candidate: bool = True
     peer_cloud_max_points: int = 2000
+    peer_cloud_voxel_size: float = 0.4
 
 
 def build_peer_envelope(
@@ -77,11 +78,13 @@ class TeamSlamPeerNode(Node):
         self.declare_parameter("peer_descriptor_only_until_candidate", True)
         self.declare_parameter("send_cloud_only_on_candidate", True)
         self.declare_parameter("peer_cloud_max_points", 2000)
+        self.declare_parameter("peer_cloud_voxel_size", 0.4)
         self.declare_parameter("compress_peer_json", True)
 
         self.robot_id = str(self.get_parameter("robot_id").value).strip().strip("/")
         self.peer_robot_id = str(self.get_parameter("peer_robot_id").value).strip().strip("/")
         self.mode = str(self.get_parameter("team_comm_mode").value).strip().lower() or "dds"
+        self.dependency_blocker = ""
         self.compress = bool(self.get_parameter("compress_peer_json").value)
         self.rate_sec = 1.0 / max(0.05, float(self.get_parameter("peer_keyframe_rate_hz").value))
         self.policy = PeerBridgePolicy(
@@ -90,30 +93,43 @@ class TeamSlamPeerNode(Node):
             ),
             send_cloud_only_on_candidate=bool(self.get_parameter("send_cloud_only_on_candidate").value),
             peer_cloud_max_points=int(self.get_parameter("peer_cloud_max_points").value),
+            peer_cloud_voxel_size=float(self.get_parameter("peer_cloud_voxel_size").value),
         )
         self.last_keyframe_sent = 0.0
         self.candidate_keyframes: set[str] = set()
+        self.local_clouds: dict[str, PointCloud2] = {}
 
         self.peer_keyframes_pub = self.create_publisher(String, "/team_slam/peer/keyframes", 10)
+        self.peer_descriptors_pub = self.create_publisher(String, "/team_slam/peer/descriptors", 10)
         self.peer_robust_pub = self.create_publisher(String, "/team_slam/peer/robust_loop_inliers", 10)
         self.peer_metrics_pub = self.create_publisher(String, "/team_slam/peer/pose_graph_metrics", 10)
+        self.peer_local_status_pub = self.create_publisher(String, "/team_slam/peer/status", 10)
         self.peer_cloud_pub = self.create_publisher(PointCloud2, "/team_slam/peer/keyframe_clouds", 10)
+        self.cloud_response_pub = self.create_publisher(PointCloud2, "/team_slam/cloud_response", 10)
         self.envelope_pub = self.create_publisher(String, "/team_slam/peer/envelopes", 10)
         self.status_pub = self.create_publisher(String, "/team_slam/peer/status", 10)
 
         self.create_subscription(String, "/team_slam/local/keyframes", self._on_local_keyframe, 10)
+        self.create_subscription(String, "/team_slam/local/descriptors", self._on_local_descriptor, 10)
+        self.create_subscription(String, "/team_slam/local/status", self._on_local_status, 10)
         self.create_subscription(String, "/team_slam/local/robust_loop_inliers", self._on_local_robust, 10)
         self.create_subscription(String, "/team_slam/local/pose_graph_metrics", self._on_local_metrics, 10)
         self.create_subscription(String, "/team_slam/cross_robot_candidates", self._on_candidate, 20)
+        self.create_subscription(String, "/team_slam/cloud_request", self._on_cloud_request, 20)
         self.create_subscription(PointCloud2, "/team_slam/local/keyframe_clouds", self._on_local_cloud, 10)
 
         self.create_timer(2.0, self._publish_status)
-        if self.mode != "dds":
+        if self.mode not in {"dds", "descriptor_only", "udp_json"}:
+            self.get_logger().warn(f"Unknown team_comm_mode={self.mode}; falling back to descriptor_only.")
+            self.dependency_blocker = "unknown_team_comm_mode"
+            self.mode = "descriptor_only"
+        if self.mode == "udp_json":
             self.get_logger().warn(
-                f"team_comm_mode:={self.mode} requested; UDP JSON is not enabled in this build, "
-                "falling back to DDS topic forwarding with explicit status."
+                "team_comm_mode:=udp_json requested; UDP socket transport is not enabled in this build, "
+                "using descriptor_only DDS envelopes and recording dependency_blocker."
             )
-            self.mode = "dds"
+            self.dependency_blocker = "udp_json_not_enabled"
+            self.mode = "descriptor_only"
         self.get_logger().info(
             f"team_slam_peer_node up: robot={self.robot_id} peer={self.peer_robot_id} mode={self.mode}"
         )
@@ -154,7 +170,21 @@ class TeamSlamPeerNode(Node):
             return
         self.last_keyframe_sent = now
         self._emit_envelope("/team_slam/local/keyframes", payload)
-        self.peer_keyframes_pub.publish(msg)
+        self.peer_descriptors_pub.publish(msg)
+        if self.mode == "dds":
+            self.peer_keyframes_pub.publish(msg)
+
+    def _on_local_descriptor(self, msg: String) -> None:
+        payload = loads_dict(msg.data)
+        if payload:
+            self._emit_envelope("/team_slam/local/descriptors", payload)
+        self.peer_descriptors_pub.publish(msg)
+
+    def _on_local_status(self, msg: String) -> None:
+        payload = loads_dict(msg.data)
+        if payload:
+            self._emit_envelope("/team_slam/local/status", payload)
+        self.peer_local_status_pub.publish(msg)
 
     def _on_local_robust(self, msg: String) -> None:
         payload = loads_dict(msg.data)
@@ -170,8 +200,21 @@ class TeamSlamPeerNode(Node):
 
     def _on_local_cloud(self, msg: PointCloud2) -> None:
         kid = str(msg.header.frame_id).split("/")[-1]
+        if kid:
+            self.local_clouds[kid] = msg
         if should_forward_keyframe_cloud(self.policy, kid, self.candidate_keyframes):
             self.peer_cloud_pub.publish(msg)
+
+    def _on_cloud_request(self, msg: String) -> None:
+        payload = loads_dict(msg.data)
+        if not payload:
+            return
+        kid = str(payload.get("keyframe_id", payload.get("compact_cloud_key", "")))
+        if not kid:
+            return
+        cloud = self.local_clouds.get(kid)
+        if cloud is not None:
+            self.cloud_response_pub.publish(cloud)
 
     def _publish_status(self) -> None:
         payload = {
@@ -181,7 +224,11 @@ class TeamSlamPeerNode(Node):
             "peer_robot_id": self.peer_robot_id,
             "team_comm_mode": self.mode,
             "candidate_keyframes": len(self.candidate_keyframes),
-            "dependency_blocker": "" if self.mode == "dds" else "udp_json_not_enabled",
+            "descriptor_first": True,
+            "send_cloud_only_on_candidate": self.policy.send_cloud_only_on_candidate,
+            "peer_cloud_max_points": self.policy.peer_cloud_max_points,
+            "peer_cloud_voxel_size": self.policy.peer_cloud_voxel_size,
+            "dependency_blocker": self.dependency_blocker,
             "gt_used_runtime": False,
         }
         self.status_pub.publish(String(data=dumps_compact(payload)))

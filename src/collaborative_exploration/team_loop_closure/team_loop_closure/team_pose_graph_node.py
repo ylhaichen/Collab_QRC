@@ -371,6 +371,7 @@ class TeamPoseGraphNode(Node):
         self.declare_parameter("match_topic", "/team_slam/cross_robot_matches")
         self.declare_parameter("robust_inliers_topic", "/team_slam/robust_loop_inliers")
         self.declare_parameter("metrics_topic", "/team_slam/pose_graph_metrics")
+        self.declare_parameter("local_metrics_topic", "/team_slam/local/pose_graph_metrics")
         self.declare_parameter("factors_topic", "/team_slam/team_pose_graph_factors")
         self.declare_parameter("team_pose_graph_backend", "auto")
         self.declare_parameter("export_dir", "logs")
@@ -379,6 +380,7 @@ class TeamPoseGraphNode(Node):
         self.declare_parameter("publish_global_odom", True)
         self.declare_parameter("publish_backend_metrics", True)
         self.declare_parameter("allow_export_only_outputs", False)
+        self.declare_parameter("no_overlap_rejection_passed", False)
 
         raw_robots = self.get_parameter("robots").value
         self.robots = [str(r).strip().strip("/") for r in raw_robots if str(r).strip()]
@@ -389,10 +391,14 @@ class TeamPoseGraphNode(Node):
         self.match_topic = str(self.get_parameter("match_topic").value)
         self.robust_topic = str(self.get_parameter("robust_inliers_topic").value)
         self.metrics_topic = str(self.get_parameter("metrics_topic").value)
+        self.local_metrics_topic = str(self.get_parameter("local_metrics_topic").value)
         self.factors_topic = str(self.get_parameter("factors_topic").value)
         self.publish_global_odom = bool(self.get_parameter("publish_global_odom").value)
         self.publish_backend_metrics = bool(self.get_parameter("publish_backend_metrics").value)
         self.allow_export_only_outputs = bool(self.get_parameter("allow_export_only_outputs").value)
+        self.no_overlap_rejection_passed = bool(
+            self.get_parameter("no_overlap_rejection_passed").value
+        )
         export_dir = Path(str(self.get_parameter("export_dir").value))
         metrics_path = Path(str(self.get_parameter("metrics_path").value))
         self.backend = TeamPoseGraphBackend(
@@ -421,6 +427,7 @@ class TeamPoseGraphNode(Node):
             self.create_subscription(Odometry, f"/{robot}/corrected_odom", lambda msg, r=robot: self._on_odom(r, msg, corrected=True), 20)
 
         self.metrics_pub = self.create_publisher(String, self.metrics_topic, 10)
+        self.local_metrics_pub = self.create_publisher(String, self.local_metrics_topic, 10)
         self.factors_pub = self.create_publisher(String, self.factors_topic, 10)
         self.global_odom_pubs = {
             robot: self.create_publisher(Odometry, f"/team_slam/{robot}/corrected_odom_global", 10)
@@ -586,9 +593,12 @@ class TeamPoseGraphNode(Node):
         metrics = self.backend.optimize_or_export(snapshot)
         now = self.get_clock().now().to_msg()
         metrics["stamp_sec"] = round(float(now.sec) + float(now.nanosec) * 1e-9, 6)
+        metrics["no_overlap_rejection_passed"] = self.no_overlap_rejection_passed
         self.latest_metrics = metrics
         if self.publish_backend_metrics:
-            self.metrics_pub.publish(String(data=dumps_compact(metrics)))
+            metrics_msg = String(data=dumps_compact(metrics))
+            self.metrics_pub.publish(metrics_msg)
+            self.local_metrics_pub.publish(metrics_msg)
         if self._outputs_allowed(metrics):
             self._publish_map_transforms()
             self._publish_global_odom()

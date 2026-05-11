@@ -24,6 +24,7 @@ class RobustLoopSelectorNode(Node):
         super().__init__("robust_loop_selector_node")
         self.declare_parameter("match_topic", "/team_slam/cross_robot_matches")
         self.declare_parameter("robust_inliers_topic", "/team_slam/robust_loop_inliers")
+        self.declare_parameter("local_robust_inliers_topic", "/team_slam/local/robust_loop_inliers")
         self.declare_parameter("reference_robot", "robot_a")
         self.declare_parameter("target_robot", "robot_b")
         self.declare_parameter("parent_frame", "robot_a/map")
@@ -49,14 +50,17 @@ class RobustLoopSelectorNode(Node):
         self.declare_parameter("robust_deduplicate_by_match_keyframe", False)
         self.declare_parameter("robust_deduplicate_transform_bin_translation_m", 0.0)
         self.declare_parameter("robust_deduplicate_transform_bin_yaw_deg", 0.0)
+        self.declare_parameter("robust_selection_backend", "greedy_consistency_fallback")
 
         self.match_topic = str(self.get_parameter("match_topic").value)
         self.out_topic = str(self.get_parameter("robust_inliers_topic").value)
+        self.local_out_topic = str(self.get_parameter("local_robust_inliers_topic").value)
         self.reference_robot = str(self.get_parameter("reference_robot").value).strip().strip("/")
         self.target_robot = str(self.get_parameter("target_robot").value).strip().strip("/")
         self.parent_frame = str(self.get_parameter("parent_frame").value).strip().strip("/")
         self.child_frame = str(self.get_parameter("child_frame").value).strip().strip("/")
         self.max_matches = int(self.get_parameter("max_verified_matches").value)
+        self.selection_backend = str(self.get_parameter("robust_selection_backend").value).strip().lower()
         backup_min = int(self.get_parameter("team_alignment_min_matches").value)
         robust_min = int(self.get_parameter("robust_min_inliers").value)
         self.params = RobustSelectorParams(
@@ -117,6 +121,7 @@ class RobustLoopSelectorNode(Node):
 
         self.create_subscription(String, self.match_topic, self._on_match, 50)
         self.pub = self.create_publisher(String, self.out_topic, 10)
+        self.local_pub = self.create_publisher(String, self.local_out_topic, 10)
         rate = max(0.2, float(self.get_parameter("publish_rate_hz").value))
         self.create_timer(1.0 / rate, self._tick)
         self.get_logger().info(
@@ -262,6 +267,7 @@ class RobustLoopSelectorNode(Node):
             "parent_frame": self.parent_frame,
             "child_frame": self.child_frame,
             "gt_used_runtime": False,
+            "robust_selection_backend": result.selection_backend,
             "inliers": [self._match_summary(m) for m in result.inliers],
             "rejected": [self._match_summary(m) for m in result.rejected],
         }
@@ -275,8 +281,14 @@ class RobustLoopSelectorNode(Node):
         return payload
 
     def _tick(self) -> None:
-        self.last_result = select_robust_inliers(list(self.verified), self.params)
-        self.pub.publish(String(data=dumps_compact(self._payload_from_result(self.last_result))))
+        self.last_result = select_robust_inliers(
+            list(self.verified),
+            self.params,
+            selection_backend=self.selection_backend,
+        )
+        msg = String(data=dumps_compact(self._payload_from_result(self.last_result)))
+        self.pub.publish(msg)
+        self.local_pub.publish(msg)
 
 
 def main(args=None) -> None:

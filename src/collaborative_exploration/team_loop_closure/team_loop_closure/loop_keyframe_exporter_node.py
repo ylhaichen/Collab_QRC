@@ -31,7 +31,10 @@ class LoopKeyframeExporter(Node):
         super().__init__("loop_keyframe_exporter_node")
         self.declare_parameter("namespaces", ["robot_a", "robot_b"])
         self.declare_parameter("output_topic", "/team_slam/keyframes")
+        self.declare_parameter("local_keyframe_topic", "/team_slam/local/keyframes")
+        self.declare_parameter("local_descriptor_topic", "/team_slam/local/descriptors")
         self.declare_parameter("keyframe_cloud_topic", "/team_slam/keyframe_clouds")
+        self.declare_parameter("local_keyframe_cloud_topic", "/team_slam/local/keyframe_clouds")
         self.declare_parameter("raw_odom_topic", "Odometry")
         self.declare_parameter("corrected_odom_topic", "corrected_odom")
         self.declare_parameter("cloud_topic", "cloud_registered_body")
@@ -55,7 +58,10 @@ class LoopKeyframeExporter(Node):
         raw_ns = self.get_parameter("namespaces").value
         self.namespaces = [str(ns).strip().strip("/") for ns in raw_ns if str(ns).strip()]
         self.output_topic = str(self.get_parameter("output_topic").value)
+        self.local_keyframe_topic = str(self.get_parameter("local_keyframe_topic").value)
+        self.local_descriptor_topic = str(self.get_parameter("local_descriptor_topic").value)
         self.keyframe_cloud_topic = str(self.get_parameter("keyframe_cloud_topic").value)
+        self.local_keyframe_cloud_topic = str(self.get_parameter("local_keyframe_cloud_topic").value)
         self.raw_odom_topic = str(self.get_parameter("raw_odom_topic").value)
         self.corrected_odom_topic = str(self.get_parameter("corrected_odom_topic").value)
         self.cloud_topic = str(self.get_parameter("cloud_topic").value)
@@ -92,7 +98,10 @@ class LoopKeyframeExporter(Node):
         self._counts: dict[str, int] = {ns: 0 for ns in self.namespaces}
         self._subs = []
         self.pub = self.create_publisher(String, self.output_topic, 10)
+        self.local_pub = self.create_publisher(String, self.local_keyframe_topic, 10)
+        self.local_descriptor_pub = self.create_publisher(String, self.local_descriptor_topic, 10)
         self.cloud_pub = self.create_publisher(PointCloud2, self.keyframe_cloud_topic, 10)
+        self.local_cloud_pub = self.create_publisher(PointCloud2, self.local_keyframe_cloud_topic, 10)
 
         for ns in self.namespaces:
             self._subs.append(self.create_subscription(
@@ -199,6 +208,7 @@ class LoopKeyframeExporter(Node):
         cloud_header.frame_id = f"team_slam_keyframe_cloud/{ns}/{kid}"
         cloud_msg = point_cloud2.create_cloud_xyz32(cloud_header, np.round(points, 3).tolist())
         self.cloud_pub.publish(cloud_msg)
+        self.local_cloud_pub.publish(cloud_msg)
         payload = {
             "schema": "team_loop_keyframe/v1",
             "id": kid,
@@ -236,7 +246,29 @@ class LoopKeyframeExporter(Node):
                 "point_count": int(points.shape[0]),
             },
         }
-        self.pub.publish(String(data=dumps_compact(payload)))
+        msg_out = String(data=dumps_compact(payload))
+        descriptor_payload = {
+            "schema": "team_loop_descriptor/v1",
+            "id": kid,
+            "keyframe_id": self._counts[ns] - 1,
+            "robot_id": ns,
+            "stamp_sec": payload["stamp_sec"],
+            "pose": payload["pose"],
+            "descriptor": payload["descriptor"],
+            "ring_key": payload["ring_key"],
+            "sector_key": payload["sector_key"],
+            "compact_cloud_key": kid,
+            "health": {
+                "point_count": int(points.shape[0]),
+                "pose_source": pose_source,
+                "gt_used_runtime": False,
+            },
+            "alignment_status": "unknown",
+            "gt_used_runtime": False,
+        }
+        self.pub.publish(msg_out)
+        self.local_pub.publish(msg_out)
+        self.local_descriptor_pub.publish(String(data=dumps_compact(descriptor_payload)))
         if self._counts[ns] == 1 or self._counts[ns] % 10 == 0:
             self.get_logger().info(
                 f"published {kid} robot={ns} points={points.shape[0]} pose_source={pose_source}"

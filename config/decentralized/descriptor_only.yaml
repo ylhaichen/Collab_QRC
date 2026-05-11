@@ -1,0 +1,10 @@
+team_slam_peer_node:
+  ros__parameters:
+    team_comm_mode: descriptor_only
+    peer_keyframe_rate_hz: 0.5
+    peer_descriptor_only_until_candidate: true
+    send_cloud_only_on_candidate: true
+    peer_cloud_max_points: 2000
+    peer_cloud_voxel_size: 0.4
+    compress_peer_json: true
+    gt_used_runtime: false

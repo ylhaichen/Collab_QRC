@@ -1,0 +1,44 @@
+{
+  "schema": "final_system_validation/v1",
+  "final_status_label": "Status D - External/Runtime Blocker",
+  "status_a_claimed": false,
+  "point_lio": {
+    "docker_build_passed": true,
+    "docker_smoke_test_passed": true,
+    "shadow_validation_passed": false,
+    "primary_validation_passed": false,
+    "blocker": "ros_participant_socket_permission_denied_and_no_live_point_lio_topics"
+  },
+  "local_slam_validation": {
+    "fast_lio_scpgo_default_safe_mode": true,
+    "point_lio_primary_passed": false,
+    "nav2_odom_tf_validated": false
+  },
+  "cross_robot_loop_closure": {
+    "runtime_valid": false,
+    "blocker": "ros_participant_socket_permission_denied",
+    "descriptor_only_merge_block_contract": true,
+    "single_weak_match_merge_block_contract": true
+  },
+  "dynamic_filtering": {
+    "synthetic_contract_passed": true,
+    "runtime_robot_cloud_validation_passed": false
+  },
+  "map_cleanup": {
+    "erasor_runtime_passed": false,
+    "removert_runtime_passed": false,
+    "fallback_contract_passed": true,
+    "blocker": "erasor_source_not_found_in_tracked_runtime_path"
+  },
+  "decentralized_communication": {
+    "descriptor_only_contract_passed": true,
+    "two_jetson_runtime_passed": false,
+    "blocker": "hardware_network_runtime_not_available"
+  },
+  "real_robot": {
+    "validated": false,
+    "blocker": "go2_go2w_livox_imu_network_runtime_not_available"
+  },
+  "fast_lio_scpgo_remains_production": true,
+  "gt_used_runtime": false
+}

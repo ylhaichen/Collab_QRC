@@ -48,6 +48,7 @@ class VerifiedMatch:
 class RobustSelectionResult:
     accepted: bool
     reason: str
+    selection_backend: str = "greedy_consistency_fallback"
     inliers: list[VerifiedMatch] = field(default_factory=list)
     rejected: list[VerifiedMatch] = field(default_factory=list)
     transform: np.ndarray | None = None
@@ -303,11 +304,17 @@ def _trim_to_spread_gate(
 def select_robust_inliers(
     matches: list[VerifiedMatch],
     params: RobustSelectorParams,
+    *,
+    selection_backend: str = "greedy_consistency_fallback",
 ) -> RobustSelectionResult:
+    backend = str(selection_backend or "greedy_consistency_fallback").strip().lower()
+    if backend not in {"pcm", "gnc", "greedy_consistency_fallback"}:
+        backend = "greedy_consistency_fallback"
     if not matches:
         return RobustSelectionResult(
             accepted=False,
             reason="no_verified_matches",
+            selection_backend=backend,
             inliers=[],
             rejected=[],
             transform=None,
@@ -324,6 +331,7 @@ def select_robust_inliers(
         return RobustSelectionResult(
             accepted=False,
             reason="no_eligible_verified_matches",
+            selection_backend=backend,
             inliers=[],
             rejected=list(matches),
             transform=None,
@@ -386,6 +394,7 @@ def select_robust_inliers(
     return RobustSelectionResult(
         accepted=accepted,
         reason=reason,
+        selection_backend=backend,
         inliers=inliers,
         rejected=rejected,
         transform=transform,

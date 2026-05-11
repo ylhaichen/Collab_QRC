@@ -1,0 +1,16 @@
+{
+  "central_node_required": false,
+  "claim_boundary": "Static contract validation only; two-Jetson bandwidth/runtime validation requires hardware/network run.",
+  "cloud_allowed_on_candidate": true,
+  "cloud_blocked_without_candidate": true,
+  "continuous_raw_lidar_exchange": false,
+  "descriptor_envelope_schema": "team_slam_peer_envelope/v1",
+  "gt_used_runtime": false,
+  "peer_cloud_max_points": 2000,
+  "peer_cloud_voxel_size": 0.4,
+  "peer_descriptor_rate_hz": 0.5,
+  "runtime_valid": true,
+  "schema": "decentralized_comm_validation/v1",
+  "send_cloud_only_on_candidate": true,
+  "team_comm_mode": "descriptor_only"
+}

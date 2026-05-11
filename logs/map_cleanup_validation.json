@@ -1,0 +1,20 @@
+{
+  "backend": "erasor",
+  "backend_available": false,
+  "cleaned_static_map_topic": "/team_slam/cleaned_static_map",
+  "dependency_blocker": "erasor_source_not_found",
+  "fallback_backend": "temporal_voxel_fallback",
+  "gt_used_runtime": false,
+  "map_cleanup_metrics_topic": "/team_slam/map_cleanup_metrics",
+  "removed_dynamic_points_topic": "/team_slam/removed_dynamic_points",
+  "required_export_missing_paths": [
+    "logs/map_cleanup_export/pcds",
+    "logs/map_cleanup_export/dense_global_map.pcd",
+    "logs/map_cleanup_export/poses_lidar2body.csv",
+    "logs/map_cleanup_export/initial_naive_map.pcd"
+  ],
+  "runtime_ready": false,
+  "runtime_valid": false,
+  "schema": "map_cleanup_validation/v1",
+  "selected_runtime_backend": "temporal_voxel_fallback"
+}

@@ -1,0 +1,17 @@
+{
+  "schema": "exploration_allocator_eval/v1",
+  "runtime_valid": true,
+  "validation_type": "synthetic_contract_test",
+  "goal_types": [
+    "frontier_goal",
+    "loop_closure_goal",
+    "rendezvous_goal",
+    "dynamic_cleanup_goal",
+    "communication_recovery_goal"
+  ],
+  "peer_frame_goals_blocked_until_alignment": true,
+  "dynamic_cleanup_gain_supported": true,
+  "communication_recovery_gain_supported": true,
+  "gt_used_runtime": false,
+  "claim_boundary": "Utility policy contract validated; live exploration behavior requires ROS/Nav2 runtime validation."
+}

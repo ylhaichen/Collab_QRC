@@ -1,0 +1,52 @@
+loop_keyframe_exporter_node:
+  ros__parameters:
+    output_topic: /team_slam/keyframes
+    keyframe_cloud_topic: /team_slam/keyframe_clouds
+    raw_odom_topic: Odometry
+    corrected_odom_topic: corrected_odom
+    cloud_topic: cloud_static
+    keyframe_min_translation: 1.0
+    keyframe_min_yaw_deg: 10.0
+    keyframe_min_time_sec: 1.0
+    min_points: 80
+    max_points: 900
+    scan_context_num_rings: 20
+    scan_context_num_sectors: 60
+    scan_context_max_radius: 80.0
+
+cross_robot_loop_matcher_node:
+  ros__parameters:
+    registration_backend: icp_2d
+    descriptor_candidate_threshold: 0.55
+    descriptor_accept_threshold: 0.42
+    registration_max_points: 260
+    registration_max_iterations: 18
+    registration_max_corr_dist: 0.75
+    registration_max_fitness: 0.45
+    registration_min_inlier_ratio: 0.35
+    yaw_search_sectors: 2
+
+robust_loop_selector_node:
+  ros__parameters:
+    robust_selection_backend: greedy_consistency_fallback
+    robust_min_inliers: 7
+    robust_min_inlier_ratio: 0.25
+    robust_max_median_rmse: 0.45
+    robust_max_translation_spread_m: 1.0
+    robust_max_yaw_spread_deg: 12.0
+    robust_prefilter_max_rmse: 0.45
+    robust_prefilter_min_inlier_ratio: 0.35
+    robust_prefilter_max_descriptor_distance: 0.45
+
+team_pose_graph_node:
+  ros__parameters:
+    team_pose_graph_backend: auto
+    allow_export_only_outputs: false
+    no_overlap_rejection_passed: false
+    publish_global_odom: true
+
+relative_transform_manager_node:
+  ros__parameters:
+    team_alignment_allow_export_only_gate: false
+    require_no_overlap_rejection_pass: true
+    publish_tf: false

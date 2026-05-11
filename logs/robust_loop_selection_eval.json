@@ -1,0 +1,16 @@
+{
+  "schema": "robust_loop_selection_eval/v1",
+  "runtime_valid": true,
+  "validation_type": "synthetic_contract_test",
+  "selection_backends_supported": [
+    "pcm",
+    "gnc",
+    "greedy_consistency_fallback"
+  ],
+  "descriptor_only_rejected": true,
+  "single_weak_match_rejected": true,
+  "pairwise_consistency_graph_tested": true,
+  "transform_spread_gate_tested": true,
+  "gt_used_runtime": false,
+  "claim_boundary": "Unit/contract validation only; live cross-robot runtime remains controlled by cross_loop_closure_final_eval."
+}

@@ -1,0 +1,8 @@
+map_cleanup_backend_node:
+  ros__parameters:
+    static_map_cleanup_backend: none
+    fallback_backend: temporal_voxel_fallback
+    export_root: logs/map_cleanup_export
+    output_dir: logs/map_cleanup_output
+    input_static_map_topic: /team_slam/static_map
+    gt_used_runtime: false

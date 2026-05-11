@@ -76,6 +76,10 @@ class DynamicObstacleFilterNode(Node):
             for ns in self.namespaces
         }
         self.metrics_pub = self.create_publisher(String, "/team_slam/dynamic_filter_metrics", 10)
+        self.robot_metrics_pubs = {
+            ns: self.create_publisher(String, f"/{ns}/dynamic_filter_metrics", 10)
+            for ns in self.namespaces
+        }
 
         for ns in self.namespaces:
             self.create_subscription(
@@ -151,7 +155,9 @@ class DynamicObstacleFilterNode(Node):
         self.mask_pubs[ns].publish(String(data=json.dumps(mask, sort_keys=True)))
         metrics = dict(mask)
         metrics["schema"] = "team_dynamic_filter_metrics/v1"
-        self.metrics_pub.publish(String(data=json.dumps(metrics, sort_keys=True)))
+        metrics_msg = String(data=json.dumps(metrics, sort_keys=True))
+        self.metrics_pub.publish(metrics_msg)
+        self.robot_metrics_pubs[ns].publish(metrics_msg)
 
 
 def main(args=None) -> None:

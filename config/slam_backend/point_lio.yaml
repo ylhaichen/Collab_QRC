@@ -1,0 +1,10 @@
+point_lio_ros2_adapter_node:
+  ros__parameters:
+    local_slam_backend: point_lio
+    mode: shadow
+    publish_primary_contract: false
+    livox_topic: livox/lidar
+    imu_topic: livox/imu
+    publish_tf: true
+    status_topic: /team_slam/local/status
+    gt_used_runtime: false

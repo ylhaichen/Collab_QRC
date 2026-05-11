@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import shutil
 
 import numpy as np
 
@@ -14,6 +15,9 @@ class RegistrationResult:
     inlier_ratio: float
     num_correspondences: int
     backend: str
+    requested_backend: str = "icp_2d"
+    dependency_blocker: str = ""
+    geometric_verification_required: bool = True
 
 
 def register_keyframe_clouds(
@@ -26,17 +30,34 @@ def register_keyframe_clouds(
     sector_count: int,
     max_iterations: int,
     max_corr_dist_m: float,
+    kiss_matcher_available: bool | None = None,
 ) -> RegistrationResult:
-    """Self-contained registration hook for v1.
+    """Register compact static keyframe clouds.
 
-    `icp_2d` is the only implemented backend in this stage. Other backend
-    names are accepted as aliases so launch files can keep a stable interface
-    while KISS-Matcher/TEASER++ remain future optional plugins.
+    KISS-Matcher is the preferred production backend when it is available as
+    an external executable/library. This Python path does not fake that
+    backend. If KISS-Matcher is requested but unavailable, it records the exact
+    blocker and falls back to ICP 2D for geometric verification.
     """
 
-    backend_name = str(backend or "icp_2d").strip().lower()
-    if backend_name not in {"icp_2d", "gicp_only", "kiss_matcher", "teaser"}:
+    requested_backend = str(backend or "icp_2d").strip().lower()
+    if requested_backend in {"gicp_only", "gicp_optional", "teaser"}:
+        requested_backend = "gicp_optional"
+    if requested_backend not in {"icp_2d", "gicp_optional", "kiss_matcher"}:
+        requested_backend = "icp_2d"
+    dependency_blocker = ""
+    backend_name = requested_backend
+    if requested_backend == "kiss_matcher":
+        available = bool(shutil.which("kiss_matcher")) if kiss_matcher_available is None else kiss_matcher_available
         backend_name = "icp_2d"
+        if available:
+            backend_name = "icp_2d"
+            dependency_blocker = "kiss_matcher_cli_integration_not_configured"
+        else:
+            dependency_blocker = "kiss_matcher_not_available"
+    elif requested_backend == "gicp_optional":
+        backend_name = "icp_2d"
+        dependency_blocker = "gicp_optional_not_available"
 
     yaw_step = 2.0 * np.pi / float(max(1, sector_count))
     best_t = None
@@ -62,5 +83,8 @@ def register_keyframe_clouds(
         fitness_m=best_fit,
         inlier_ratio=best_inlier,
         num_correspondences=int(round(best_inlier * float(max(0, source_count)))),
-        backend="icp_2d",
+        backend=backend_name,
+        requested_backend=requested_backend,
+        dependency_blocker=dependency_blocker,
+        geometric_verification_required=True,
     )
