@@ -29,7 +29,7 @@ from rclpy.qos import (
 )
 
 from geometry_msgs.msg import PointStamped, PoseStamped
-from nav_msgs.msg import Odometry
+from nav_msgs.msg import OccupancyGrid, Odometry
 
 
 def _split_ros_argv(argv):
@@ -39,6 +39,26 @@ def _split_ros_argv(argv):
     return argv, []
 
 
+def odom_pose_inside_map(odom: Odometry, map_msg: OccupancyGrid | None, *, margin_m: float) -> bool:
+    if map_msg is None:
+        return True
+    x = float(odom.pose.pose.position.x)
+    y = float(odom.pose.pose.position.y)
+    if not math.isfinite(x) or not math.isfinite(y):
+        return False
+    width = int(map_msg.info.width)
+    height = int(map_msg.info.height)
+    resolution = float(map_msg.info.resolution)
+    if width <= 0 or height <= 0 or resolution <= 0.0:
+        return False
+    margin = max(0.0, float(margin_m))
+    min_x = float(map_msg.info.origin.position.x) - margin
+    min_y = float(map_msg.info.origin.position.y) - margin
+    max_x = float(map_msg.info.origin.position.x) + float(width) * resolution + margin
+    max_y = float(map_msg.info.origin.position.y) + float(height) * resolution + margin
+    return min_x <= x <= max_x and min_y <= y <= max_y
+
+
 class Cfpa2ToNav2Bridge(Node):
     def __init__(self) -> None:
         super().__init__("cfpa2_to_nav2_bridge")
@@ -46,6 +66,9 @@ class Cfpa2ToNav2Bridge(Node):
         self.declare_parameter("waypoint_topic", "way_point")
         self.declare_parameter("goal_pose_topic", "goal_pose")
         self.declare_parameter("odom_topic", "odom/nav")
+        self.declare_parameter("map_topic", "map")
+        self.declare_parameter("reject_when_odom_outside_map", True)
+        self.declare_parameter("map_bounds_margin_m", 2.0)
         # Skip republishing if new goal is within this distance of last
         # published goal — CFPA2 republishes its current goal at 2 Hz to
         # keep the channel alive, we don't want Nav2 to restart every tick.
@@ -55,9 +78,14 @@ class Cfpa2ToNav2Bridge(Node):
         wp_topic = f"/{ns}/{self.get_parameter('waypoint_topic').value}"
         goal_topic = f"/{ns}/{self.get_parameter('goal_pose_topic').value}"
         odom_topic = f"/{ns}/{self.get_parameter('odom_topic').value}"
+        map_topic = f"/{ns}/{self.get_parameter('map_topic').value}"
         self.goal_change_min_m = float(
             self.get_parameter("goal_change_min_m").value
         )
+        self.reject_when_odom_outside_map = bool(
+            self.get_parameter("reject_when_odom_outside_map").value
+        )
+        self.map_bounds_margin_m = max(0.0, float(self.get_parameter("map_bounds_margin_m").value))
 
         # CFPA2's way_point_coord publishes RELIABLE; odom_relay also reliable.
         cfpa_qos = QoSProfile(
@@ -82,10 +110,14 @@ class Cfpa2ToNav2Bridge(Node):
 
         self._last_pose_x: float | None = None
         self._last_pose_y: float | None = None
+        self._last_odom: Odometry | None = None
+        self._latest_map: OccupancyGrid | None = None
         self._last_goal_x: float | None = None
         self._last_goal_y: float | None = None
+        self._last_invalid_odom_warn_ns = 0
 
         self.create_subscription(Odometry, odom_topic, self._on_odom, cfpa_qos)
+        self.create_subscription(OccupancyGrid, map_topic, self._on_map, cfpa_qos)
         self.create_subscription(
             PointStamped, wp_topic, self._on_waypoint, cfpa_qos
         )
@@ -98,11 +130,33 @@ class Cfpa2ToNav2Bridge(Node):
         )
 
     def _on_odom(self, msg: Odometry) -> None:
+        self._last_odom = msg
         self._last_pose_x = msg.pose.pose.position.x
         self._last_pose_y = msg.pose.pose.position.y
 
+    def _on_map(self, msg: OccupancyGrid) -> None:
+        self._latest_map = msg
+
     def _on_waypoint(self, msg: PointStamped) -> None:
         gx, gy = float(msg.point.x), float(msg.point.y)
+        if (
+            self.reject_when_odom_outside_map
+            and self._last_odom is not None
+            and not odom_pose_inside_map(
+                self._last_odom,
+                self._latest_map,
+                margin_m=self.map_bounds_margin_m,
+            )
+        ):
+            now_ns = self.get_clock().now().nanoseconds
+            if now_ns - self._last_invalid_odom_warn_ns > int(2e9):
+                pos = self._last_odom.pose.pose.position
+                self.get_logger().warn(
+                    "dropping CFPA2 waypoint because odom/nav is outside map bounds "
+                    f"pose=({float(pos.x):+.2f},{float(pos.y):+.2f})"
+                )
+                self._last_invalid_odom_warn_ns = now_ns
+            return
         # Suppress duplicate / sub-threshold-change goals.
         if (
             self._last_goal_x is not None

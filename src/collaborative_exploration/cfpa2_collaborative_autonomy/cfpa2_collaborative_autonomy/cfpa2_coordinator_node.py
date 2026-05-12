@@ -148,6 +148,56 @@ def shared_map_quality_usable(
     )
 
 
+def point_inside_map_bounds(
+    msg: OccupancyGrid | None,
+    point: tuple[float, float],
+    *,
+    margin_m: float = 0.0,
+) -> bool:
+    if msg is None:
+        return True
+    res = float(msg.info.resolution)
+    width = int(msg.info.width)
+    height = int(msg.info.height)
+    if width <= 0 or height <= 0 or res <= 0.0:
+        return False
+    x, y = float(point[0]), float(point[1])
+    if not math.isfinite(x) or not math.isfinite(y):
+        return False
+    margin = max(0.0, float(margin_m))
+    min_x = float(msg.info.origin.position.x) - margin
+    min_y = float(msg.info.origin.position.y) - margin
+    max_x = float(msg.info.origin.position.x) + float(width) * res + margin
+    max_y = float(msg.info.origin.position.y) + float(height) * res + margin
+    return min_x <= x <= max_x and min_y <= y <= max_y
+
+
+def odom_inside_map_bounds(
+    odom: Odometry,
+    map_msg: OccupancyGrid | None,
+    *,
+    margin_m: float = 0.0,
+) -> bool:
+    pos = odom.pose.pose.position
+    return point_inside_map_bounds(map_msg, (float(pos.x), float(pos.y)), margin_m=margin_m)
+
+
+def goal_within_robot_distance(
+    *,
+    robot_xy: tuple[float, float],
+    goal_xy: tuple[float, float],
+    max_distance_m: float,
+) -> bool:
+    limit = float(max_distance_m)
+    if limit <= 0.0:
+        return True
+    rx, ry = float(robot_xy[0]), float(robot_xy[1])
+    gx, gy = float(goal_xy[0]), float(goal_xy[1])
+    if not all(math.isfinite(v) for v in (rx, ry, gx, gy)):
+        return False
+    return math.hypot(gx - rx, gy - ry) <= limit
+
+
 def _resolve_cfpa2_overlap_penalty_fn():
     candidates: list[Path] = []
     here = Path(__file__).resolve()
@@ -423,6 +473,7 @@ class CFPA2Coordinator(Node):
         self.declare_parameter("debug_no_goal_log_interval_sec", 2.0)
         self.declare_parameter("goal_sanity_max_abs_m", 100.0)
         self.declare_parameter("goal_sanity_map_margin_m", 2.0)
+        self.declare_parameter("goal_sanity_max_robot_goal_distance_m", 0.0)
 
         self.namespaces = [str(x) for x in self.get_parameter("namespaces").value]
         self.publish_rate = max(0.2, float(self.get_parameter("publish_rate").value))
@@ -810,6 +861,9 @@ class CFPA2Coordinator(Node):
         )
         self.goal_sanity_map_margin_m = max(
             0.0, float(self.get_parameter("goal_sanity_map_margin_m").value)
+        )
+        self.goal_sanity_max_robot_goal_distance_m = max(
+            0.0, float(self.get_parameter("goal_sanity_max_robot_goal_distance_m").value)
         )
 
         self.maps: dict[str, OccupancyGrid] = {}
@@ -1284,18 +1338,8 @@ class CFPA2Coordinator(Node):
         *,
         margin_m: Optional[float] = None,
     ) -> bool:
-        if msg is None:
-            return True
         margin = self.goal_sanity_map_margin_m if margin_m is None else max(0.0, margin_m)
-        res = float(msg.info.resolution)
-        if res <= 0.0:
-            return False
-        x, y = float(point[0]), float(point[1])
-        min_x = float(msg.info.origin.position.x) - margin
-        min_y = float(msg.info.origin.position.y) - margin
-        max_x = float(msg.info.origin.position.x) + (float(msg.info.width) * res) + margin
-        max_y = float(msg.info.origin.position.y) + (float(msg.info.height) * res) + margin
-        return min_x <= x <= max_x and min_y <= y <= max_y
+        return point_inside_map_bounds(msg, point, margin_m=margin)
 
     def _goal_sane_for_map(
         self,
@@ -1325,6 +1369,35 @@ class CFPA2Coordinator(Node):
             self.get_logger().warn(
                 f"{ns}: dropping {context} ({float(goal_w[0]):.2f},{float(goal_w[1]):.2f}) "
                 f"reason={reason}"
+            )
+        return False
+
+    def _goal_sane_for_robot_distance(
+        self,
+        ns: str,
+        goal_w: tuple[float, float],
+        *,
+        now_ns: Optional[int] = None,
+        context: str = "goal",
+    ) -> bool:
+        if self.goal_sanity_max_robot_goal_distance_m <= 0.0 or ns not in self.odoms:
+            return True
+        if goal_within_robot_distance(
+            robot_xy=self._robot_xy(ns),
+            goal_xy=goal_w,
+            max_distance_m=self.goal_sanity_max_robot_goal_distance_m,
+        ):
+            return True
+
+        stamp_ns = now_ns if now_ns is not None else self.get_clock().now().nanoseconds
+        last_ns = self._last_goal_sanity_warn_ns.get(ns, 0)
+        if stamp_ns - last_ns > int(1e9):
+            self._last_goal_sanity_warn_ns[ns] = stamp_ns
+            rx, ry = self._robot_xy(ns)
+            self.get_logger().warn(
+                f"{ns}: dropping {context} ({float(goal_w[0]):.2f},{float(goal_w[1]):.2f}) "
+                f"reason=robot_goal_distance>{self.goal_sanity_max_robot_goal_distance_m:.1f}m "
+                f"robot=({rx:.2f},{ry:.2f})"
             )
         return False
 
@@ -3686,6 +3759,13 @@ class CFPA2Coordinator(Node):
         for goal, _score in sorted(utilities.items(), key=lambda kv: kv[1], reverse=True):
             if excluded_key is not None and self._goal_key(goal) == excluded_key:
                 continue
+            if not self._goal_sane_for_robot_distance(
+                ns,
+                goal,
+                now_ns=now_ns,
+                context="cfpa2_best_utility",
+            ):
+                continue
             if self._goal_too_close(ns, goal):
                 continue
             if self._is_blacklisted(ns, goal, now_ns):
@@ -3695,6 +3775,13 @@ class CFPA2Coordinator(Node):
         if fallback_targets:
             for goal in sorted(fallback_targets, key=lambda g: self._distance_robot_to_goal(ns, g)):
                 if excluded_key is not None and self._goal_key(goal) == excluded_key:
+                    continue
+                if not self._goal_sane_for_robot_distance(
+                    ns,
+                    goal,
+                    now_ns=now_ns,
+                    context="cfpa2_best_fallback",
+                ):
                     continue
                 if self._goal_too_close(ns, goal):
                     continue
@@ -4512,6 +4599,14 @@ class CFPA2Coordinator(Node):
                         )
 
                 publish_map = self.maps.get(ns, planning_map)
+                if self._current_pose_goal_if_sane(
+                    ns,
+                    publish_map,
+                    now_ns,
+                    context="cfpa2_start_pose",
+                ) is None:
+                    self._set_policy_reason(ns, "hold/cfpa2_invalid_odom")
+                    continue
                 if not self._goal_sane_for_map(
                     ns,
                     publish_map,
@@ -4520,6 +4615,14 @@ class CFPA2Coordinator(Node):
                     context="cfpa2_assignment",
                 ):
                     self._set_policy_reason(ns, "hold/cfpa2_invalid_goal")
+                    continue
+                if not self._goal_sane_for_robot_distance(
+                    ns,
+                    goal,
+                    now_ns=now_ns,
+                    context="cfpa2_assignment",
+                ):
+                    self._set_policy_reason(ns, "hold/cfpa2_far_goal")
                     continue
                 goal = self._set_active_goal(ns, goal, now_ns)
                 publish_goal = goal

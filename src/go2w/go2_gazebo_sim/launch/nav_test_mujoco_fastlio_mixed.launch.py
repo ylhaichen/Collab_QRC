@@ -715,6 +715,9 @@ def _build_fastlio_nav_stack(
                     {"max_odom_translation_step_m": 0.75},
                     {"max_odom_yaw_step_deg": 60.0},
                     {"max_odom_speed_mps": 3.0},
+                    {"map_bounds_guard_enabled": True},
+                    {"map_bounds_topic": "map"},
+                    {"map_bounds_margin_m": 2.0},
                 ],
                 remappings=[
                     ("/tf", f"/{ns}/tf"),

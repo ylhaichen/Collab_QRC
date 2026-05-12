@@ -9,8 +9,9 @@ from typing import Any
 try:
     import rclpy
     from geometry_msgs.msg import TransformStamped
-    from nav_msgs.msg import Odometry
+    from nav_msgs.msg import OccupancyGrid, Odometry
     from rclpy.node import Node
+    from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPolicy
     from sensor_msgs.msg import Imu, PointCloud2
     from std_msgs.msg import String
     from tf2_ros import TransformBroadcaster
@@ -18,6 +19,7 @@ except ModuleNotFoundError:  # Pure contract tests can run without ROS 2 sourced
     rclpy = None  # type: ignore[assignment]
     Node = object  # type: ignore[misc,assignment]
     Odometry = Any  # type: ignore[misc,assignment]
+    OccupancyGrid = Any  # type: ignore[misc,assignment]
     PointCloud2 = Any  # type: ignore[misc,assignment]
     Imu = Any  # type: ignore[misc,assignment]
     String = Any  # type: ignore[misc,assignment]
@@ -37,6 +39,26 @@ def _yaw_from_odom(msg: Odometry) -> float:
 
 def _wrap_pi(angle: float) -> float:
     return math.atan2(math.sin(angle), math.cos(angle))
+
+
+def odom_within_map_bounds(msg: Odometry, map_msg: OccupancyGrid | None, *, margin_m: float) -> bool:
+    if map_msg is None:
+        return True
+    x = float(msg.pose.pose.position.x)
+    y = float(msg.pose.pose.position.y)
+    if not math.isfinite(x) or not math.isfinite(y):
+        return False
+    width = int(map_msg.info.width)
+    height = int(map_msg.info.height)
+    resolution = float(map_msg.info.resolution)
+    if width <= 0 or height <= 0 or resolution <= 0.0:
+        return False
+    margin = max(0.0, float(margin_m))
+    min_x = float(map_msg.info.origin.position.x) - margin
+    min_y = float(map_msg.info.origin.position.y) - margin
+    max_x = float(map_msg.info.origin.position.x) + float(width) * resolution + margin
+    max_y = float(map_msg.info.origin.position.y) + float(height) * resolution + margin
+    return min_x <= x <= max_x and min_y <= y <= max_y
 
 
 class _RateCounter:
@@ -78,6 +100,9 @@ class PointLioRos2AdapterNode(Node):
         self.declare_parameter("max_odom_translation_step_m", 1.0)
         self.declare_parameter("max_odom_yaw_step_deg", 60.0)
         self.declare_parameter("max_odom_speed_mps", 3.0)
+        self.declare_parameter("map_bounds_guard_enabled", False)
+        self.declare_parameter("map_bounds_topic", "map")
+        self.declare_parameter("map_bounds_margin_m", 2.0)
 
         self.robot_namespace = str(self.get_parameter("robot_namespace").value).strip().strip("/")
         self.mode = str(self.get_parameter("mode").value).strip().lower() or "shadow"
@@ -97,6 +122,9 @@ class PointLioRos2AdapterNode(Node):
         self.max_odom_translation_step_m = float(self.get_parameter("max_odom_translation_step_m").value)
         self.max_odom_yaw_step_rad = math.radians(float(self.get_parameter("max_odom_yaw_step_deg").value))
         self.max_odom_speed_mps = float(self.get_parameter("max_odom_speed_mps").value)
+        self.map_bounds_guard_enabled = bool(self.get_parameter("map_bounds_guard_enabled").value)
+        self.map_bounds_topic = str(self.get_parameter("map_bounds_topic").value).strip().strip("/") or "map"
+        self.map_bounds_margin_m = max(0.0, float(self.get_parameter("map_bounds_margin_m").value))
         self.contract = build_point_lio_contract(self.robot_namespace)
         self.odom_rate = _RateCounter()
         self.adapter_odom_rate = _RateCounter()
@@ -106,7 +134,11 @@ class PointLioRos2AdapterNode(Node):
         self.last_odom_stamp = None
         self.last_native_odom: Odometry | None = None
         self.last_published_odom: Odometry | None = None
+        self.last_map_valid_odom: Odometry | None = None
+        self.latest_bounds_map: OccupancyGrid | None = None
         self.rejected_odom_jumps = 0
+        self.rejected_odom_bounds = 0
+        self._last_reject_reason = ""
 
         self.odom_pub = self.create_publisher(Odometry, self.contract.outputs["odometry"], 20)
         self.corrected_pub = self.create_publisher(Odometry, self.contract.outputs["corrected_odom"], 20)
@@ -118,6 +150,19 @@ class PointLioRos2AdapterNode(Node):
         self.tf_br = TransformBroadcaster(self) if self.publish_tf and TransformBroadcaster else None
 
         self.create_subscription(Odometry, self.contract.native_odom_topic, self._on_native_odom, 20)
+        if self.map_bounds_guard_enabled:
+            map_qos = QoSProfile(
+                reliability=ReliabilityPolicy.RELIABLE,
+                durability=DurabilityPolicy.TRANSIENT_LOCAL,
+                history=HistoryPolicy.KEEP_LAST,
+                depth=1,
+            )
+            self.create_subscription(
+                OccupancyGrid,
+                f"/{self.robot_namespace}/{self.map_bounds_topic}",
+                self._on_bounds_map,
+                map_qos,
+            )
         self.create_subscription(PointCloud2, self.contract.native_cloud_topic, self._on_native_cloud, 5)
         self.create_subscription(PointCloud2, self.contract.native_static_topic, self._on_native_static, 5)
         self.create_subscription(PointCloud2, self.contract.native_dynamic_topic, self._on_native_dynamic, 5)
@@ -139,7 +184,8 @@ class PointLioRos2AdapterNode(Node):
             f"publish_primary_contract={self.publish_primary} "
             f"frame={self.output_frame_id} child={self.output_child_frame_id} "
             f"map_to_odom_tf={self.publish_map_to_odom_tf} "
-            f"odom_jump_guard={self.odom_jump_guard_enabled}"
+            f"odom_jump_guard={self.odom_jump_guard_enabled} "
+            f"map_bounds_guard={self.map_bounds_guard_enabled}"
         )
 
     def _on_livox(self, _msg: PointCloud2) -> None:
@@ -147,6 +193,15 @@ class PointLioRos2AdapterNode(Node):
 
     def _on_imu(self, _msg: Imu) -> None:
         self.imu_input_seen = True
+
+    def _on_bounds_map(self, msg: OccupancyGrid) -> None:
+        self.latest_bounds_map = msg
+        if self.last_published_odom is not None and odom_within_map_bounds(
+            self.last_published_odom,
+            msg,
+            margin_m=self.map_bounds_margin_m,
+        ):
+            self.last_map_valid_odom = copy.deepcopy(self.last_published_odom)
 
     def _retarget_odom(self, msg: Odometry) -> Odometry:
         out = Odometry()
@@ -162,6 +217,15 @@ class PointLioRos2AdapterNode(Node):
         return float(msg.header.stamp.sec) + float(msg.header.stamp.nanosec) * 1e-9
 
     def _native_odom_is_plausible(self, msg: Odometry) -> bool:
+        self._last_reject_reason = ""
+        if self.map_bounds_guard_enabled and not odom_within_map_bounds(
+            msg,
+            self.latest_bounds_map,
+            margin_m=self.map_bounds_margin_m,
+        ):
+            self._last_reject_reason = "map_bounds"
+            self.rejected_odom_bounds += 1
+            return False
         if not self.odom_jump_guard_enabled or self.last_native_odom is None:
             return True
         prev = self.last_native_odom.pose.pose.position
@@ -175,7 +239,10 @@ class PointLioRos2AdapterNode(Node):
         dt = max(0.0, self._stamp_sec(msg) - self._stamp_sec(self.last_native_odom))
         speed_gate = self.max_odom_speed_mps * dt + 0.15 if dt > 0.0 else 0.0
         trans_gate = max(self.max_odom_translation_step_m, speed_gate)
-        return dist <= trans_gate and yaw_delta <= self.max_odom_yaw_step_rad
+        ok = dist <= trans_gate and yaw_delta <= self.max_odom_yaw_step_rad
+        if not ok:
+            self._last_reject_reason = "jump"
+        return ok
 
     def _publish_tf(self, odom: Odometry) -> None:
         if self.tf_br is None:
@@ -206,14 +273,31 @@ class PointLioRos2AdapterNode(Node):
             self.last_native_odom = copy.deepcopy(msg)
             odom = self._retarget_odom(msg)
             self.last_published_odom = copy.deepcopy(odom)
+            if odom_within_map_bounds(
+                odom,
+                self.latest_bounds_map,
+                margin_m=self.map_bounds_margin_m,
+            ):
+                self.last_map_valid_odom = copy.deepcopy(odom)
         elif self.last_published_odom is not None:
             self.rejected_odom_jumps += 1
             if self.rejected_odom_jumps <= 5 or self.rejected_odom_jumps % 50 == 0:
                 self.get_logger().warn(
-                    "Rejecting implausible Point-LIO odometry jump; "
-                    f"robot={self.robot_namespace} rejected_count={self.rejected_odom_jumps}"
+                    "Rejecting implausible Point-LIO odometry; "
+                    f"robot={self.robot_namespace} reason={self._last_reject_reason or 'unknown'} "
+                    f"rejected_count={self.rejected_odom_jumps}"
                 )
-            odom = copy.deepcopy(self.last_published_odom)
+            hold = self.last_published_odom
+            if self.map_bounds_guard_enabled and self.latest_bounds_map is not None:
+                if self.last_map_valid_odom is not None:
+                    hold = self.last_map_valid_odom
+                elif not odom_within_map_bounds(
+                    hold,
+                    self.latest_bounds_map,
+                    margin_m=self.map_bounds_margin_m,
+                ):
+                    return
+            odom = copy.deepcopy(hold)
             odom.header.stamp = msg.header.stamp
         else:
             self.rejected_odom_jumps += 1
@@ -262,6 +346,9 @@ class PointLioRos2AdapterNode(Node):
         payload["last_pose_yaw_source"] = "native_point_lio_quaternion"
         payload["odom_jump_guard_enabled"] = bool(self.odom_jump_guard_enabled)
         payload["rejected_odom_jumps"] = int(self.rejected_odom_jumps)
+        payload["map_bounds_guard_enabled"] = bool(self.map_bounds_guard_enabled)
+        payload["rejected_odom_bounds"] = int(self.rejected_odom_bounds)
+        payload["last_reject_reason"] = str(self._last_reject_reason)
         self.status_pub.publish(String(data=json.dumps(payload, sort_keys=True)))
 
 

@@ -55,7 +55,7 @@ from rclpy.qos import (
 )
 
 from geometry_msgs.msg import PoseStamped, Twist
-from nav_msgs.msg import Odometry
+from nav_msgs.msg import OccupancyGrid, Odometry
 from nav2_msgs.action import BackUp
 from std_msgs.msg import Empty
 
@@ -67,11 +67,32 @@ def _split_ros_argv(argv):
     return argv, []
 
 
+def odom_pose_inside_map(odom: Odometry, map_msg: OccupancyGrid | None, *, margin_m: float) -> bool:
+    if map_msg is None:
+        return True
+    x = float(odom.pose.pose.position.x)
+    y = float(odom.pose.pose.position.y)
+    if not math.isfinite(x) or not math.isfinite(y):
+        return False
+    width = int(map_msg.info.width)
+    height = int(map_msg.info.height)
+    resolution = float(map_msg.info.resolution)
+    if width <= 0 or height <= 0 or resolution <= 0.0:
+        return False
+    margin = max(0.0, float(margin_m))
+    min_x = float(map_msg.info.origin.position.x) - margin
+    min_y = float(map_msg.info.origin.position.y) - margin
+    max_x = float(map_msg.info.origin.position.x) + float(width) * resolution + margin
+    max_y = float(map_msg.info.origin.position.y) + float(height) * resolution + margin
+    return min_x <= x <= max_x and min_y <= y <= max_y
+
+
 class StuckWatchdog(Node):
     def __init__(self) -> None:
         super().__init__("stuck_watchdog")
         self.declare_parameter("namespace", "robot_a")
         self.declare_parameter("odom_topic", "odom/nav")
+        self.declare_parameter("map_topic", "map")
         self.declare_parameter("goal_topic", "goal_pose")
         self.declare_parameter("backup_action", "backup")
         self.declare_parameter("frontier_replan_topic", "frontier_replan")
@@ -95,6 +116,8 @@ class StuckWatchdog(Node):
         # Goal-change reset: when a fresh goal arrives, clear the pose
         # history so we measure stuck-ness against the new goal only.
         self.declare_parameter("goal_change_threshold_m", 0.50)
+        self.declare_parameter("suppress_recovery_when_odom_outside_map", True)
+        self.declare_parameter("map_bounds_margin_m", 2.0)
         # Last-resort raw cmd_vel pulse — fires only when N consecutive
         # BackUp action requests fail to be accepted (e.g. robot
         # wedged with walls on both sides → behavior_server's collision-
@@ -113,6 +136,7 @@ class StuckWatchdog(Node):
 
         ns = str(self.get_parameter("namespace").value)
         odom_topic = f"/{ns}/{self.get_parameter('odom_topic').value}"
+        map_topic = f"/{ns}/{self.get_parameter('map_topic').value}"
         goal_topic = f"/{ns}/{self.get_parameter('goal_topic').value}"
         backup_action = f"/{ns}/{self.get_parameter('backup_action').value}"
         frontier_replan_topic = f"/{ns}/{self.get_parameter('frontier_replan_topic').value}"
@@ -128,6 +152,10 @@ class StuckWatchdog(Node):
         self.goal_change_thr = float(
             self.get_parameter("goal_change_threshold_m").value
         )
+        self.suppress_recovery_when_odom_outside_map = bool(
+            self.get_parameter("suppress_recovery_when_odom_outside_map").value
+        )
+        self.map_bounds_margin_m = max(0.0, float(self.get_parameter("map_bounds_margin_m").value))
         self.pulse_after_backup_failures = max(
             1, int(self.get_parameter("pulse_after_backup_failures").value)
         )
@@ -156,10 +184,14 @@ class StuckWatchdog(Node):
         # Pose history: deque of (t_sec, x, y).
         self._pose_hist: deque = deque()
         self._latest_goal: PoseStamped | None = None
+        self._latest_odom: Odometry | None = None
+        self._latest_map: OccupancyGrid | None = None
         self._last_recovery_t: float = 0.0
         self._recovery_in_flight: bool = False
+        self._last_invalid_odom_warn_t: float = 0.0
 
         self.create_subscription(Odometry, odom_topic, self._odom_cb, 10)
+        self.create_subscription(OccupancyGrid, map_topic, self._map_cb, 10)
         self.create_subscription(PoseStamped, goal_topic, self._goal_cb, nav2_goal_qos)
         # Republish goal on the same topic Nav2 listens on, with the
         # same RELIABLE QoS bt_navigator actually expects.
@@ -185,6 +217,7 @@ class StuckWatchdog(Node):
         return time.monotonic()
 
     def _odom_cb(self, msg: Odometry) -> None:
+        self._latest_odom = msg
         t = self._now_sec()
         x = msg.pose.pose.position.x
         y = msg.pose.pose.position.y
@@ -193,6 +226,33 @@ class StuckWatchdog(Node):
         cutoff = t - self.window_sec
         while self._pose_hist and self._pose_hist[0][0] < cutoff:
             self._pose_hist.popleft()
+
+    def _map_cb(self, msg: OccupancyGrid) -> None:
+        self._latest_map = msg
+
+    def _latest_odom_inside_map(self) -> bool:
+        if not self.suppress_recovery_when_odom_outside_map:
+            return True
+        if self._latest_odom is None:
+            return True
+        return odom_pose_inside_map(
+            self._latest_odom,
+            self._latest_map,
+            margin_m=self.map_bounds_margin_m,
+        )
+
+    def _warn_invalid_odom_once(self, context: str) -> None:
+        now = self._now_sec()
+        if now - self._last_invalid_odom_warn_t < 2.0:
+            return
+        self._last_invalid_odom_warn_t = now
+        if self._latest_odom is None:
+            return
+        pos = self._latest_odom.pose.pose.position
+        self.get_logger().warn(
+            f"{context}: odom/nav outside map bounds "
+            f"pose=({float(pos.x):+.2f},{float(pos.y):+.2f}); suppressing recovery goal replay"
+        )
 
     def _goal_cb(self, msg: PoseStamped) -> None:
         # If goal changed substantially, reset the history — we want to
@@ -212,6 +272,11 @@ class StuckWatchdog(Node):
         if self._recovery_in_flight:
             return
         if self._latest_goal is None:
+            return
+        if not self._latest_odom_inside_map():
+            self._warn_invalid_odom_once("STUCK guard")
+            self._latest_goal = None
+            self._pose_hist.clear()
             return
         if self._now_sec() - self._last_recovery_t < self.cooldown_sec:
             return
@@ -326,7 +391,7 @@ class StuckWatchdog(Node):
         # halfway), we still want to nudge Nav2 to replan from the new
         # pose. Republish the cached goal: bt_navigator's NavigateToPose
         # action treats a re-published goal_pose as a preempt + replan.
-        if self._latest_goal is not None:
+        if self._latest_goal is not None and self._latest_odom_inside_map():
             now = self.get_clock().now().to_msg()
             republish = PoseStamped()
             republish.header.stamp = now
@@ -338,6 +403,9 @@ class StuckWatchdog(Node):
                 f"({self._latest_goal.pose.position.x:+.2f},"
                 f"{self._latest_goal.pose.position.y:+.2f}) to force replan."
             )
+        elif self._latest_goal is not None:
+            self._warn_invalid_odom_once("BackUp done")
+            self._latest_goal = None
         # Clear pose history so the next stuck-window starts fresh.
         self._pose_hist.clear()
         self._recovery_in_flight = False
@@ -383,12 +451,15 @@ class StuckWatchdog(Node):
             self._pulse_state = None
             self._recovery_in_flight = False
             # Republish cached goal so Nav2 plans from the new pose.
-            if self._latest_goal is not None:
+            if self._latest_goal is not None and self._latest_odom_inside_map():
                 republish = PoseStamped()
                 republish.header.stamp = self.get_clock().now().to_msg()
                 republish.header.frame_id = self._latest_goal.header.frame_id
                 republish.pose = self._latest_goal.pose
                 self._goal_pub.publish(republish)
+            elif self._latest_goal is not None:
+                self._warn_invalid_odom_once("cmd_vel pulse done")
+                self._latest_goal = None
             return
         msg = Twist()
         msg.linear.x = float(self.pulse_vx)
