@@ -29,6 +29,8 @@ Expected visible state:
 Useful topic checks in another terminal:
   ros2 topic hz /robot_a/Odometry
   ros2 topic hz /robot_b/Odometry
+  ros2 topic echo --once /robot_a/way_point_coord
+  ros2 topic echo --once /robot_b/way_point_coord
   ros2 topic echo --once /team_slam/alignment_status
   ros2 topic echo --once /team_slam/robust_loop_inliers
   ros2 topic hz /merged_map
@@ -41,11 +43,14 @@ Success looks like:
 - /team_slam/robust_loop_inliers reaches the configured threshold.
 - /team_slam/alignment_status becomes aligned.
 - /merged_map appears only after robust evidence and accepted pose-graph factors.
+- CFPA2 logs ASSIGN [cfpa2] repeatedly and /robot_a/way_point_coord plus /robot_b/way_point_coord move away from the start area.
+- If /merged_map is occupied-heavy, CFPA2 logs a shared-map quality-gate warning and falls back to per-robot maps for frontier extraction.
 
 Failure looks like:
 - Point-LIO odometry stays silent.
 - alignment_status stays unknown/rejected in the overlap scene.
 - /merged_map appears before robust inliers or in no-overlap mode.
+- CFPA2 repeatedly logs NO_GOAL [no_frontiers_after_extract] without later ASSIGN [cfpa2].
 - Raw LiDAR, dense maps, or full costmaps are continuously exchanged as peer traffic.
 
 Press Ctrl-C to stop. Log file:

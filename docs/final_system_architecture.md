@@ -20,6 +20,8 @@ Cross-robot alignment authority is `team_loop_closure`:
 
 Dynamic map handling uses `dynamic_scene_filter` online and `map_cleanup` asynchronously. Decentralized exchange uses descriptor-first DDS envelopes, with compact keyframe clouds sent only after a candidate or explicit request.
 
+Exploration may consume `/merged_map` only as a planning surface after a separate occupancy-quality gate passes. If the shared planning map is malformed, too sparse, or occupied-heavy, CFPA2 keeps `/merged_map` visible for debugging but falls back to per-robot maps for frontier extraction. This prevents a safety-gated but unusable shared map from starving exploration goals.
+
 ## Safety Defaults
 
 The default configuration keeps `fast_lio_scpgo` as production. `/merged_map` remains closed unless the safety gate publishes `status=aligned`. Point-LIO, KISS-Matcher, ERASOR, and Removert are never claimed runtime-ready unless their build/run validation logs prove it.

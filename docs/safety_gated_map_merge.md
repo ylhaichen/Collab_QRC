@@ -15,6 +15,17 @@ The gate accepts only when all conditions are true:
 
 Descriptor-only candidates, single weak ICP matches, export-only pose graph output, and optional local SLAM mutual state are insufficient.
 
+## Planner Quality Gate
+
+Opening `/merged_map` is not enough to make it a valid frontier-planning surface. CFPA2 applies a separate shared-map quality gate before using it for exploration. The gate rejects invalid grid geometry, too few known cells, too little free space, or an occupied-heavy map. When the gate rejects the map, `/merged_map` remains available for visualization and debugging, but CFPA2 falls back to per-robot maps for frontier extraction and logs the free/occupied/unknown counts.
+
+Default thresholds:
+
+- `shared_map_quality_gate_enabled=true`
+- `shared_map_max_occupied_ratio=0.70`
+- `shared_map_min_free_ratio=0.01`
+- `shared_map_min_known_cells=100`
+
 ## Runtime Surface
 
 `relative_transform_manager_node` publishes:

@@ -77,6 +77,77 @@ from std_msgs.msg import Empty, String
 from visualization_msgs.msg import Marker, MarkerArray
 
 
+def shared_map_quality_summary(
+    msg: OccupancyGrid,
+    *,
+    occ_threshold: int,
+    unknown_value: int,
+) -> dict[str, float | int]:
+    total = len(msg.data)
+    if total <= 0:
+        return {
+            "total": 0,
+            "free": 0,
+            "occupied": 0,
+            "unknown": 0,
+            "known": 0,
+            "free_ratio": 0.0,
+            "occupied_ratio": 0.0,
+            "unknown_ratio": 0.0,
+            "known_ratio": 0.0,
+        }
+    free = 0
+    occupied = 0
+    unknown = 0
+    for raw in msg.data:
+        value = int(raw)
+        if value == unknown_value:
+            unknown += 1
+        elif value >= occ_threshold:
+            occupied += 1
+        elif value >= 0:
+            free += 1
+        else:
+            unknown += 1
+    known = free + occupied
+    return {
+        "total": total,
+        "free": free,
+        "occupied": occupied,
+        "unknown": unknown,
+        "known": known,
+        "free_ratio": round(free / total, 5),
+        "occupied_ratio": round(occupied / total, 5),
+        "unknown_ratio": round(unknown / total, 5),
+        "known_ratio": round(known / total, 5),
+    }
+
+
+def shared_map_quality_usable(
+    msg: OccupancyGrid,
+    *,
+    occ_threshold: int,
+    unknown_value: int,
+    max_occupied_ratio: float,
+    min_free_ratio: float,
+    min_known_cells: int,
+) -> bool:
+    if int(msg.info.width) <= 0 or int(msg.info.height) <= 0 or float(msg.info.resolution) <= 0.0:
+        return False
+    if len(msg.data) != int(msg.info.width) * int(msg.info.height):
+        return False
+    summary = shared_map_quality_summary(
+        msg,
+        occ_threshold=occ_threshold,
+        unknown_value=unknown_value,
+    )
+    return (
+        int(summary["known"]) >= max(0, int(min_known_cells))
+        and float(summary["free_ratio"]) >= max(0.0, float(min_free_ratio))
+        and float(summary["occupied_ratio"]) <= min(1.0, max(0.0, float(max_occupied_ratio)))
+    )
+
+
 def _resolve_cfpa2_overlap_penalty_fn():
     candidates: list[Path] = []
     here = Path(__file__).resolve()
@@ -161,6 +232,10 @@ class CFPA2Coordinator(Node):
         self.declare_parameter("shared_map_topic", "/disco_slam/global_map")
         self.declare_parameter("shared_map_wait_sec", 8.0)
         self.declare_parameter("shared_map_local_patch_radius_m", 2.5)
+        self.declare_parameter("shared_map_quality_gate_enabled", True)
+        self.declare_parameter("shared_map_max_occupied_ratio", 0.70)
+        self.declare_parameter("shared_map_min_free_ratio", 0.01)
+        self.declare_parameter("shared_map_min_known_cells", 100)
         self.declare_parameter("free_value", 0)
         self.declare_parameter("unknown_value", -1)
         self.declare_parameter("occupancy_block_threshold", 50)
@@ -373,6 +448,18 @@ class CFPA2Coordinator(Node):
         self.shared_map_wait_sec = max(0.0, float(self.get_parameter("shared_map_wait_sec").value))
         self.shared_map_local_patch_radius_m = max(
             0.0, float(self.get_parameter("shared_map_local_patch_radius_m").value)
+        )
+        self.shared_map_quality_gate_enabled = bool(
+            self.get_parameter("shared_map_quality_gate_enabled").value
+        )
+        self.shared_map_max_occupied_ratio = min(
+            1.0, max(0.0, float(self.get_parameter("shared_map_max_occupied_ratio").value))
+        )
+        self.shared_map_min_free_ratio = min(
+            1.0, max(0.0, float(self.get_parameter("shared_map_min_free_ratio").value))
+        )
+        self.shared_map_min_known_cells = max(
+            0, int(self.get_parameter("shared_map_min_known_cells").value)
         )
         self.free_value = int(self.get_parameter("free_value").value)
         self.unknown_value = int(self.get_parameter("unknown_value").value)
@@ -788,6 +875,9 @@ class CFPA2Coordinator(Node):
 
         self._warned_missing_shared_map = False
         self._shared_map_fallback_active = False
+        self._shared_map_quality_usable = False
+        self._shared_map_quality_summary: dict[str, float | int] = {}
+        self._last_shared_map_quality_warn_ns = 0
         self._warned_cfpa2_two_robot_only = False
         self._cfpa2_last_close_stop_log_ns = 0
         self._start_ns = self.get_clock().now().nanoseconds
@@ -1135,12 +1225,40 @@ class CFPA2Coordinator(Node):
 
     def _shared_map_cb(self, msg: OccupancyGrid) -> None:
         self.shared_map = msg
-        if self._shared_map_fallback_active:
+        self._shared_map_quality_summary = shared_map_quality_summary(
+            msg,
+            occ_threshold=self.occ_thresh,
+            unknown_value=self.unknown_value,
+        )
+        if self.shared_map_quality_gate_enabled:
+            self._shared_map_quality_usable = shared_map_quality_usable(
+                msg,
+                occ_threshold=self.occ_thresh,
+                unknown_value=self.unknown_value,
+                max_occupied_ratio=self.shared_map_max_occupied_ratio,
+                min_free_ratio=self.shared_map_min_free_ratio,
+                min_known_cells=self.shared_map_min_known_cells,
+            )
+        else:
+            self._shared_map_quality_usable = True
+        if self._shared_map_quality_usable and self._shared_map_fallback_active:
             self.get_logger().info(
                 f"Shared map received on {self.shared_map_topic}; switching to shared-map coordination."
             )
+        if not self._shared_map_quality_usable:
+            now_ns = self.get_clock().now().nanoseconds
+            if now_ns - self._last_shared_map_quality_warn_ns > int(5e9):
+                s = self._shared_map_quality_summary
+                self.get_logger().warn(
+                    f"Shared map on {self.shared_map_topic} failed quality gate; "
+                    "falling back to per-robot maps for frontier extraction "
+                    f"(free={s.get('free', 0)} occ={s.get('occupied', 0)} "
+                    f"unk={s.get('unknown', 0)} occ_ratio={float(s.get('occupied_ratio', 0.0)):.3f}, "
+                    f"limit={self.shared_map_max_occupied_ratio:.3f})."
+                )
+                self._last_shared_map_quality_warn_ns = now_ns
         self._warned_missing_shared_map = False
-        self._shared_map_fallback_active = False
+        self._shared_map_fallback_active = not self._shared_map_quality_usable
 
     @staticmethod
     def _grid_index(x: int, y: int, w: int) -> int:
@@ -3965,7 +4083,11 @@ class CFPA2Coordinator(Node):
 
     def _tick_impl(self) -> None:
         now_ns = self.get_clock().now().nanoseconds
-        using_shared_map = self.use_shared_map and self.shared_map is not None
+        using_shared_map = (
+            self.use_shared_map
+            and self.shared_map is not None
+            and (not self.shared_map_quality_gate_enabled or self._shared_map_quality_usable)
+        )
         target_map: OccupancyGrid
         if self.use_shared_map:
             if using_shared_map:
