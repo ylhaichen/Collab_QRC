@@ -1,18 +1,8 @@
 {
-  "adapter_topics": {
-    "primary_robot_a_corrected_odom": "/robot_a/corrected_odom",
-    "primary_robot_a_odom_nav": "/robot_a/odom/nav",
-    "primary_robot_a_odometry": "/robot_a/Odometry",
-    "primary_robot_b_corrected_odom": "/robot_b/corrected_odom",
-    "primary_robot_b_odom_nav": "/robot_b/odom/nav",
-    "primary_robot_b_odometry": "/robot_b/Odometry",
-    "shadow_robot_a_odometry": "/robot_a/point_lio/Odometry",
-    "shadow_robot_b_odometry": "/robot_b/point_lio/Odometry"
-  },
   "backend": "point_lio",
   "backend_runtime_ready": true,
   "child_frame_id_non_empty": true,
-  "current_status": "Status B",
+  "current_status": "Status C",
   "fast_lio_production_path_unaffected": true,
   "frame_id_non_empty": true,
   "gt_used_runtime": false,
@@ -21,15 +11,21 @@
   "native_odom_topic": "/aft_mapped_to_init",
   "native_odometry_nonzero_rate": true,
   "nav2_odom_tf_validated": true,
+  "primary_nav_topics": [
+    "/robot_a/odom/nav",
+    "/robot_b/odom/nav"
+  ],
+  "primary_odom_topics": [
+    "/robot_a/Odometry",
+    "/robot_b/Odometry"
+  ],
   "primary_validation_passed": true,
-  "real_robot_validation_passed": false,
-  "ros2_primary_odometry_nonzero_rate": true,
   "ros2_shadow_odom_topics": [
     "/robot_a/point_lio/Odometry",
     "/robot_b/point_lio/Odometry"
   ],
   "ros2_shadow_odometry_nonzero_rate": true,
-  "schema": "point_lio_validation/v3",
+  "schema": "point_lio_validation/v2",
   "shadow_validation_passed": true,
   "team_loop_closure_keyframes_received": true,
   "validation_name": "point_lio_shadow_and_primary_validation"

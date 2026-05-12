@@ -205,6 +205,7 @@ realtek-r8126-dkms/
 /logs/**/robust_loop_inliers.jsonl
 /logs/**/*.jsonl
 /logs/**/*.jsonl.err
+/logs/*.status
 /logs/**/*.bag
 /logs/**/*.db3
 /logs/**/*.mcap
@@ -217,6 +218,7 @@ realtek-r8126-dkms/
 /logs/manual/
 /logs/cross_loop_*_runtime_final/
 /logs/cross_loop_overlap_pointlio_sanity/
+/logs/simulation_hardening/
 /logs/map_cleanup_export/
 /logs/map_cleanup_output/
 *.bag

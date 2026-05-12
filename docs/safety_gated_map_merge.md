@@ -27,6 +27,6 @@ Descriptor-only candidates, single weak ICP matches, export-only pose graph outp
 
 ## Current Runtime Result
 
-The safety gate passed in Point-LIO-primary overlap runtime and opened `/merged_map` only after robust selection accepted, the team pose graph had 11 inter-robot factors, the relative transform was finite, no-overlap rejection had passed in the paired runtime validation, and `gt_used_runtime=false`.
+The safety gate passed in Point-LIO-primary simulation hardening. Across three overlap trials, `/merged_map` opened only after robust selection accepted, the team pose graph had accepted inter-robot factors, the relative transform was finite, paired no-overlap rejection had passed, and `gt_used_runtime=false`.
 
-The no-overlap runtime kept `/merged_map` closed. Descriptor-only candidates and a single weak match remain insufficient to open map merge.
+Across three no-overlap trials, `/merged_map` stayed closed and inter-robot pose graph factors remained zero. Descriptor-only candidates and a single weak match remain insufficient to open map merge.

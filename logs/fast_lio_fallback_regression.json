@@ -1,10 +1,10 @@
 {
-  "cloud_topics_nonzero_rate": false,
-  "exact_error": "/robot_a/Odometry: launch process exited while waiting for /robot_a/Odometry ; /robot_b/Odometry: launch process exited while waiting for /robot_b/Odometry ; /robot_a/odom/nav: launch process exited while waiting for /robot_a/odom/nav ; /robot_b/odom/nav: launch process exited while waiting for /robot_b/odom/nav ; /robot_a/cloud_registered_body: launch process exited while waiting for /robot_a/cloud_registered_body ; /robot_b/cloud_registered_body: launch process exited while waiting for /robot_b/cloud_registered_body ; ",
-  "fast_lio_scpgo_fallback_available": false,
+  "cloud_topics_nonzero_rate": true,
+  "exact_error": "",
+  "fast_lio_scpgo_fallback_available": true,
   "gt_used_runtime": false,
   "local_slam_backend": "fast_lio_scpgo",
-  "odom_topics_nonzero_rate": false,
-  "runtime_valid": false,
+  "odom_topics_nonzero_rate": true,
+  "runtime_valid": true,
   "schema": "fast_lio_fallback_regression/v1"
 }

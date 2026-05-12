@@ -1,13 +1,22 @@
 {
+  "claim_boundary": "Synthetic temporal-voxel moving-cluster contract; no dedicated dynamic-object MuJoCo scene was available in this pass.",
+  "cloud_static_excludes_moving_trace": true,
   "dynamic_filter_ratio": 0.14286,
   "dynamic_object_cleared": true,
+  "dynamic_obstacle_layer_clears_after_ttl": true,
   "dynamic_points_filtered": 1,
   "dynamic_voxel_count_after_ttl": 0,
   "gt_used_runtime": false,
+  "moving_object_appears_in_cloud_dynamic": true,
+  "moving_object_permanent_merged_map_obstacle": false,
   "runtime_valid": true,
+  "scene_available": false,
   "schema": "dynamic_filter_validation/v1",
+  "source": "synthetic_moving_cluster",
   "stale_obstacle_decay_time_sec": 1.5,
   "static_points_kept": 6,
+  "static_walls_remain_in_cloud_static": true,
   "static_walls_remain_stable": true,
+  "team_loop_closure_uses_cloud_static": true,
   "validation_type": "synthetic_temporal_voxel_contract"
 }

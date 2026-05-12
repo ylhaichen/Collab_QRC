@@ -26,9 +26,11 @@ The default configuration keeps `fast_lio_scpgo` as production. `/merged_map` re
 
 ## Runtime Validation Status
 
-Current branch validation reached `Status B`, not Status A. Point-LIO shadow and primary simulation validation passed with native odometry on `/aft_mapped_to_init` and native cloud on `/cloud_registered_body`. The Point-LIO primary launch produced `/robot_a/Odometry`, `/robot_b/Odometry`, corrected odometry, `/odom/nav`, Nav2 odom/tf, and team keyframes without ground truth runtime alignment.
+Current branch status is `Simulation Hardening Passed`, not Status A. Point-LIO shadow and primary simulation validation passed with native odometry on `/aft_mapped_to_init` and native cloud on `/cloud_registered_body`. The Point-LIO primary launch produced `/robot_a/Odometry`, `/robot_b/Odometry`, corrected odometry, `/odom/nav`, Nav2 odom/tf, static/dynamic cloud outputs, and team keyframes without ground truth runtime alignment.
 
-The DiSCo-style cross-robot runtime validation passed overlap and no-overlap scenes with `gtsam_cpp` pose graph optimization, robust inlier gating, and safety-gated `/merged_map`. Real Go2/Go2W validation is still blocked by missing robot network and Livox/IMU topics. Fast-LIO / SC-PGO cannot be demoted because the fallback regression did not produce nonzero odometry topics in the latest run.
+The DiSCo-style cross-robot simulation hardening passed three overlap trials and three no-overlap trials with `gtsam_cpp` pose graph optimization, robust inlier gating, and safety-gated `/merged_map`. Dynamic-object and decentralized communication stress are currently validated as explicitly labeled synthetic contracts because no dedicated dynamic-object or peer-network stress scene was available in this pass.
+
+Fast-LIO / SC-PGO fallback regression passed after forcing Fast DDS to UDP transport (`FASTDDS_BUILTIN_TRANSPORTS=UDPv4`) to avoid local shared-memory port lock artifacts. Fast-LIO is still not globally demoted by this task; it remains retained as the fallback/default safe path. Real Go2/Go2W validation is intentionally not claimed in this simulation-hardening pass.
 
 ## Primary Launch
 

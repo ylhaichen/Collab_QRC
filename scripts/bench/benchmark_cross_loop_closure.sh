@@ -5,6 +5,7 @@ WS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 ROS2_SETUP_BASH="${ROS2_SETUP_BASH:-/opt/ros/humble/setup.bash}"
 DURATION_SEC="${DURATION_SEC:-180}"
 TOPIC_WAIT_SEC="${TOPIC_WAIT_SEC:-180}"
+HZ_SAMPLE_SEC="${HZ_SAMPLE_SEC:-12}"
 RUN_FINAL_EVAL="${RUN_FINAL_EVAL:-false}"
 TRIALS="${TRIALS:-3}"
 PROFILE="${PROFILE:-robust}"
@@ -72,6 +73,22 @@ scene_has_overlap() {
       echo "false"
       ;;
   esac
+}
+
+launch_arg_value() {
+  local key="$1"
+  local fallback="$2"
+  shift 2
+  local arg
+  for arg in "$@"; do
+    case "${arg}" in
+      "${key}:="*)
+        printf '%s\n' "${arg#${key}:=}"
+        return 0
+        ;;
+    esac
+  done
+  printf '%s\n' "${fallback}"
 }
 
 if [[ "${RUN_FINAL_EVAL}" == "true" ]]; then
@@ -200,11 +217,67 @@ record_topic_field() {
   ' "${WS_DIR}/scripts/bench/record_topic_field.py" "${topic}" "${field}" "${TOPIC_WAIT_SEC}"
 }
 
+record_topic_hz() {
+  local topic="$1"
+  local output="$2"
+  start_recorder "${output}" '
+    set -euo pipefail
+    sample="$1"
+    wait_sec="$2"
+    topic="$3"
+    deadline=$((SECONDS + wait_sec))
+    tmp="$(mktemp)"
+    trap "rm -f \"${tmp}\"" EXIT
+    while (( SECONDS < deadline )); do
+      timeout "${sample}" ros2 topic hz "${topic}" >"${tmp}" 2>&1 || true
+      cat "${tmp}"
+      if grep -q "average rate:" "${tmp}"; then
+        exit 0
+      fi
+      sleep 2
+    done
+    exit 1
+  ' "${HZ_SAMPLE_SEC}s" "${TOPIC_WAIT_SEC}" "${topic}"
+}
+
+record_tf_lookup() {
+  local target_frame="$1"
+  local source_frame="$2"
+  local tf_topic="$3"
+  local tf_static_topic="$4"
+  local output="$5"
+  start_recorder "${output}" '
+    set -euo pipefail
+    sample="$1"
+    wait_sec="$2"
+    target_frame="$3"
+    source_frame="$4"
+    tf_topic="$5"
+    tf_static_topic="$6"
+    deadline=$((SECONDS + wait_sec))
+    tmp="$(mktemp)"
+    trap "rm -f \"${tmp}\"" EXIT
+    while (( SECONDS < deadline )); do
+      timeout "${sample}" ros2 run tf2_ros tf2_echo "${target_frame}" "${source_frame}" \
+        --ros-args -r /tf:="${tf_topic}" -r /tf_static:="${tf_static_topic}" >"${tmp}" 2>&1 || true
+      cat "${tmp}"
+      if grep -q "Translation:" "${tmp}"; then
+        exit 0
+      fi
+      sleep 2
+    done
+    exit 1
+  ' "${HZ_SAMPLE_SEC}s" "${TOPIC_WAIT_SEC}" "${target_frame}" "${source_frame}" "${tf_topic}" "${tf_static_topic}"
+}
+
 mapfile -t profile_launch_args < <(profile_args "${PROFILE}")
 scene_overlap_arg=()
 if [[ "${SCENE_HAS_OVERLAP}" == "true" ]]; then
   scene_overlap_arg=(--scene-has-overlap)
 fi
+local_slam_backend="$(launch_arg_value local_slam_backend point_lio "$@")"
+registration_backend="$(launch_arg_value registration_backend icp_2d "$@")"
+robust_selection_backend="$(launch_arg_value robust_selection_backend greedy_consistency_fallback "$@")"
 
 launch_cmd=(
   ./scripts/launch/nav_test_demo3_mixed.sh
@@ -241,6 +314,14 @@ record_string_topic /team_slam/peer/status "${OUT_DIR}/peer_status.jsonl"
 record_string_topic /team_slam/peer/envelopes "${OUT_DIR}/peer_envelopes.jsonl"
 record_string_topic /cfpa2/loop_candidates "${OUT_DIR}/loop_candidates.jsonl"
 record_topic_field /merged_map header.stamp.sec "${OUT_DIR}/merged_map_stamps.txt"
+record_topic_hz /robot_a/Odometry "${OUT_DIR}/point_lio_odom_hz_robot_a.log"
+record_topic_hz /robot_b/Odometry "${OUT_DIR}/point_lio_odom_hz_robot_b.log"
+record_topic_hz /robot_a/cloud_registered_body "${OUT_DIR}/point_lio_cloud_hz_robot_a.log"
+record_topic_hz /robot_b/cloud_registered_body "${OUT_DIR}/point_lio_cloud_hz_robot_b.log"
+record_topic_hz /robot_a/odom/nav "${OUT_DIR}/nav2_odom_hz_robot_a.log"
+record_topic_hz /robot_b/odom/nav "${OUT_DIR}/nav2_odom_hz_robot_b.log"
+record_tf_lookup map base_link /robot_a/tf /robot_a/tf_static "${OUT_DIR}/nav2_tf_robot_a_map_base.log"
+record_tf_lookup map b_base_link /robot_b/tf /robot_b/tf_static "${OUT_DIR}/nav2_tf_robot_b_map_base.log"
 
 sleep "${DURATION_SEC}"
 cleanup
@@ -251,6 +332,9 @@ python3 "${WS_DIR}/scripts/bench/cross_loop_closure_reporter.py" \
   --scene-name "${SCENE_NAME}" \
   --trial-id "${TRIAL_ID}" \
   --profile "${PROFILE}" \
+  --local-slam-backend "${local_slam_backend}" \
+  --registration-backend "${registration_backend}" \
+  --robust-selection-backend "${robust_selection_backend}" \
   "${scene_overlap_arg[@]}"
 
 mkdir -p "${WS_DIR}/logs"

@@ -6,6 +6,7 @@ cd "${WS_DIR}"
 mkdir -p logs
 export ROS_LOG_DIR="${ROS_LOG_DIR:-/tmp/collab_qrc_ros_logs}"
 mkdir -p "${ROS_LOG_DIR}"
+export FASTDDS_BUILTIN_TRANSPORTS="${FASTDDS_BUILTIN_TRANSPORTS:-UDPv4}"
 
 ROS2_SETUP_BASH="${ROS2_SETUP_BASH:-/opt/ros/humble/setup.bash}"
 TOPIC_WAIT_SEC="${TOPIC_WAIT_SEC:-180}"
@@ -69,17 +70,42 @@ wait_topic_rate() {
 
 pass=true
 errors=()
-for topic in \
-  /robot_a/Odometry \
-  /robot_b/Odometry \
-  /robot_a/odom/nav \
-  /robot_b/odom/nav \
-  /robot_a/cloud_registered_body \
-  /robot_b/cloud_registered_body; do
+topics=(
+  /robot_a/Odometry
+  /robot_b/Odometry
+  /robot_a/odom/nav
+  /robot_b/odom/nav
+  /robot_a/cloud_registered_body
+  /robot_b/cloud_registered_body
+)
+pids=()
+status_files=()
+for topic in "${topics[@]}"; do
   safe="${topic//\//_}"
-  if ! wait_topic_rate "${topic}" "logs/fast_lio_fallback_hz${safe}.log"; then
+  status_file="logs/fast_lio_fallback_hz${safe}.status"
+  status_files+=("${status_file}")
+  (
+    if wait_topic_rate "${topic}" "logs/fast_lio_fallback_hz${safe}.log"; then
+      echo ok >"${status_file}"
+    else
+      echo fail >"${status_file}"
+    fi
+  ) &
+  pids+=("$!")
+done
+for pid in "${pids[@]}"; do
+  wait "${pid}" || true
+done
+for topic in "${topics[@]}"; do
+  safe="${topic//\//_}"
+  status_file="logs/fast_lio_fallback_hz${safe}.status"
+  if [[ "$(cat "${status_file}" 2>/dev/null || echo fail)" != "ok" ]]; then
     pass=false
-    errors+=("${topic}: $(tail -n 5 "logs/fast_lio_fallback_hz${safe}.log" | tr '\n' ' ')")
+    detail="$(tail -n 5 "logs/fast_lio_fallback_hz${safe}.log" 2>/dev/null | tr '\n' ' ' | perl -pe 's/\e\[[0-9;]*[[:alpha:]]//g')"
+    if [[ -z "${detail// }" ]]; then
+      detail="no average rate observed within ${TOPIC_WAIT_SEC}s; Fast-LIO node initialized but required topic stayed silent"
+    fi
+    errors+=("${topic}: ${detail}")
   fi
 done
 

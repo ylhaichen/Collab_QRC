@@ -37,6 +37,8 @@ The selector builds a consistency graph over verified inter-robot matches, selec
 
 ## Current Runtime Result
 
-The Point-LIO-primary cross-loop runtime validation passed with the current validated registration backend `icp_2d`; KISS-Matcher is still a preferred target backend but is not runtime-validated on this branch. In the overlap scene, the gate accepted `aligned` with 11 robust inliers, 11 inter-robot pose graph factors, median RMSE `0.24555`, translation spread `1.20381 m`, yaw spread `14.996 deg`, and `gt_used_runtime=false`. `/merged_map` opened only after robust evidence, at `48.554 s`.
+The Point-LIO-primary simulation hardening passed three overlap trials and three no-overlap trials with the current validated registration backend `icp_2d`; KISS-Matcher is still a preferred target backend but is not runtime-validated on this branch.
 
-The no-overlap scene was rejected with zero accepted inter-robot pose graph factors and no `/merged_map` opening. Descriptor-only and single weak match merge blocking are covered by the robust loop selector contract tests and the no-overlap runtime result.
+Overlap trials accepted `aligned` with robust inlier counts `12`, `7`, and `45`, and inter-robot pose graph factors `7`, `7`, and `45`. No-overlap trials were rejected with zero accepted inter-robot pose graph factors and no `/merged_map` opening. All six trials reported `gt_used_runtime=false`, nonzero Point-LIO odom/cloud rate, valid Nav2 odom/tf, and nonzero team keyframes.
+
+Descriptor-only and single weak match merge blocking are covered by the robust loop selector contract tests and the repeated no-overlap runtime result.

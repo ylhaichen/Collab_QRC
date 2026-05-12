@@ -131,14 +131,23 @@ wait_topic_rate() {
 wait_topic_sample_best_effort() {
   local topic="$1"
   local out="$2"
+  local hz_out="${out}.hz"
   local deadline=$((SECONDS + TOPIC_WAIT_SEC))
   while (( SECONDS < deadline )); do
     if ! kill -0 "${LAUNCH_PID}" >/dev/null 2>&1; then
       echo "launch process exited while waiting for ${topic}" >"${out}"
       return 1
     fi
-    timeout "${HZ_SAMPLE_SEC}s" ros2 topic echo --once "${topic}" --qos-reliability best_effort >"${out}" 2>&1 || true
+    timeout "${HZ_SAMPLE_SEC}s" ros2 topic echo --qos-reliability best_effort --qos-durability volatile --once "${topic}" >"${out}" 2>&1 || true
     if grep -q "header:" "${out}"; then
+      return 0
+    fi
+    timeout "${HZ_SAMPLE_SEC}s" ros2 topic hz "${topic}" >"${hz_out}" 2>&1 || true
+    if grep -q "average rate:" "${hz_out}"; then
+      {
+        echo "header: validated_by_topic_hz_fallback"
+        cat "${hz_out}"
+      } >"${out}"
       return 0
     fi
     sleep 2

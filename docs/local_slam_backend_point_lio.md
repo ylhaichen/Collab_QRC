@@ -40,4 +40,4 @@ Point-LIO shadow and primary simulation validation passed. Native Point-LIO odom
 
 The adapter publishes `map->odom` as an identity compatibility transform and `odom->base_link` / `odom->b_base_link` from Point-LIO odometry. An odometry jump guard rejects implausible Point-LIO pose jumps without using GT or a hardcoded inter-robot transform.
 
-Fast-LIO / SC-PGO remains the real robot production-safe path until real robot Point-LIO validation and fallback regression both pass. The latest Fast-LIO fallback regression was blocked because `/robot_a/Odometry`, `/robot_b/Odometry`, `/robot_a/odom/nav`, `/robot_b/odom/nav`, and registered cloud topics did not become nonzero-rate before launch exit.
+Fast-LIO / SC-PGO remains retained and must not be demoted globally by this simulation-hardening task. The latest fallback regression passed after setting `FASTDDS_BUILTIN_TRANSPORTS=UDPv4`; required fallback odometry, `/odom/nav`, and registered cloud topics became nonzero-rate with `gt_used_runtime=false`.

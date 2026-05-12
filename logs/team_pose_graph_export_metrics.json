@@ -1,5 +1,5 @@
 {
-  "alignment_confidence": 0.8287,
+  "alignment_confidence": 0.0,
   "dependency_blocker": "gtsam_cpp_external_optimizer_required",
   "export_paths": {
     "factors_json": "/home/ylhc/Desktop/Collab_QRC/logs/team_pose_graph_factors.json",

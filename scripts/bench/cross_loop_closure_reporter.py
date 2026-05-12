@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import re
 from pathlib import Path
 from typing import Any
 
@@ -94,6 +95,30 @@ def _first_numeric_line(path: Path) -> float | None:
     return None
 
 
+def _topic_hz(path: Path) -> float:
+    if not path.exists():
+        return 0.0
+    text = path.read_text(encoding="utf-8", errors="replace")
+    match = re.search(r"average rate:\s*([0-9]+(?:\.[0-9]+)?)", text)
+    if not match:
+        return 0.0
+    return float(match.group(1))
+
+
+def _min_positive_rate(*paths: Path) -> float:
+    rates = [_topic_hz(path) for path in paths]
+    if any(rate <= 0.0 for rate in rates):
+        return 0.0
+    return round(min(rates), 4)
+
+
+def _tf_lookup_valid(path: Path) -> bool:
+    if not path.exists():
+        return False
+    text = path.read_text(encoding="utf-8", errors="replace")
+    return "Translation:" in text and "Rotation:" in text
+
+
 def _runtime_error(root: Path) -> str:
     launch_log = root / "launch.log"
     if launch_log.exists():
@@ -141,10 +166,16 @@ def _write_markdown(path: Path, summary: dict[str, Any]) -> None:
         f"- trial_id: `{summary['trial_id']}`",
         f"- profile: `{summary['profile']}`",
         f"- relative_pose_source: `{summary['relative_pose_source']}`",
+        f"- local_slam_backend: `{summary['local_slam_backend']}`",
+        f"- registration_backend: `{summary['registration_backend']}`",
+        f"- robust_selection_backend: `{summary['robust_selection_backend']}`",
         f"- gt_used_runtime: `{summary['gt_used_runtime']}`",
         f"- runtime_valid: `{summary['runtime_valid']}`",
         f"- runtime_error: `{summary['runtime_error']}`",
         f"- keyframes: `{summary['keyframes']}`",
+        f"- point_lio_odom_rate: `{summary['point_lio_odom_rate']}`",
+        f"- point_lio_cloud_rate: `{summary['point_lio_cloud_rate']}`",
+        f"- nav2_odom_tf_valid: `{summary['nav2_odom_tf_valid']}`",
         f"- descriptor_candidates: `{summary['descriptor_candidates']}`",
         f"- cross_robot_matches_total: `{summary['cross_robot_matches_total']}`",
         f"- verified_matches: `{summary['verified_matches']}`",
@@ -218,6 +249,8 @@ def summarize_run(args: argparse.Namespace) -> dict[str, Any]:
     ever_aligned = aligned_stamp is not None
     time_to_alignment = None if aligned_stamp is None else round(aligned_stamp - first_seen, 3)
     merged_map_stamp = _first_numeric_line(root / "merged_map_stamps.txt")
+    if merged_map_stamp is not None and first_seen > 0.0 and merged_map_stamp < first_seen - 1.0:
+        merged_map_stamp = None
     if merged_map_stamp is None:
         merged_map_stamp = _first_stamp(statuses, lambda x: x.get("status") == "aligned")
     merged_time = None if merged_map_stamp is None else round(merged_map_stamp - first_seen, 3)
@@ -255,20 +288,47 @@ def summarize_run(args: argparse.Namespace) -> dict[str, Any]:
         )
 
     gt_path = Path(args.gt_transform_json) if args.gt_transform_json else None
+    point_lio_odom_rate = _min_positive_rate(
+        root / "point_lio_odom_hz_robot_a.log",
+        root / "point_lio_odom_hz_robot_b.log",
+    )
+    point_lio_cloud_rate = _min_positive_rate(
+        root / "point_lio_cloud_hz_robot_a.log",
+        root / "point_lio_cloud_hz_robot_b.log",
+    )
+    nav2_odom_rate = _min_positive_rate(
+        root / "nav2_odom_hz_robot_a.log",
+        root / "nav2_odom_hz_robot_b.log",
+    )
+    nav2_tf_valid = _tf_lookup_valid(root / "nav2_tf_robot_a_map_base.log") and _tf_lookup_valid(
+        root / "nav2_tf_robot_b_map_base.log"
+    )
     summary: dict[str, Any] = {
         "schema": "cross_loop_closure_summary/v2",
         "scene_name": args.scene_name,
         "trial_id": int(args.trial_id),
         "profile": args.profile,
+        "local_slam_backend": args.local_slam_backend,
+        "registration_backend": args.registration_backend,
+        "robust_selection_backend": args.robust_selection_backend,
         "relative_pose_source": args.relative_pose_source,
         "gt_used_runtime": gt_used_runtime,
         "runtime_valid": runtime_valid,
         "runtime_error": runtime_error,
         "keyframes": keyframe_count,
+        "keyframe_count": keyframe_count,
+        "point_lio_odom_rate": point_lio_odom_rate,
+        "point_lio_cloud_rate": point_lio_cloud_rate,
+        "nav2_odom_rate": nav2_odom_rate,
+        "nav2_tf_valid": nav2_tf_valid,
+        "nav2_odom_tf_valid": nav2_odom_rate > 0.0 and nav2_tf_valid,
         "descriptor_candidates": descriptor_candidate_count,
+        "descriptor_candidate_count": descriptor_candidate_count,
         "verified_matches": verified_count,
+        "verified_match_count": verified_count,
         "cross_robot_matches_total": match_total,
         "rejected_matches": rejected_count,
+        "rejected_match_count": rejected_count,
         "false_positive_rejection_count": rejected_count,
         "recorder_inferred_counts": {
             "keyframes": keyframe_count > len(keyframes),
@@ -276,6 +336,7 @@ def summarize_run(args: argparse.Namespace) -> dict[str, Any]:
             "descriptor_candidates": descriptor_candidate_count > len(candidates),
         },
         "robust_inlier_set_size": int(latest_robust.get("robust_inlier_set_size", 0) or 0),
+        "robust_inlier_count": int(latest_robust.get("robust_inlier_set_size", 0) or 0),
         "robust_inlier_ratio": float(latest_robust.get("robust_inlier_ratio", 0.0) or 0.0),
         "robust_inlier_ratio_raw": float(
             latest_robust.get("robust_inlier_ratio_raw", latest_robust.get("robust_inlier_ratio", 0.0)) or 0.0
@@ -312,6 +373,7 @@ def summarize_run(args: argparse.Namespace) -> dict[str, Any]:
         ),
         "consistent_matches": int(latest_robust.get("robust_inlier_set_size", 0) or 0),
         "alignment_status": final_status,
+        "alignment_success": final_status == "aligned",
         "time_to_alignment_sec": time_to_alignment,
         "merged_map_enabled_time_sec": merged_time,
         "pose_graph_num_factors": pose_graph_num_factors,
@@ -405,6 +467,9 @@ def main() -> int:
     ap.add_argument("--scene-has-overlap", action="store_true")
     ap.add_argument("--trial-id", default="1")
     ap.add_argument("--profile", default="robust")
+    ap.add_argument("--local-slam-backend", default="point_lio")
+    ap.add_argument("--registration-backend", default="icp_2d")
+    ap.add_argument("--robust-selection-backend", default="greedy_consistency_fallback")
     ap.add_argument("--aggregate-root", action="store_true")
     args = ap.parse_args()
 

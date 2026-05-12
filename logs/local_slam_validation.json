@@ -1,6 +1,5 @@
 {
   "fast_lio_scpgo_remains_available_as_fallback": true,
-  "fast_lio_fallback_regression_passed": false,
   "fast_lio_scpgo_remains_production": true,
   "gt_used_runtime": false,
   "local_slam_backend": "point_lio",
