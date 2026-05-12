@@ -27,3 +27,9 @@ Point-LIO validation requires native ROS 1 backend build/run, ROS 1/ROS 2 bridge
 ## Status Boundary
 
 Without physical Go2/Go2W hardware, Livox/IMU drivers, network access, Docker permission, and ROS runtime logs, real robot validation remains blocked. Do not report Status A until those logs pass.
+
+## Current Runtime Result
+
+The latest real robot deployment check did not pass. `robot_a_network_reachable=false` and `robot_b_network_reachable=false`; required runtime topics `/livox/lidar`, `/livox/imu`, `/robot_a/Odometry`, `/robot_b/Odometry`, `/robot_a/odom/nav`, `/robot_b/odom/nav`, and `/team_slam/keyframes` were unavailable.
+
+Point-LIO is validated as a simulation primary path, not as a real robot primary path. Fast-LIO / SC-PGO must remain the production-safe robot path until the real Go2/Go2W Point-LIO run and fallback regression both produce nonzero-rate odom/cloud/Nav2/tf evidence.

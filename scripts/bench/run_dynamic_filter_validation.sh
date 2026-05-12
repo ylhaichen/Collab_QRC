@@ -16,7 +16,7 @@ from pathlib import Path
 
 from dynamic_scene_filter.temporal_voxel_filter import DynamicFilterParams, TemporalVoxelFilter
 
-filt = TemporalVoxelFilter(DynamicFilterParams(dynamic_obstacle_ttl_sec=1.0))
+filt = TemporalVoxelFilter(DynamicFilterParams(dynamic_obstacle_ttl_sec=1.0, track_new_voxel_motion=True))
 static_observations = 0
 for stamp in (0.0, 1.0, 2.1):
     res = filt.classify_points([(2.0, 0.0, 0.2), (2.0, 0.5, 0.2)], stamp_sec=stamp)
@@ -27,6 +27,7 @@ dynamic_points = len(dyn.dynamic_points)
 filt.prune(stamp_sec=5.0)
 summary = {
     "schema": "dynamic_filter_validation/v1",
+    "validation_type": "synthetic_temporal_voxel_contract",
     "runtime_valid": True,
     "dynamic_points_filtered": dynamic_points,
     "static_points_kept": static_observations,

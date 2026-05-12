@@ -1,18 +1,23 @@
 {
-  "schema": "final_system_validation/v1",
-  "final_status_label": "Status D - External/Runtime Blocker",
+  "schema": "final_system_validation/v2",
+  "final_status_label": "Status B - Point-LIO/DiSCo simulation core passed; real robot/network and fallback runtime blocked",
   "status_a_claimed": false,
+  "gt_used_runtime": false,
   "point_lio": {
-    "docker_build_passed": true,
-    "docker_smoke_test_passed": true,
-    "shadow_validation_passed": false,
-    "primary_validation_passed": false,
-    "blocker": "ros_participant_socket_permission_denied_and_no_live_point_lio_topics"
+    "native_odom_topic": "/aft_mapped_to_init",
+    "native_cloud_topic": "/cloud_registered_body",
+    "shadow_validation_passed": true,
+    "primary_validation_passed": true,
+    "nav2_odom_tf_validated": true,
+    "team_loop_closure_keyframes_received": true,
+    "real_robot_validation_passed": false
   },
   "local_slam_validation": {
-    "fast_lio_scpgo_default_safe_mode": true,
-    "point_lio_primary_passed": false,
-    "nav2_odom_tf_validated": false
+    "selected_backend": "point_lio",
+    "point_lio_primary_passed": true,
+    "fast_lio_scpgo_default_safe_mode_retained": true,
+    "fast_lio_fallback_regression_passed": false,
+    "fast_lio_can_be_demoted": false
   },
   "cross_robot_loop_closure": {
     "runtime_valid": true,
@@ -20,32 +25,88 @@
     "no_overlap_pass": true,
     "optimized_overlap": true,
     "pose_graph_backend": "gtsam_cpp",
-    "robust_inlier_set_size": 7,
-    "pose_graph_inter_robot_factors": 7,
-    "merged_map_enabled_time_sec": 87.964,
-    "blocker": "",
+    "registration_backend_runtime": "icp_2d",
+    "kiss_matcher_runtime_passed": false,
+    "kiss_matcher_blocker": "kiss_matcher_not_on_path_or_validated",
+    "robust_selection_backend_runtime": "greedy_consistency_fallback",
+    "overlap_alignment_status": "aligned",
+    "overlap_robust_inlier_set_size": 11,
+    "overlap_pose_graph_inter_robot_factors": 11,
+    "overlap_median_rmse": 0.24555,
+    "overlap_transform_spread_translation": 1.20381,
+    "overlap_transform_spread_yaw_deg": 14.996,
+    "overlap_merged_map_enabled_time_sec": 48.554,
+    "no_overlap_alignment_status": "rejected",
+    "no_overlap_pose_graph_inter_robot_factors": 0,
     "descriptor_only_merge_block_contract": true,
-    "single_weak_match_merge_block_contract": true
+    "single_weak_match_merge_block_contract": true,
+    "gt_used_runtime": false
   },
   "dynamic_filtering": {
-    "synthetic_contract_passed": true,
-    "runtime_robot_cloud_validation_passed": true
+    "validation_type": "synthetic_temporal_voxel_contract plus cross_loop_static_cloud_runtime_metrics",
+    "runtime_valid": true,
+    "dynamic_points_filtered": 1,
+    "dynamic_object_cleared": true,
+    "static_walls_remain_stable": true,
+    "cross_loop_dynamic_filter_metrics_count": 2085
   },
   "map_cleanup": {
+    "requested_backend": "erasor",
     "erasor_runtime_passed": false,
     "removert_runtime_passed": false,
-    "fallback_contract_passed": true,
-    "blocker": "erasor_source_not_found_in_tracked_runtime_path"
+    "fallback_backend": "temporal_voxel_fallback",
+    "fallback_validation_passed": true,
+    "cleaned_static_map_file": "logs/map_cleanup_output/cleaned_static_map.pcd",
+    "removed_dynamic_points_file": "logs/map_cleanup_output/removed_dynamic_points.pcd",
+    "external_backend_build_blocker": "erasor_build_failed_missing_jsk_recognition_msgs",
+    "external_backend_build_log": "logs/manual/erasor_docker_build_with_deps_20260512T040550Z.log"
   },
   "decentralized_communication": {
+    "team_comm_mode": "descriptor_only",
     "descriptor_only_contract_passed": true,
+    "cloud_on_demand_contract_passed": true,
+    "continuous_raw_lidar_exchange": false,
     "two_jetson_runtime_passed": false,
-    "blocker": "hardware_network_runtime_not_available"
+    "blocker": "real two-Jetson or equivalent peer network not available in this run"
+  },
+  "exploration_allocator": {
+    "synthetic_contract_passed": true,
+    "live_nav2_runtime_passed": false,
+    "claim_boundary": "Utility policy contract validated; live exploration behavior requires ROS/Nav2 runtime validation."
   },
   "real_robot": {
     "validated": false,
-    "blocker": "go2_go2w_livox_imu_network_runtime_not_available"
+    "blocker_type": "network_unavailable",
+    "robot_a_network_reachable": false,
+    "robot_b_network_reachable": false,
+    "missing_topics": [
+      "/livox/lidar",
+      "/livox/imu",
+      "/robot_a/Odometry",
+      "/robot_b/Odometry",
+      "/robot_a/odom/nav",
+      "/robot_b/odom/nav",
+      "/team_slam/keyframes"
+    ]
   },
-  "fast_lio_scpgo_remains_production": true,
-  "gt_used_runtime": false
+  "remaining_blockers": [
+    {
+      "validation_name": "real_robot_deployment_go2_go2w",
+      "blocked_command": "bash scripts/deploy/check_real_robot_deployment_go2_go2w.sh",
+      "blocker_type": "network_unavailable",
+      "exact_error": "robot_a_network_reachable=false; robot_b_network_reachable=false; missing /livox/lidar, /livox/imu, /robot_a/Odometry, /robot_b/Odometry, /robot_a/odom/nav, /robot_b/odom/nav, /team_slam/keyframes"
+    },
+    {
+      "validation_name": "fast_lio_fallback_regression",
+      "blocked_command": "bash scripts/bench/run_fast_lio_fallback_regression.sh",
+      "blocker_type": "ros_runtime",
+      "exact_error": "/robot_a/Odometry, /robot_b/Odometry, /robot_a/odom/nav, /robot_b/odom/nav, /robot_a/cloud_registered_body, /robot_b/cloud_registered_body did not become nonzero-rate before launch exit"
+    },
+    {
+      "validation_name": "erasor_runtime_cleanup",
+      "blocked_command": "docker run --rm -v \"$PWD\":/ws -w /ws ros:noetic-ros-base bash -lc 'apt-get update && apt-get install ROS1 deps && catkin_make -DCMAKE_BUILD_TYPE=Release'",
+      "blocker_type": "ros_runtime",
+      "exact_error": "fatal error: jsk_recognition_msgs/PolygonArray.h: No such file or directory"
+    }
+  ]
 }

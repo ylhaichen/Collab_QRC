@@ -1,6 +1,7 @@
 """Domain-specific launch module builders for go2_gazebo_sim."""
 
 import os
+import glob
 
 
 def _find_mujoco_plugin_dir() -> str:
@@ -17,11 +18,18 @@ def _find_mujoco_plugin_dir() -> str:
     candidates = []
     conda = os.environ.get("CONDA_PREFIX")
     if conda:
-        candidates.append(os.path.join(conda, "lib", "python3.10",
-                                       "site-packages", "mujoco", "plugin"))
+        candidates.extend(
+            sorted(glob.glob(os.path.join(conda, "lib", "python*", "site-packages", "mujoco", "plugin")))
+        )
     candidates.append(os.path.join(os.path.expanduser("~"),
                                    ".local", "lib", "python3.10",
                                    "site-packages", "mujoco", "plugin"))
+    candidates.extend(
+        sorted(glob.glob(os.path.join(os.path.expanduser("~"), "micromamba", "envs", "*", "lib", "python*", "site-packages", "mujoco", "plugin")))
+    )
+    candidates.extend(
+        sorted(glob.glob(os.path.join(os.path.expanduser("~"), "miniconda3", "envs", "*", "lib", "python*", "site-packages", "mujoco", "plugin")))
+    )
     for c in candidates:
         if os.path.isdir(c):
             return c

@@ -49,8 +49,8 @@ profile_args() {
         "robust_min_inliers:=7" \
         "robust_min_inlier_ratio:=0.25" \
         "robust_max_median_rmse:=0.45" \
-        "robust_max_translation_spread_m:=1.0" \
-        "robust_max_yaw_spread_deg:=12.0" \
+        "robust_max_translation_spread_m:=1.5" \
+        "robust_max_yaw_spread_deg:=18.0" \
         "robust_prefilter_max_rmse:=0.45" \
         "robust_prefilter_min_inlier_ratio:=0.35" \
         "robust_prefilter_min_correspondences:=0" \

@@ -74,9 +74,14 @@ def backend_available(backend: str) -> tuple[bool, str]:
     exe = shutil.which(name)
     if exe:
         return True, ""
-    source_dir = Path("src/vendor") / name
-    if source_dir.exists():
-        return True, ""
+    source_candidates = [
+        Path("src/vendor") / name,
+        Path("external") / name,
+        Path("external") / name.upper(),
+    ]
+    source_dir = next((path for path in source_candidates if path.exists()), None)
+    if source_dir is not None:
+        return False, f"{name}_executable_not_found_source_present:{source_dir}"
     return False, f"{name}_source_not_found"
 
 

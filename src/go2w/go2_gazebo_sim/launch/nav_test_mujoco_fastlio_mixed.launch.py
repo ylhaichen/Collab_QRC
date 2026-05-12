@@ -309,7 +309,8 @@ def _build_cleanup_stale_cmd() -> str:
 
 def _build_sensor_bridges(ns: str, mjcf_path: str, base_body: str, imu_site: str,
                           pose_sensor: str, imu_sensor: str, links_config: str,
-                          use_sim_time: bool, contact_odom_topic: str = "odom/ground_truth"):
+                          use_sim_time: bool, contact_odom_topic: str = "odom/ground_truth",
+                          enable_contact_bridge: bool = True):
     """Per-robot MuJoCo sensor bridges (ground-truth odom + foot contacts).
 
     The mujoco plugin publishes raw sensor topics under its own namespace
@@ -317,7 +318,7 @@ def _build_sensor_bridges(ns: str, mjcf_path: str, base_body: str, imu_site: str
     and republish under /{ns}/odom/ground_truth, /{ns}/imu/data,
     /{ns}/foot_contacts.
     """
-    return [
+    actions = [
         Node(
             package="mujoco_sensor_bridge",
             executable="mujoco_odom_bridge",
@@ -351,7 +352,9 @@ def _build_sensor_bridges(ns: str, mjcf_path: str, base_body: str, imu_site: str
             ],
             output="screen",
         ),
-        Node(
+    ]
+    if enable_contact_bridge:
+        actions.append(Node(
             package="mujoco_sensor_bridge",
             executable="mujoco_contact_node",
             namespace=ns,
@@ -364,8 +367,8 @@ def _build_sensor_bridges(ns: str, mjcf_path: str, base_body: str, imu_site: str
                 links_config,
             ],
             output="screen",
-        ),
-    ]
+        ))
+    return actions
 
 
 def _build_robot_state_publisher(ns: str, robot_description: str, use_sim_time: bool):
@@ -415,6 +418,7 @@ def _build_fastlio_nav_stack(
     loop_closure_backend: str = "auto",
     bootstrap_from_gt: bool = True,
     peer_obstacle_enabled: bool = False,
+    local_slam_backend: str = "fast_lio_scpgo",
 ):
     """Per-robot Fast-LIO + octomap + FAR nav stack.
 
@@ -540,11 +544,16 @@ def _build_fastlio_nav_stack(
     # drifts. Downstream, astar_nav uses that drifted pose to compute
     # commands → robot ends up walking on top of obstacles (the
     # "climbed cross_v_n" failure in 2026-04-25 demo3_mixed).
-    fastlio_input_topic = (
-        f"/{ns}/registered_scan_octomap"
-        if peer_namespaces
-        else f"/{ns}/registered_scan_reliable"
-    )
+    if local_slam_backend == "point_lio" or not peer_namespaces:
+        # Local SLAM validation needs the adapted Velodyne-compatible cloud,
+        # but does not need the historical relay when no peer filtering is
+        # active. Subscribing directly to MuJoCo's best-effort LiDAR topic
+        # avoids starving Point-LIO/Fast-LIO when the relay is present but not
+        # forwarding samples; pointcloud_adapter republishes Reliable output
+        # on /<ns>/velodyne_points for the SLAM backend.
+        fastlio_input_topic = mujoco_lidar_topic
+    else:
+        fastlio_input_topic = f"/{ns}/registered_scan_octomap"
     actions.append(
         Node(
             package="go2w_perception",
@@ -627,73 +636,160 @@ def _build_fastlio_nav_stack(
             )
         )
 
-    # ── Fast-LIO2 SLAM ──
-    slam_nodes = [
-        Node(
-            package="fast_lio",
-            executable="fastlio_mapping",
-            namespace=ns,
-            name="slam_node",
-            parameters=[slam_config_path, {"use_sim_time": use_sim_time}],
-            # Fast-LIO hard-codes a `camera_init -> body` TF
-            # (laserMapping.cpp:654). Letting it hit /{ns}/tf gives `body`
-            # two parents (ours: base_link, Fast-LIO's: camera_init) and
-            # breaks `body -> map` lookup. Route Fast-LIO's /tf to a sink;
-            # nobody consumes it. /tf_static is still shared normally.
-            remappings=[
-                ("/velodyne_points", f"/{ns}/velodyne_points"),
-                ("/imu/data", f"/{ns}/imu/data"),
-                ("/Odometry", f"/{ns}/Odometry"),
-                ("/cloud_registered_body", f"/{ns}/cloud_registered_body"),
-                ("/tf", f"/{ns}/fastlio_tf_sink"),
-                ("/tf_static", f"/{ns}/tf_static"),
-            ],
-            output="screen",
-        ),
-        # fast_lio_tf_adapter: replaces both slam_odom_relay (frame
-        # remap) and the mujoco_odom_bridge's TF role. Subscribes
-        # Fast-LIO's `/<ns>/Odometry` (frame camera_init→body), applies
-        # one-shot GT bootstrap so map frame's origin aligns with the
-        # world origin, then publishes:
-        #   - /<ns>/odom/nav         (Odometry, frame=map child=base_link)
-        #   - TF map → base_link     (the canonical pose for Nav2)
-        # Real-robot compatible: doesn't depend on mujoco_odom_bridge or
-        # CHAMP's broken state_estimation/odom_raw chain. On real, the
-        # same code path runs; with SC-PGO ported (loop_closure:=true),
-        # adapter prefers /<ns>/corrected_odom over raw when fresh.
-        ExecuteProcess(
-            cmd=[
-                "python3", "-u",
-                os.path.join(_ws_root, "scripts/runtime/fast_lio_tf_adapter.py"),
-                "--ros-args",
-                "-p", f"namespace:={ns}",
-                "-p", f"use_sim_time:={'true' if use_sim_time else 'false'}",
-                "-p", "input_topic:=Odometry",
-                "-p", "output_topic:=odom/nav",
-                # TF parent must match local_costmap's `global_frame: odom`.
-                # The static `map → odom = identity` from the launch's TF
-                # publishers connects this to the map frame for global
-                # planning. With GT bootstrap the alignment offset (dx,
-                # dy, yaw_offset) is baked into the published pose, so
-                # robot's pose in `odom` already equals world coords.
-                "-p", "output_frame_id:=odom",
-                "-p", f"output_child_frame_id:={base_frame}",
-                "-p", "publish_tf:=true",
-                "-p", f"bootstrap_from_gt:={'true' if bootstrap_from_gt else 'false'}",
-                "-p", "gt_topic:=odom/ground_truth",
-                "-p", "corrected_topic:=corrected_odom",
-                # TransformBroadcaster publishes to global /tf by default;
-                # in this namespaced dual-robot setup, all consumers
-                # subscribe /<ns>/tf. Without this remap, the adapter's
-                # TF is invisible to nav2 (Could not find a connection
-                # between 'odom' and 'base_link').
-                "-r", f"/tf:=/{ns}/tf",
-                "-r", f"/tf_static:=/{ns}/tf_static",
-            ],
-            name=f"fast_lio_tf_adapter_{ns}",
-            output="screen",
-        ),
-    ]
+    # ── Local SLAM backend ──
+    if local_slam_backend == "point_lio":
+        robot_index = 0 if ns == "robot_a" else 1
+        ros_master_port = 11311 + robot_index
+        bridge_port = 19001 + robot_index
+        container_name = f"collab_qrc_point_lio_{ns}"
+        point_lio_cmd = (
+            f"docker rm -f {container_name} 2>/dev/null || true; "
+            f"exec docker run --rm --net=host --name {container_name} "
+            f"-v {str(_workspace_root())}:/workspace:ro "
+            f"-e ROS_MASTER_URI=http://127.0.0.1:{ros_master_port} "
+            f"-e ROS_HOSTNAME=127.0.0.1 "
+            f"-e ROS_IP=127.0.0.1 "
+            "collab_qrc_point_lio:noetic bash -lc '"
+            "set -e; "
+            "source /opt/ros/noetic/setup.bash; "
+            "source /point_lio_ws/devel/setup.bash; "
+            f"roscore -p {ros_master_port} >/tmp/point_lio_roscore_{ns}.log 2>&1 & "
+            "sleep 3; "
+            f"python3 /workspace/scripts/runtime/point_lio_ros1_socket_bridge.py --port {bridge_port} "
+            f">/tmp/point_lio_ros1_bridge_{ns}.log 2>&1 & "
+            "rosparam load /workspace/docker/point_lio/collab_mid360_sim.yaml /laserMapping; "
+            "rosparam set /laserMapping/use_imu_as_input 1; "
+            "rosparam set /laserMapping/prop_at_freq_of_imu 1; "
+            "rosparam set /laserMapping/check_satu 1; "
+            "rosparam set /laserMapping/init_map_size 10; "
+            "rosparam set /laserMapping/point_filter_num 4; "
+            "rosparam set /laserMapping/space_down_sample 1; "
+            "rosparam set /laserMapping/filter_size_surf 0.5; "
+            "rosparam set /laserMapping/filter_size_map 0.5; "
+            "rosparam set /laserMapping/cube_side_length 1000; "
+            "rosparam set /laserMapping/runtime_pos_log_enable 0; "
+            "exec rosrun point_lio pointlio_mapping __name:=laserMapping"
+            "'"
+        )
+        slam_nodes = [
+            ExecuteProcess(
+                cmd=["bash", "-lc", point_lio_cmd],
+                name=f"point_lio_docker_{ns}",
+                output="screen",
+            ),
+            ExecuteProcess(
+                cmd=[
+                    "python3", "-u",
+                    os.path.join(_ws_root, "scripts/runtime/point_lio_ros2_socket_bridge.py"),
+                    "--robot-namespace", ns,
+                    "--port", str(bridge_port),
+                    "--cloud-topic", mujoco_lidar_topic,
+                    "--imu-topic", f"/{ns}/imu/data",
+                    "--max-cloud-hz", "10.0",
+                    "--adapt-mid360",
+                    "--num-rings", str(adapter_num_rings),
+                    "--min-vert-angle-deg", str(adapter_min_vert_angle_deg),
+                    "--max-vert-angle-deg", str(adapter_max_vert_angle_deg),
+                ],
+                name=f"point_lio_ros2_socket_bridge_{ns}",
+                output="screen",
+            ),
+            Node(
+                package="point_lio_ros2_adapter",
+                executable="point_lio_ros2_adapter_node",
+                name=f"{ns}_point_lio_ros2_adapter",
+                output="screen",
+                parameters=[
+                    {"use_sim_time": use_sim_time},
+                    {"robot_namespace": ns},
+                    {"mode": "primary"},
+                    {"publish_primary_contract": True},
+                    {"publish_tf": True},
+                    {"output_frame_id": "odom"},
+                    {"output_child_frame_id": base_frame},
+                    {"output_cloud_frame_id": base_frame},
+                    {"map_frame_id": "map"},
+                    {"publish_map_to_odom_tf": True},
+                    {"align_cloud_stamp_to_odom": True},
+                    {"odom_jump_guard_enabled": True},
+                    {"max_odom_translation_step_m": 0.75},
+                    {"max_odom_yaw_step_deg": 60.0},
+                    {"max_odom_speed_mps": 3.0},
+                ],
+                remappings=[
+                    ("/tf", f"/{ns}/tf"),
+                    ("/tf_static", f"/{ns}/tf_static"),
+                ],
+            ),
+        ]
+    else:
+        # ── Fast-LIO2 SLAM ──
+        slam_nodes = [
+            Node(
+                package="fast_lio",
+                executable="fastlio_mapping",
+                namespace=ns,
+                name="slam_node",
+                parameters=[slam_config_path, {"use_sim_time": use_sim_time}],
+                # Fast-LIO hard-codes a `camera_init -> body` TF
+                # (laserMapping.cpp:654). Letting it hit /{ns}/tf gives `body`
+                # two parents (ours: base_link, Fast-LIO's: camera_init) and
+                # breaks `body -> map` lookup. Route Fast-LIO's /tf to a sink;
+                # nobody consumes it. /tf_static is still shared normally.
+                remappings=[
+                    ("/velodyne_points", f"/{ns}/velodyne_points"),
+                    ("/imu/data", f"/{ns}/imu/data"),
+                    ("/Odometry", f"/{ns}/Odometry"),
+                    ("/cloud_registered_body", f"/{ns}/cloud_registered_body"),
+                    ("/tf", f"/{ns}/fastlio_tf_sink"),
+                    ("/tf_static", f"/{ns}/tf_static"),
+                ],
+                output="screen",
+            ),
+            # fast_lio_tf_adapter: replaces both slam_odom_relay (frame
+            # remap) and the mujoco_odom_bridge's TF role. Subscribes
+            # Fast-LIO's `/<ns>/Odometry` (frame camera_init→body), applies
+            # one-shot GT bootstrap so map frame's origin aligns with the
+            # world origin, then publishes:
+            #   - /<ns>/odom/nav         (Odometry, frame=map child=base_link)
+            #   - TF map → base_link     (the canonical pose for Nav2)
+            # Real-robot compatible: doesn't depend on mujoco_odom_bridge or
+            # CHAMP's broken state_estimation/odom_raw chain. On real, the
+            # same code path runs; with SC-PGO ported (loop_closure:=true),
+            # adapter prefers /<ns>/corrected_odom over raw when fresh.
+            ExecuteProcess(
+                cmd=[
+                    "python3", "-u",
+                    os.path.join(_ws_root, "scripts/runtime/fast_lio_tf_adapter.py"),
+                    "--ros-args",
+                    "-p", f"namespace:={ns}",
+                    "-p", f"use_sim_time:={'true' if use_sim_time else 'false'}",
+                    "-p", "input_topic:=Odometry",
+                    "-p", "output_topic:=odom/nav",
+                    # TF parent must match local_costmap's `global_frame: odom`.
+                    # The static `map → odom = identity` from the launch's TF
+                    # publishers connects this to the map frame for global
+                    # planning. With GT bootstrap the alignment offset (dx,
+                    # dy, yaw_offset) is baked into the published pose, so
+                    # robot's pose in `odom` already equals world coords.
+                    "-p", "output_frame_id:=odom",
+                    "-p", f"output_child_frame_id:={base_frame}",
+                    "-p", "publish_tf:=true",
+                    "-p", f"bootstrap_from_gt:={'true' if bootstrap_from_gt else 'false'}",
+                    "-p", "gt_topic:=odom/ground_truth",
+                    "-p", "corrected_topic:=corrected_odom",
+                    # TransformBroadcaster publishes to global /tf by default;
+                    # in this namespaced dual-robot setup, all consumers
+                    # subscribe /<ns>/tf. Without this remap, the adapter's
+                    # TF is invisible to nav2 (Could not find a connection
+                    # between 'odom' and 'base_link').
+                    "-r", f"/tf:=/{ns}/tf",
+                    "-r", f"/tf_static:=/{ns}/tf_static",
+                ],
+                name=f"fast_lio_tf_adapter_{ns}",
+                output="screen",
+            ),
+        ]
     actions.append(TimerAction(period=slam_delay, actions=slam_nodes))
 
     # ── Optional: SC-PGO loop-closure post-processor on top of Fast-LIO ──
@@ -1901,6 +1997,7 @@ def _launch_setup(context):
         _get(context, "alignment_reject_min_verified_matches").strip() or "7"
     )
     team_pose_graph_backend = (_get(context, "team_pose_graph_backend").strip().lower() or "auto")
+    local_slam_backend = (_get(context, "local_slam_backend").strip().lower() or "fast_lio_scpgo")
     team_alignment_allow_export_only_gate = _as_bool(
         _get(context, "team_alignment_allow_export_only_gate")
     )
@@ -1983,8 +2080,14 @@ def _launch_setup(context):
             "team_pose_graph_backend must be 'auto' | 'gtsam' | 'gtsam_python' | 'gtsam_cpp' | "
             f"'g2o_export_only', got '{team_pose_graph_backend}'")
     cpp_pose_graph_owner = team_pose_graph_backend in {"auto", "gtsam_cpp"}
-    if team_comm_mode not in {"dds", "udp_json"}:
-        raise ValueError(f"team_comm_mode must be 'dds' | 'udp_json', got '{team_comm_mode}'")
+    if local_slam_backend not in {"fast_lio_scpgo", "point_lio"}:
+        raise ValueError(
+            "local_slam_backend must be 'fast_lio_scpgo' | 'point_lio', "
+            f"got '{local_slam_backend}'")
+    if team_comm_mode not in {"dds", "udp_json", "descriptor_only"}:
+        raise ValueError(
+            "team_comm_mode must be 'dds' | 'udp_json' | 'descriptor_only', "
+            f"got '{team_comm_mode}'")
     if relative_pose_source not in {"none", "gt", "discovered"}:
         raise ValueError(
             "relative_pose_source must be 'none' | 'gt' | 'discovered', "
@@ -2052,6 +2155,7 @@ def _launch_setup(context):
     actions = [LogInfo(msg="[nav_test_mujoco_fastlio_mixed] starting heterogeneous dual-robot nav (Go2W + Go2)")]
     actions.append(LogInfo(msg=(
         f"[nav_test_mujoco_fastlio_mixed] relative_pose_source:={relative_pose_source} "
+        f"local_slam_backend:={local_slam_backend} "
         f"bootstrap_from_gt:={'true' if slam_bootstrap_from_gt else 'false'} "
         f"map_merge:={'true' if map_merge_enabled else 'false'}"
     )))
@@ -2113,6 +2217,7 @@ def _launch_setup(context):
             links_config=links_a,
             use_sim_time=use_sim_time,
             contact_odom_topic=contact_odom_topic,
+            enable_contact_bridge=not slam_only,
         )
     )
     sensor_actions.extend(
@@ -2124,6 +2229,7 @@ def _launch_setup(context):
             links_config=links_b,
             use_sim_time=use_sim_time,
             contact_odom_topic=contact_odom_topic,
+            enable_contact_bridge=not slam_only,
         )
     )
     actions.append(TimerAction(period=5.0, actions=sensor_actions))
@@ -2230,6 +2336,7 @@ def _launch_setup(context):
             loop_closure_backend=loop_closure_backend,
             bootstrap_from_gt=slam_bootstrap_from_gt,
             peer_obstacle_enabled=peer_obstacle_enabled,
+            local_slam_backend=local_slam_backend,
         )
     )
     actions.extend(
@@ -2265,6 +2372,7 @@ def _launch_setup(context):
             loop_closure_backend=loop_closure_backend,
             bootstrap_from_gt=slam_bootstrap_from_gt,
             peer_obstacle_enabled=peer_obstacle_enabled,
+            local_slam_backend=local_slam_backend,
         )
     )
 
@@ -3080,6 +3188,10 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "no_overlap_rejection_passed", default_value="false",
             description="Validation gate: true only after a no-overlap run proves false-positive rejection.",
+        ),
+        DeclareLaunchArgument(
+            "local_slam_backend", default_value="fast_lio_scpgo",
+            description="fast_lio_scpgo | point_lio. Point-LIO uses Docker ROS1 backend plus explicit socket bridge.",
         ),
         DeclareLaunchArgument(
             "alignment_reject_timeout_sec", default_value="60.0",

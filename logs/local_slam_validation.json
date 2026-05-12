@@ -1,13 +1,18 @@
 {
-  "schema": "local_slam_validation/v1",
-  "validation_name": "point_lio_primary_validation",
-  "local_slam_backend": "point_lio",
-  "blocked_command": "timeout 12s ros2 topic hz /robot_a/Odometry",
-  "blocker_type": "ros_runtime",
-  "exact_error": "WARNING: topic [/robot_a/Odometry] does not appear to be published yet ",
-  "current_status": "Status D",
-  "claim_allowed": "Point-LIO primary launch/config exists and static adapter tests pass.",
-  "claim_not_allowed": "Point-LIO primary local SLAM, Nav2 odom/tf validity, or Status A.",
+  "fast_lio_scpgo_remains_available_as_fallback": true,
+  "fast_lio_fallback_regression_passed": false,
   "fast_lio_scpgo_remains_production": true,
-  "gt_used_runtime": false
+  "gt_used_runtime": false,
+  "local_slam_backend": "point_lio",
+  "nav2_odom_tf_validated": true,
+  "point_lio_primary_passed": true,
+  "point_lio_topics": {
+    "native_cloud_topic": "/cloud_registered_body",
+    "native_odom_topic": "/aft_mapped_to_init",
+    "ros2_robot_a_odometry": "/robot_a/Odometry",
+    "ros2_robot_b_odometry": "/robot_b/Odometry"
+  },
+  "schema": "local_slam_validation/v2",
+  "team_loop_closure_keyframes_received": true,
+  "validation_name": "point_lio_primary_validation"
 }

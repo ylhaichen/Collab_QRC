@@ -8,5 +8,6 @@
   "schema": "dynamic_filter_validation/v1",
   "stale_obstacle_decay_time_sec": 1.5,
   "static_points_kept": 6,
-  "static_walls_remain_stable": true
+  "static_walls_remain_stable": true,
+  "validation_type": "synthetic_temporal_voxel_contract"
 }

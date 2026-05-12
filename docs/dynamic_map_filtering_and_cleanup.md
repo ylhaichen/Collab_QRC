@@ -36,3 +36,9 @@ Outputs:
 - `/team_slam/map_cleanup_metrics`
 
 ERASOR/Removert are not run in the real-time odometry loop. If their source or runtime is unavailable, logs must record the blocker and the fallback must not be used to claim ERASOR/Removert success.
+
+## Current Runtime Result
+
+The online temporal voxel filter contract passed with dynamic motion classified, TTL clearing, and static wall preservation. The Point-LIO cross-loop runtime also reported dynamic filter metrics and static-cloud keyframe flow, so Scan Context and registration used the static cloud path rather than raw dynamic traces.
+
+ERASOR source is present under `external/ERASOR`, but ERASOR runtime is not claimed ready. A ROS Noetic Docker build probe with ROS/PCL/OpenCV dependencies failed at `jsk_recognition_msgs/PolygonArray.h`. The validated cleanup backend for this branch is therefore `temporal_voxel_fallback`, which produced `logs/map_cleanup_output/cleaned_static_map.pcd` and `logs/map_cleanup_output/removed_dynamic_points.pcd` from the required export format without blocking odometry/Nav2.

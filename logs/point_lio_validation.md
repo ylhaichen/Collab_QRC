@@ -1,17 +1,16 @@
 # Point-LIO Validation
 
-- docker_build_passed: `true`
-- docker_smoke_test_passed: `true`
-- shadow_validation_passed: `false`
-- primary_validation_passed: `false`
-- backend_runtime_ready: `false`
+- native_odom_topic: `/aft_mapped_to_init`
+- native_cloud_topic: `/cloud_registered_body`
+- shadow_validation_passed: `true`
+- primary_validation_passed: `true`
+- native_odometry_nonzero_rate: `true`
+- native_cloud_nonzero_rate: `true`
+- ros2_shadow_odometry_nonzero_rate: `true`
+- ros2_primary_odometry_nonzero_rate: `true`
+- nav2_odom_tf_validated: `true`
+- team_loop_closure_keyframes_received: `true`
 - gt_used_runtime: `false`
+- real_robot_validation_passed: `false`
 
-BLOCKED_VALIDATION:
-  validation_name: point_lio_shadow_validation
-  blocked_command: timeout 12s ros2 topic hz /robot_a/point_lio/Odometry
-  blocker_type: ros_runtime
-  exact_error: WARNING: topic [/robot_a/point_lio/Odometry] does not appear to be published yet
-  current_status: Status D
-  claim_allowed: Point-LIO Docker build/smoke, adapter package/config/scripts, and static contract tests.
-  claim_not_allowed: Point-LIO shadow odometry nonzero-rate, Point-LIO backend runtime-ready, Point-LIO primary local SLAM, real robot validation, or Status A.
+Point-LIO is runtime-valid in the local simulation path and as the selected primary local SLAM backend for the Point-LIO runtime validation. Real robot validation remains blocked by missing Go2/Go2W network and Livox/IMU topics.

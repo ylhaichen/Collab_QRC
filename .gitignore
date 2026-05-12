@@ -136,6 +136,7 @@ imu_calib_data.yaml*
 # Local cloned exploration module
 # =============================================
 /src/cfpa2-rh-physics-exploration/
+/external/
 
 # =============================================
 # TTS cache
@@ -213,6 +214,11 @@ realtek-r8126-dkms/
 /logs/**/initial_naive_map.pcd
 /logs/**/cleaned_static_map.pcd
 /logs/**/removed_dynamic_points.pcd
+/logs/manual/
+/logs/cross_loop_*_runtime_final/
+/logs/cross_loop_overlap_pointlio_sanity/
+/logs/map_cleanup_export/
+/logs/map_cleanup_output/
 *.bag
 *.db3
 *.mcap

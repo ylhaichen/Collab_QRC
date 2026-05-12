@@ -1,0 +1,26 @@
+{
+  "blocker_type": "network_unavailable",
+  "claim_allowed": "Local host probe completed; sim runtime validation remains valid.",
+  "claim_not_allowed": "Real robot validation, Status A, or Fast-LIO demotion on hardware.",
+  "current_status": "Status B",
+  "gt_used_runtime": false,
+  "jetson_cpu_load_probe": "0.43 1.10 3.95",
+  "jetson_mem_available_kb_probe": 10125416,
+  "nav2_odom_tf_valid_on_robot": false,
+  "point_lio_primary_on_robot": false,
+  "required_topics_missing": [
+    "/livox/lidar",
+    "/livox/imu",
+    "/robot_a/Odometry",
+    "/robot_b/Odometry",
+    "/robot_a/odom/nav",
+    "/robot_b/odom/nav",
+    "/team_slam/keyframes"
+  ],
+  "required_topics_nonzero_rate": [],
+  "robot_a_network_reachable": false,
+  "robot_b_network_reachable": false,
+  "runtime_valid": false,
+  "schema": "real_robot_deployment_validation/v1",
+  "team_loop_closure_keyframes_on_robot": false
+}

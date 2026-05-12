@@ -24,3 +24,9 @@ Descriptor-only candidates, single weak ICP matches, export-only pose graph outp
 - `/team_slam/local/status`
 
 `discovered_map_merge_bootstrap_node` waits for `status=aligned` before writing map-merge parameters. The generated parameters are derived from discovered alignment, not MuJoCo ground truth or hardcoded `robot_a_to_robot_b`.
+
+## Current Runtime Result
+
+The safety gate passed in Point-LIO-primary overlap runtime and opened `/merged_map` only after robust selection accepted, the team pose graph had 11 inter-robot factors, the relative transform was finite, no-overlap rejection had passed in the paired runtime validation, and `gt_used_runtime=false`.
+
+The no-overlap runtime kept `/merged_map` closed. Descriptor-only candidates and a single weak match remain insufficient to open map merge.

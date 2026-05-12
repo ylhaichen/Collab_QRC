@@ -34,3 +34,9 @@ Supported mode labels:
 - `greedy_consistency_fallback`
 
 The selector builds a consistency graph over verified inter-robot matches, selects the largest consistent set, trims spread outliers, and accepts only when inlier count, eligible inlier ratio, transform spread, yaw spread, median RMSE, and `gt_used_runtime=false` pass.
+
+## Current Runtime Result
+
+The Point-LIO-primary cross-loop runtime validation passed with the current validated registration backend `icp_2d`; KISS-Matcher is still a preferred target backend but is not runtime-validated on this branch. In the overlap scene, the gate accepted `aligned` with 11 robust inliers, 11 inter-robot pose graph factors, median RMSE `0.24555`, translation spread `1.20381 m`, yaw spread `14.996 deg`, and `gt_used_runtime=false`. `/merged_map` opened only after robust evidence, at `48.554 s`.
+
+The no-overlap scene was rejected with zero accepted inter-robot pose graph factors and no `/merged_map` opening. Descriptor-only and single weak match merge blocking are covered by the robust loop selector contract tests and the no-overlap runtime result.

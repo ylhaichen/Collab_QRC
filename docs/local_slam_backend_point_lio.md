@@ -33,3 +33,11 @@ Native Point-LIO inputs remain under:
 ## Validation Boundary
 
 Static adapter contract tests do not prove Point-LIO runtime readiness. Point-LIO may become primary only after Docker build, Livox/IMU input, shadow odometry rate, adapter odometry rate, Nav2 odom/tf, and real robot validation pass without ground truth.
+
+## Current Runtime Result
+
+Point-LIO shadow and primary simulation validation passed. Native Point-LIO odometry was discovered as `/aft_mapped_to_init`; native registered cloud was discovered as `/cloud_registered_body`. The ROS 2 adapter published nonzero-rate shadow odometry under `/robot_a/point_lio/Odometry` and `/robot_b/point_lio/Odometry`, then primary-mode `/robot_a/Odometry`, `/robot_b/Odometry`, corrected odometry, `/odom/nav`, clouds, and TF.
+
+The adapter publishes `map->odom` as an identity compatibility transform and `odom->base_link` / `odom->b_base_link` from Point-LIO odometry. An odometry jump guard rejects implausible Point-LIO pose jumps without using GT or a hardcoded inter-robot transform.
+
+Fast-LIO / SC-PGO remains the real robot production-safe path until real robot Point-LIO validation and fallback regression both pass. The latest Fast-LIO fallback regression was blocked because `/robot_a/Odometry`, `/robot_b/Odometry`, `/robot_a/odom/nav`, `/robot_b/odom/nav`, and registered cloud topics did not become nonzero-rate before launch exit.

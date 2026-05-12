@@ -12,6 +12,7 @@ NO_OVERLAP_DURATION_SEC="${NO_OVERLAP_DURATION_SEC:-90}"
 TEAM_POSE_GRAPH_BACKEND="${TEAM_POSE_GRAPH_BACKEND:-g2o_export_only}"
 TEAM_ALIGNMENT_ALLOW_EXPORT_ONLY_GATE="${TEAM_ALIGNMENT_ALLOW_EXPORT_ONLY_GATE:-true}"
 USE_DYNAMIC_FILTER="${USE_DYNAMIC_FILTER:-false}"
+LOCAL_SLAM_BACKEND="${LOCAL_SLAM_BACKEND:-point_lio}"
 
 for arg in "$@"; do
   case "${arg}" in
@@ -23,6 +24,9 @@ for arg in "$@"; do
       ;;
     use_dynamic_filter:=*)
       USE_DYNAMIC_FILTER="${arg#use_dynamic_filter:=}"
+      ;;
+    local_slam_backend:=*)
+      LOCAL_SLAM_BACKEND="${arg#local_slam_backend:=}"
       ;;
   esac
 done
@@ -41,6 +45,7 @@ SCENE_HAS_OVERLAP=false \
 scripts/bench/benchmark_cross_loop_closure.sh \
   "team_pose_graph_backend:=${TEAM_POSE_GRAPH_BACKEND}" \
   "team_alignment_allow_export_only_gate:=${TEAM_ALIGNMENT_ALLOW_EXPORT_ONLY_GATE}" \
+  "local_slam_backend:=${LOCAL_SLAM_BACKEND}" \
   "no_overlap_rejection_passed:=false" \
   "use_dynamic_filter:=${USE_DYNAMIC_FILTER}" \
   "mujoco_model_path:=${WS_DIR}/src/go2w/go2_gazebo_sim/mujoco/no_overlap_dual_scene.xml"
@@ -75,6 +80,7 @@ SCENE_HAS_OVERLAP=true \
 scripts/bench/benchmark_cross_loop_closure.sh \
   "team_pose_graph_backend:=${TEAM_POSE_GRAPH_BACKEND}" \
   "team_alignment_allow_export_only_gate:=${TEAM_ALIGNMENT_ALLOW_EXPORT_ONLY_GATE}" \
+  "local_slam_backend:=${LOCAL_SLAM_BACKEND}" \
   "no_overlap_rejection_passed:=${NO_OVERLAP_REJECTION_PASSED}" \
   "use_dynamic_filter:=${USE_DYNAMIC_FILTER}" \
   "mujoco_model_path:=${WS_DIR}/src/go2w/go2_gazebo_sim/mujoco/demo3_mixed.xml"

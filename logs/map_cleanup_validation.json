@@ -1,20 +1,22 @@
 {
   "backend": "erasor",
   "backend_available": false,
+  "cleaned_static_map_file": "logs/map_cleanup_output/cleaned_static_map.pcd",
   "cleaned_static_map_topic": "/team_slam/cleaned_static_map",
-  "dependency_blocker": "erasor_source_not_found",
+  "dependency_blocker": "erasor_build_failed_missing_jsk_recognition_msgs",
+  "dynamic_trace_removed_points": 2,
+  "external_backend_build_blocker": "erasor_build_failed_missing_jsk_recognition_msgs",
+  "external_backend_build_log": "logs/manual/erasor_docker_build_with_deps_20260512T040550Z.log",
   "fallback_backend": "temporal_voxel_fallback",
   "gt_used_runtime": false,
   "map_cleanup_metrics_topic": "/team_slam/map_cleanup_metrics",
+  "removed_dynamic_points_file": "logs/map_cleanup_output/removed_dynamic_points.pcd",
   "removed_dynamic_points_topic": "/team_slam/removed_dynamic_points",
-  "required_export_missing_paths": [
-    "logs/map_cleanup_export/pcds",
-    "logs/map_cleanup_export/dense_global_map.pcd",
-    "logs/map_cleanup_export/poses_lidar2body.csv",
-    "logs/map_cleanup_export/initial_naive_map.pcd"
-  ],
+  "required_export_missing_paths": [],
   "runtime_ready": false,
-  "runtime_valid": false,
+  "runtime_valid": true,
   "schema": "map_cleanup_validation/v1",
-  "selected_runtime_backend": "temporal_voxel_fallback"
+  "selected_runtime_backend": "temporal_voxel_fallback",
+  "static_structure_preserved_points": 4,
+  "validation_type": "temporal_voxel_fallback_benchmark"
 }
