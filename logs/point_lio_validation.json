@@ -8,11 +8,11 @@
   "shadow_validation_passed": false,
   "shadow_blocked_command": "timeout 12s ros2 topic hz /robot_a/point_lio/Odometry",
   "shadow_blocker_type": "ros_runtime",
-  "shadow_exact_error": "2026-05-12 00:19:43.722 [TRANSPORT_UDP Error] Error creating socket: Operation not permitted -> Function init 2026-05-12 00:19:43.722 [RTPS_PARTICIPANT Error] User transport failed to register. -> Function RTPSParticipantImpl WARNING: topic [/robot_a/point_lio/Odometry] does not appear to be published yet",
+  "shadow_exact_error": "WARNING: topic [/robot_a/point_lio/Odometry] does not appear to be published yet",
   "primary_validation_passed": false,
   "backend_runtime_ready": false,
   "current_status": "Status D",
-  "claim_allowed": "Point-LIO Docker build and package discovery pass; ROS2 adapter/config/scripts and static contract tests pass.",
+  "claim_allowed": "Point-LIO Docker build/smoke, adapter package/config/scripts, and static contract tests.",
   "claim_not_allowed": "Point-LIO shadow odometry nonzero-rate, Point-LIO primary local SLAM, Nav2 odom/tf validity, real robot validation, or Status A.",
   "log_file": "logs/point_lio_docker_build_and_test.log",
   "gt_used_runtime": false

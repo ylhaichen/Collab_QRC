@@ -1904,6 +1904,7 @@ def _launch_setup(context):
     team_alignment_allow_export_only_gate = _as_bool(
         _get(context, "team_alignment_allow_export_only_gate")
     )
+    no_overlap_rejection_passed = _as_bool(_get(context, "no_overlap_rejection_passed"))
     use_dynamic_filter = _as_bool(_get(context, "use_dynamic_filter")) or _as_bool(
         _get(context, "dynamic_filter_enabled")
     )
@@ -2412,6 +2413,7 @@ def _launch_setup(context):
                             ),
                             "publish_backend_metrics": not cpp_pose_graph_owner,
                             "allow_export_only_outputs": team_alignment_allow_export_only_gate,
+                            "no_overlap_rejection_passed": no_overlap_rejection_passed,
                         }],
                         output="screen",
                     ),
@@ -2446,6 +2448,7 @@ def _launch_setup(context):
                             "team_alignment_allow_export_only_gate": team_alignment_allow_export_only_gate,
                             "alignment_reject_timeout_sec": alignment_reject_timeout_sec,
                             "alignment_reject_min_verified_matches": alignment_reject_min_verified_matches,
+                            "no_overlap_rejection_passed": no_overlap_rejection_passed,
                             "publish_tf": False,
                         }],
                         output="screen",
@@ -3073,6 +3076,10 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "team_alignment_allow_export_only_gate", default_value="false",
             description="Debug/eval only: allow map-merge alignment gate when pose graph is export-only rather than optimized.",
+        ),
+        DeclareLaunchArgument(
+            "no_overlap_rejection_passed", default_value="false",
+            description="Validation gate: true only after a no-overlap run proves false-positive rejection.",
         ),
         DeclareLaunchArgument(
             "alignment_reject_timeout_sec", default_value="60.0",

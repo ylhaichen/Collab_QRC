@@ -32,18 +32,6 @@ if [[ "${START_BRIDGE}" == "true" ]]; then
   bash scripts/launch/scpgo_ros1_bridge.sh -d
 fi
 
-OUT_DIR=logs/cross_loop_overlap_runtime_final \
-DURATION_SEC="${OVERLAP_DURATION_SEC}" \
-TOPIC_WAIT_SEC="${TOPIC_WAIT_SEC}" \
-PROFILE="${PROFILE}" \
-SCENE_NAME=demo3_mixed.xml \
-SCENE_HAS_OVERLAP=true \
-scripts/bench/benchmark_cross_loop_closure.sh \
-  "team_pose_graph_backend:=${TEAM_POSE_GRAPH_BACKEND}" \
-  "team_alignment_allow_export_only_gate:=${TEAM_ALIGNMENT_ALLOW_EXPORT_ONLY_GATE}" \
-  "use_dynamic_filter:=${USE_DYNAMIC_FILTER}" \
-  "mujoco_model_path:=${WS_DIR}/src/go2w/go2_gazebo_sim/mujoco/demo3_mixed.xml"
-
 OUT_DIR=logs/cross_loop_no_overlap_runtime_final \
 DURATION_SEC="${NO_OVERLAP_DURATION_SEC}" \
 TOPIC_WAIT_SEC="${TOPIC_WAIT_SEC}" \
@@ -53,8 +41,43 @@ SCENE_HAS_OVERLAP=false \
 scripts/bench/benchmark_cross_loop_closure.sh \
   "team_pose_graph_backend:=${TEAM_POSE_GRAPH_BACKEND}" \
   "team_alignment_allow_export_only_gate:=${TEAM_ALIGNMENT_ALLOW_EXPORT_ONLY_GATE}" \
+  "no_overlap_rejection_passed:=false" \
   "use_dynamic_filter:=${USE_DYNAMIC_FILTER}" \
   "mujoco_model_path:=${WS_DIR}/src/go2w/go2_gazebo_sim/mujoco/no_overlap_dual_scene.xml"
+
+NO_OVERLAP_REJECTION_PASSED="$(python3 - <<'PY'
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+summary = json.loads(
+    Path("logs/cross_loop_no_overlap_runtime_final/cross_loop_closure_summary.json").read_text()
+)
+passed = (
+    summary.get("runtime_valid") is True
+    and summary.get("gt_used_runtime") is False
+    and summary.get("alignment_status") in {"rejected", "tentative"}
+    and summary.get("false_alignment") is False
+    and summary.get("merged_map_enabled_time_sec") is None
+    and int(summary.get("pose_graph_inter_robot_factors") or 0) == 0
+)
+print("true" if passed else "false")
+PY
+)"
+
+OUT_DIR=logs/cross_loop_overlap_runtime_final \
+DURATION_SEC="${OVERLAP_DURATION_SEC}" \
+TOPIC_WAIT_SEC="${TOPIC_WAIT_SEC}" \
+PROFILE="${PROFILE}" \
+SCENE_NAME=demo3_mixed.xml \
+SCENE_HAS_OVERLAP=true \
+scripts/bench/benchmark_cross_loop_closure.sh \
+  "team_pose_graph_backend:=${TEAM_POSE_GRAPH_BACKEND}" \
+  "team_alignment_allow_export_only_gate:=${TEAM_ALIGNMENT_ALLOW_EXPORT_ONLY_GATE}" \
+  "no_overlap_rejection_passed:=${NO_OVERLAP_REJECTION_PASSED}" \
+  "use_dynamic_filter:=${USE_DYNAMIC_FILTER}" \
+  "mujoco_model_path:=${WS_DIR}/src/go2w/go2_gazebo_sim/mujoco/demo3_mixed.xml"
 
 python3 - <<'PY'
 from __future__ import annotations

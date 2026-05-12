@@ -72,12 +72,13 @@ def register_keyframe_clouds(
             max_iterations=max_iterations,
             max_corr_dist=max_corr_dist_m,
         )
-        if fit < best_fit:
+        if best_t is None or fit < best_fit:
             best_t = t
             best_fit = fit
             best_inlier = inlier
 
-    assert best_t is not None
+    if best_t is None:
+        best_t = np.eye(3, dtype=np.float64)
     return RegistrationResult(
         transform=best_t,
         fitness_m=best_fit,

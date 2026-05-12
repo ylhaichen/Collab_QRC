@@ -7,8 +7,10 @@ Final status label: **Status D - External/Runtime Blocker**
 - Point-LIO Docker smoke test: `passed`
 - Point-LIO shadow odometry: `blocked`
 - Point-LIO primary local SLAM: `blocked`
-- Cross-robot loop closure runtime: `blocked`
-- Dynamic filter contract: `passed`
+- Cross-robot loop closure runtime: `passed`
+- Cross-robot loop closure overlap/no-overlap: `passed`
+- Cross-robot optimized PGO backend: `gtsam_cpp`
+- Dynamic filter contract/runtime static cloud pipeline: `passed`
 - ERASOR/Removert runtime cleanup: `blocked`
 - Decentralized descriptor-only contract: `passed`
 - Real robot validation: `blocked`
@@ -17,9 +19,9 @@ Final status label: **Status D - External/Runtime Blocker**
 
 BLOCKED_VALIDATION:
   validation_name: final_system_runtime_validation
-  blocked_command: scripts/bench/run_point_lio_shadow_validation.sh; scripts/bench/run_point_lio_primary_validation.sh; scripts/bench/run_cross_loop_runtime_validation.sh; real Go2/Go2W deployment commands
+  blocked_command: scripts/bench/run_point_lio_shadow_validation.sh; scripts/bench/run_point_lio_primary_validation.sh; real Go2/Go2W deployment commands; ERASOR/Removert runtime cleanup commands
   blocker_type: ros_runtime|hardware_unavailable|network_unavailable
-  exact_error: ROS2 DDS participant could not create UDP sockets in this sandbox; no live Point-LIO/Fast-LIO/Nav2/real robot topics are available.
+  exact_error: Point-LIO shadow/primary odometry topics were not published; ERASOR/Removert runtime sources are not available in the tracked runtime path; Go2/Go2W Livox/IMU/network hardware validation is unavailable.
   current_status: Status D
-  claim_allowed: Buildable ROS2 packages, Point-LIO Docker backend build/smoke, static architecture contracts, dynamic filter contract, descriptor-only communication contract.
-  claim_not_allowed: Status A, Point-LIO primary pass, simulation full-system pass, real robot pass, ERASOR/Removert runtime pass, KISS-Matcher runtime pass.
+  claim_allowed: Buildable ROS2 packages, Point-LIO Docker backend build/smoke, DiSCo-style cross-loop simulation runtime pass, dynamic filter contract/runtime static-cloud pipeline, descriptor-only communication contract.
+  claim_not_allowed: Status A, Point-LIO primary pass, real robot pass, ERASOR/Removert runtime pass, KISS-Matcher runtime pass.

@@ -78,6 +78,7 @@ class RelativeTransformManager(Node):
         self.declare_parameter("publish_rate_hz", 2.0)
         self.declare_parameter("publish_tf", False)
         self.declare_parameter("require_no_overlap_rejection_pass", True)
+        self.declare_parameter("no_overlap_rejection_passed", False)
 
         self.robust_topic = str(self.get_parameter("robust_inliers_topic").value)
         self.metrics_topic = str(self.get_parameter("pose_graph_metrics_topic").value)
@@ -95,6 +96,9 @@ class RelativeTransformManager(Node):
         )
         self.publish_tf = bool(self.get_parameter("publish_tf").value)
         self.require_no_overlap = bool(self.get_parameter("require_no_overlap_rejection_pass").value)
+        self.configured_no_overlap_passed = bool(
+            self.get_parameter("no_overlap_rejection_passed").value
+        )
 
         self.robust_payload: dict[str, Any] | None = None
         self.metrics_payload: dict[str, Any] | None = None
@@ -149,7 +153,9 @@ class RelativeTransformManager(Node):
         optimization_success = bool(metrics.get("optimization_success", False))
         export_only_allowed = self.allow_export_only and backend == "g2o_export_only"
         graph_ready = optimization_success or export_only_allowed
-        no_overlap_passed = bool(metrics.get("no_overlap_rejection_passed", False))
+        no_overlap_passed = self.configured_no_overlap_passed or bool(
+            metrics.get("no_overlap_rejection_passed", False)
+        )
         if not self.require_no_overlap:
             no_overlap_passed = True
 
@@ -262,7 +268,8 @@ class RelativeTransformManager(Node):
             "reject_reason": robust.get("reject_reason", ""),
             "pose_graph_backend": metrics.get("optimization_backend", "unknown"),
             "pose_graph_optimization_success": bool(metrics.get("optimization_success", False)),
-            "no_overlap_rejection_passed": bool(metrics.get("no_overlap_rejection_passed", False)),
+            "no_overlap_rejection_passed": self.configured_no_overlap_passed
+            or bool(metrics.get("no_overlap_rejection_passed", False)),
             "merged_map_open": self.status == "aligned",
             "gt_used_runtime": bool(robust.get("gt_used_runtime", False))
             or bool(metrics.get("gt_used_runtime", False)),

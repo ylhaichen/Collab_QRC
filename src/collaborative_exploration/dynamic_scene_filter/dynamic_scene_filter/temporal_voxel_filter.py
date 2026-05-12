@@ -18,6 +18,7 @@ class DynamicFilterParams:
     max_static_velocity: float = 0.15
     min_dynamic_velocity: float = 0.35
     near_robot_ignore_radius: float = 0.4
+    track_new_voxel_motion: bool = False
 
 
 @dataclass
@@ -69,21 +70,22 @@ class TemporalVoxelFilter:
         record = self.voxels.get(key)
         if record is None:
             velocity_hint = 0.0
-            history = [
-                old for old in self.voxels.values()
-                if stamp_sec - old.last_seen_time > 1e-6
-                and stamp_sec - old.last_seen_time <= self.params.dynamic_obstacle_ttl_sec
-            ]
-            if history:
-                nearest = min(
-                    history,
-                    key=lambda old: (
-                        self._dist(point, old.last_position_centroid),
-                        stamp_sec - old.last_seen_time,
-                    ),
-                )
-                dt_hint = max(1e-6, stamp_sec - nearest.last_seen_time)
-                velocity_hint = self._dist(point, nearest.last_position_centroid) / dt_hint
+            if self.params.track_new_voxel_motion:
+                history = [
+                    old for old in self.voxels.values()
+                    if stamp_sec - old.last_seen_time > 1e-6
+                    and stamp_sec - old.last_seen_time <= self.params.dynamic_obstacle_ttl_sec
+                ]
+                if history:
+                    nearest = min(
+                        history,
+                        key=lambda old: (
+                            self._dist(point, old.last_position_centroid),
+                            stamp_sec - old.last_seen_time,
+                        ),
+                    )
+                    dt_hint = max(1e-6, stamp_sec - nearest.last_seen_time)
+                    velocity_hint = self._dist(point, nearest.last_position_centroid) / dt_hint
             record = VoxelRecord(
                 first_seen_time=stamp_sec,
                 last_seen_time=stamp_sec,
@@ -92,8 +94,9 @@ class TemporalVoxelFilter:
                 velocity_estimate=velocity_hint,
             )
             self.voxels[key] = record
-        dt = max(1e-6, stamp_sec - record.last_seen_time)
-        velocity = self._dist(point, record.last_position_centroid) / dt
+        # This filter is occupancy based. Multiple points from the same scan
+        # or jitter inside an already occupied voxel are not object motion.
+        velocity = 0.0
         record.velocity_estimate = 0.65 * record.velocity_estimate + 0.35 * velocity
         record.last_position_centroid = point
         record.last_seen_time = stamp_sec

@@ -15,14 +15,21 @@
     "nav2_odom_tf_validated": false
   },
   "cross_robot_loop_closure": {
-    "runtime_valid": false,
-    "blocker": "ros_participant_socket_permission_denied",
+    "runtime_valid": true,
+    "overlap_pass": true,
+    "no_overlap_pass": true,
+    "optimized_overlap": true,
+    "pose_graph_backend": "gtsam_cpp",
+    "robust_inlier_set_size": 7,
+    "pose_graph_inter_robot_factors": 7,
+    "merged_map_enabled_time_sec": 87.964,
+    "blocker": "",
     "descriptor_only_merge_block_contract": true,
     "single_weak_match_merge_block_contract": true
   },
   "dynamic_filtering": {
     "synthetic_contract_passed": true,
-    "runtime_robot_cloud_validation_passed": false
+    "runtime_robot_cloud_validation_passed": true
   },
   "map_cleanup": {
     "erasor_runtime_passed": false,

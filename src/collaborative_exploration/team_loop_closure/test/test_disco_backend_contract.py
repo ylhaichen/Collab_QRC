@@ -43,6 +43,24 @@ def test_kiss_matcher_mode_falls_back_to_icp_with_explicit_blocker() -> None:
     assert math.isfinite(result.fitness_m)
 
 
+def test_registration_rejects_tiny_clouds_without_crashing() -> None:
+    result = register_keyframe_clouds(
+        np.empty((0, 2), dtype=np.float64),
+        _cloud(),
+        backend="icp_2d",
+        initial_yaw=0.3,
+        yaw_search_sectors=1,
+        sector_count=60,
+        max_iterations=8,
+        max_corr_dist_m=0.6,
+    )
+
+    assert result.backend == "icp_2d"
+    assert math.isinf(result.fitness_m)
+    assert result.inlier_ratio == 0.0
+    assert result.num_correspondences == 0
+
+
 def test_robust_selector_reports_pcm_backend_and_rejects_single_weak_match() -> None:
     params = RobustSelectorParams(
         robust_min_inliers=3,

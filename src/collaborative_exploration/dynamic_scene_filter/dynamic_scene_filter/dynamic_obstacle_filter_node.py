@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 from typing import Iterable
 
 import rclpy
@@ -12,6 +13,7 @@ from sensor_msgs_py import point_cloud2
 from std_msgs.msg import Header, String
 from visualization_msgs.msg import Marker, MarkerArray
 
+from .frame_transform import Pose2D, split_original_points_by_labels, transform_body_points_to_odom
 from .temporal_voxel_filter import DynamicFilterParams, Point3, TemporalVoxelFilter
 
 
@@ -39,9 +41,12 @@ class DynamicObstacleFilterNode(Node):
         self.declare_parameter("dynamic_max_static_velocity", 0.15)
         self.declare_parameter("dynamic_min_dynamic_velocity", 0.35)
         self.declare_parameter("dynamic_near_robot_ignore_radius", 0.4)
+        self.declare_parameter("dynamic_track_new_voxel_motion", False)
         self.declare_parameter("dynamic_publish_debug_clouds", True)
         self.declare_parameter("input_cloud_topic", "cloud_registered_body")
         self.declare_parameter("odom_topic", "corrected_odom")
+        self.declare_parameter("raw_odom_topic", "Odometry")
+        self.declare_parameter("classify_in_odom_frame", True)
 
         raw_namespaces = self.get_parameter("namespaces").value
         self.namespaces = [str(ns).strip().strip("/") for ns in raw_namespaces if str(ns).strip()]
@@ -49,6 +54,8 @@ class DynamicObstacleFilterNode(Node):
         self.debug_clouds = bool(self.get_parameter("dynamic_publish_debug_clouds").value)
         self.input_cloud_topic = str(self.get_parameter("input_cloud_topic").value).strip().strip("/")
         self.odom_topic = str(self.get_parameter("odom_topic").value).strip().strip("/")
+        self.raw_odom_topic = str(self.get_parameter("raw_odom_topic").value).strip().strip("/")
+        self.classify_in_odom_frame = bool(self.get_parameter("classify_in_odom_frame").value)
         params = DynamicFilterParams(
             voxel_size=float(self.get_parameter("dynamic_voxel_size").value),
             static_min_observations=int(self.get_parameter("dynamic_static_min_observations").value),
@@ -58,9 +65,11 @@ class DynamicObstacleFilterNode(Node):
             max_static_velocity=float(self.get_parameter("dynamic_max_static_velocity").value),
             min_dynamic_velocity=float(self.get_parameter("dynamic_min_dynamic_velocity").value),
             near_robot_ignore_radius=float(self.get_parameter("dynamic_near_robot_ignore_radius").value),
+            track_new_voxel_motion=bool(self.get_parameter("dynamic_track_new_voxel_motion").value),
         )
         self.filters = {ns: TemporalVoxelFilter(params) for ns in self.namespaces}
-        self.latest_odom: dict[str, Odometry] = {}
+        self.latest_corrected_odom: dict[str, Odometry] = {}
+        self.latest_raw_odom: dict[str, Odometry] = {}
 
         self.static_pubs = {
             ns: self.create_publisher(PointCloud2, f"/{ns}/cloud_static", 5) for ns in self.namespaces
@@ -91,11 +100,20 @@ class DynamicObstacleFilterNode(Node):
             self.create_subscription(
                 Odometry,
                 f"/{ns}/{self.odom_topic}",
-                lambda msg, n=ns: self.latest_odom.__setitem__(n, msg),
+                lambda msg, n=ns: self.latest_corrected_odom.__setitem__(n, msg),
                 5,
             )
+            if self.raw_odom_topic and self.raw_odom_topic != self.odom_topic:
+                self.create_subscription(
+                    Odometry,
+                    f"/{ns}/{self.raw_odom_topic}",
+                    lambda msg, n=ns: self.latest_raw_odom.__setitem__(n, msg),
+                    5,
+                )
         self.get_logger().info(
-            f"dynamic_obstacle_filter_node up: robots={self.namespaces} enabled={self.enabled}"
+            "dynamic_obstacle_filter_node up: "
+            f"robots={self.namespaces} enabled={self.enabled} "
+            f"classify_in_odom_frame={self.classify_in_odom_frame}"
         )
 
     def _publish_cloud(self, pub, header: Header, points: Iterable[Point3]) -> None:
@@ -126,6 +144,36 @@ class DynamicObstacleFilterNode(Node):
         markers.markers.append(marker)
         self.marker_pubs[ns].publish(markers)
 
+    @staticmethod
+    def _pose_from_odom(msg: Odometry) -> Pose2D:
+        p = msg.pose.pose.position
+        q = msg.pose.pose.orientation
+        siny_cosp = 2.0 * (float(q.w) * float(q.z) + float(q.x) * float(q.y))
+        cosy_cosp = 1.0 - 2.0 * (float(q.y) * float(q.y) + float(q.z) * float(q.z))
+        return Pose2D(
+            x=float(p.x),
+            y=float(p.y),
+            z=float(p.z),
+            yaw=math.atan2(siny_cosp, cosy_cosp),
+        )
+
+    def _latest_odom(self, ns: str) -> tuple[Odometry | None, str]:
+        corrected = self.latest_corrected_odom.get(ns)
+        if corrected is not None:
+            return corrected, "corrected_odom"
+        raw = self.latest_raw_odom.get(ns)
+        if raw is not None:
+            return raw, "Odometry"
+        return None, "none"
+
+    def _classification_points(self, ns: str, points: list[Point3]) -> tuple[list[Point3], str]:
+        if not self.classify_in_odom_frame:
+            return points, "body_disabled"
+        odom, source = self._latest_odom(ns)
+        if odom is None:
+            return points, "body_no_odom"
+        return transform_body_points_to_odom(points, self._pose_from_odom(odom)), source
+
     def _on_cloud(self, ns: str, msg: PointCloud2) -> None:
         stamp_sec = _stamp_to_sec(msg.header.stamp)
         points = _cloud_points(msg)
@@ -134,9 +182,9 @@ class DynamicObstacleFilterNode(Node):
             result_dynamic: list[Point3] = []
             ratio = 0.0
         else:
-            result = self.filters[ns].classify_points(points, stamp_sec=stamp_sec)
-            result_static = result.static_points
-            result_dynamic = result.dynamic_points
+            classification_points, classification_frame = self._classification_points(ns, points)
+            result = self.filters[ns].classify_points(classification_points, stamp_sec=stamp_sec)
+            result_static, result_dynamic = split_original_points_by_labels(points, result.labels)
             ratio = result.dynamic_filter_ratio
         self._publish_cloud(self.static_pubs[ns], msg.header, result_static)
         if self.debug_clouds:
@@ -150,6 +198,7 @@ class DynamicObstacleFilterNode(Node):
             "static_points_kept": len(result_static),
             "dynamic_filter_ratio": round(float(ratio), 5),
             "dynamic_voxel_count": self.filters[ns].dynamic_voxel_count,
+            "classification_frame": classification_frame if self.enabled else "disabled",
             "gt_used_runtime": False,
         }
         self.mask_pubs[ns].publish(String(data=json.dumps(mask, sort_keys=True)))
