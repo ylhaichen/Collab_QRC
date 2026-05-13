@@ -129,6 +129,145 @@ def test_tentative_alignment_keeps_local_anti_dwell_goal_selection() -> None:
     assert math.isclose(decision.goal.x, 5.0)
 
 
+def test_tentative_alignment_prefers_multiview_frontier_over_valid_near_local_goal() -> None:
+    policy = PrealignmentPolicy(
+        robot_id="robot_a",
+        config=PrealignmentConfig(
+            min_goal_distance=1.0,
+            min_start_displacement=2.0,
+            robust_acceptance_min_inliers=7,
+        ),
+    )
+    policy.update_pose(0.0, 0.0, stamp_sec=0.0)
+    policy.update_pose(3.5, 0.0, stamp_sec=10.0)
+    policy.update_alignment_status(
+        status="tentative",
+        cross_robot_candidates=80,
+        verified_matches=20,
+        robust_inliers=3,
+        stamp_sec=10.0,
+    )
+
+    decision = policy.choose_goal(
+        incoming=GoalSample(5.0, 0.0, frame_id="robot_a/map", keyframe_gain=0.5),
+        local_frontiers=[
+            GoalSample(5.0, 0.0, frame_id="robot_a/map", keyframe_gain=0.5),
+            GoalSample(8.0, 1.5, frame_id="robot_a/map", corridor_score=2.0, keyframe_gain=4.8),
+        ],
+        stamp_sec=11.0,
+    )
+
+    assert decision.phase == AlignmentPhase.TENTATIVE_ALIGNMENT
+    assert decision.reason == "tentative_alignment_explore"
+    assert decision.goal is not None
+    assert math.isclose(decision.goal.x, 8.0)
+    assert policy.metrics.tentative_alignment_explore_goals == 1
+
+
+def test_scripted_overlap_demo_generates_local_only_robot_specific_multiview_goals() -> None:
+    robot_a = PrealignmentPolicy(
+        robot_id="robot_a",
+        config=PrealignmentConfig(
+            min_goal_distance=1.0,
+            min_start_displacement=2.0,
+            scripted_overlap_demo=True,
+        ),
+    )
+    robot_b = PrealignmentPolicy(
+        robot_id="robot_b",
+        config=PrealignmentConfig(
+            min_goal_distance=1.0,
+            min_start_displacement=2.0,
+            scripted_overlap_demo=True,
+        ),
+    )
+    for policy in (robot_a, robot_b):
+        policy.update_pose(0.0, 0.0, stamp_sec=0.0)
+        policy.update_pose(0.2, 0.0, stamp_sec=5.0)
+        policy.update_alignment_status(
+            status="tentative",
+            cross_robot_candidates=40,
+            verified_matches=12,
+            robust_inliers=3,
+            stamp_sec=5.0,
+        )
+
+    a_decision = robot_a.choose_goal(incoming=None, local_frontiers=[], stamp_sec=6.0)
+    b_decision = robot_b.choose_goal(incoming=None, local_frontiers=[], stamp_sec=6.0)
+
+    assert a_decision.reason == "scripted_local_overlap_demo"
+    assert b_decision.reason == "scripted_local_overlap_demo"
+    assert a_decision.goal is not None
+    assert b_decision.goal is not None
+    assert a_decision.goal.frame_id == "robot_a/map"
+    assert b_decision.goal.frame_id == "robot_b/map"
+    assert (a_decision.goal.x, a_decision.goal.y) != (b_decision.goal.x, b_decision.goal.y)
+    assert robot_a.metrics.scripted_local_overlap_goals == 1
+    assert robot_b.metrics.scripted_local_overlap_goals == 1
+
+
+def test_scripted_overlap_demo_prefers_real_local_frontier_over_fixed_waypoint() -> None:
+    policy = PrealignmentPolicy(
+        robot_id="robot_a",
+        config=PrealignmentConfig(
+            min_goal_distance=1.0,
+            min_start_displacement=2.0,
+            scripted_overlap_demo=True,
+        ),
+    )
+    policy.update_pose(0.0, 0.0, stamp_sec=0.0)
+    policy.update_pose(0.5, 0.0, stamp_sec=3.0)
+    policy.update_alignment_status(
+        status="tentative",
+        cross_robot_candidates=20,
+        verified_matches=8,
+        robust_inliers=3,
+        stamp_sec=3.0,
+    )
+
+    decision = policy.choose_goal(
+        incoming=None,
+        local_frontiers=[
+            GoalSample(2.2, -1.0, frame_id="robot_a/map", keyframe_gain=1.0),
+            GoalSample(3.2, 1.0, frame_id="robot_a/map", corridor_score=2.0, keyframe_gain=3.0),
+        ],
+        stamp_sec=4.0,
+    )
+
+    assert decision.reason == "scripted_local_overlap_demo"
+    assert decision.goal is not None
+    assert decision.goal.x == 3.2
+    assert decision.goal.y == 1.0
+    assert policy.metrics.local_frontiers_selected == 1
+    assert policy.metrics.tentative_alignment_explore_goals == 1
+    assert policy.metrics.scripted_local_overlap_goals == 1
+
+
+def test_policy_tracks_robust_growth_rate_and_tentative_duration() -> None:
+    policy = PrealignmentPolicy(
+        robot_id="robot_a",
+        config=PrealignmentConfig(robust_acceptance_min_inliers=7),
+    )
+    policy.update_alignment_status(
+        status="tentative",
+        cross_robot_candidates=10,
+        verified_matches=5,
+        robust_inliers=1,
+        stamp_sec=10.0,
+    )
+    policy.update_alignment_status(
+        status="tentative",
+        cross_robot_candidates=30,
+        verified_matches=18,
+        robust_inliers=4,
+        stamp_sec=25.0,
+    )
+
+    assert policy.phase == AlignmentPhase.TENTATIVE_ALIGNMENT
+    assert math.isclose(policy.metrics.robust_inlier_growth_rate, 0.2, rel_tol=1e-6)
+    assert math.isclose(policy.metrics.tentative_alignment_duration, 15.0, rel_tol=1e-6)
+
+
 def test_policy_tracks_path_length_keyframes_and_blacklists_failed_goal() -> None:
     policy = PrealignmentPolicy(robot_id="robot_a")
     policy.update_pose(0.0, 0.0, stamp_sec=0.0)

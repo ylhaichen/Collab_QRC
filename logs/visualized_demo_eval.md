@@ -1,37 +1,46 @@
 # Visualized Demo Eval
 
 - schema: `visualized_discovered_pose_demo_eval/v1`
-- duration_sec: `60.098`
+- duration_sec: `90.0`
 - prealignment_anti_dwell_active: `True`
-- robot_a_distance_from_start: `3.2321`
-- robot_b_distance_from_start: `5.0312`
-- robot_a_max_distance_from_start: `3.2321`
-- robot_b_max_distance_from_start: `5.0312`
-- robot_a_path_length: `9.5899`
-- robot_b_path_length: `8.0113`
-- robot_a_keyframes: `22`
-- robot_b_keyframes: `28`
-- local_frontiers_selected: `6`
+- overlap_seeking_active: `False`
+- tentative_alignment_exploration_active: `False`
+- prealign_scripted_overlap_demo: `True`
+- robot_a_distance_from_start: `5.787`
+- robot_b_distance_from_start: `23.0897`
+- robot_a_max_distance_from_start: `6.2348`
+- robot_b_max_distance_from_start: `23.2405`
+- robot_a_path_length: `18.4427`
+- robot_b_path_length: `31.7209`
+- robot_a_keyframes: `27`
+- robot_b_keyframes: `46`
+- local_frontiers_selected: `19`
 - goals_rejected_as_too_close: `2`
 - stuck_replans: `0`
-- blacklisted_goals: `2`
-- cross_robot_candidates: `198`
-- verified_matches: `42`
-- robust_inliers: `3`
-- alignment_status: `rejected`
+- blacklisted_goals: `4`
+- cross_robot_candidates: `311`
+- verified_matches: `88`
+- robust_inliers: `7`
+- robust_inlier_growth_rate: `0.090897`
+- tentative_alignment_duration: `77.01`
+- overlap_seeking_goals: `0`
+- tentative_alignment_explore_goals: `16`
+- scripted_local_overlap_goals: `17`
+- alignment_status: `aligned`
 - physical_overlap_occurred: `True`
-- robust_alignment_occurred: `False`
-- merged_map_enabled_time_sec: `None`
+- robust_alignment_occurred: `True`
+- merged_map_enabled_time_sec: `61.5265827660005`
 - merged_map_opened_only_after_gate: `True`
 - prealignment_gate_enabled: `True`
 - prealignment_gate_satisfied: `True`
 - gt_used_runtime: `False`
 - both_robots_exceeded_min_start_displacement: `True`
+- no_overlap_rejection_result: `not_applicable_physical_overlap_detected`
 - occupancy:
-  - robot_a_local_grid_messages: `721`
-  - robot_b_local_grid_messages: `651`
-  - merged_grid_messages: `0`
+  - robot_a_local_grid_messages: `1088`
+  - robot_b_local_grid_messages: `950`
+  - merged_grid_messages: `8`
   - local_grids_nonzero_rate: `True`
-  - merged_grid_active: `False`
+  - merged_grid_active: `True`
   - merged_grid_only_after_aligned: `True`
   - local_grids_use_static_cloud: `True`

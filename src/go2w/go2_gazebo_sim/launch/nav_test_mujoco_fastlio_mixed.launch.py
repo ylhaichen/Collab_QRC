@@ -2077,6 +2077,10 @@ def _launch_setup(context):
     )
     prealign_keyframe_gain_bonus = float(_get(context, "prealign_keyframe_gain_bonus").strip() or "0.5")
     prealign_goal_hold_sec = float(_get(context, "prealign_goal_hold_sec").strip() or "5.0")
+    prealign_robust_acceptance_min_inliers = int(
+        _get(context, "prealign_robust_acceptance_min_inliers").strip() or "7"
+    )
+    prealign_scripted_overlap_demo = _as_bool(_get(context, "prealign_scripted_overlap_demo"))
     occupancy_grid_visualization_enabled = _as_bool(_get(context, "occupancy_grid_visualization_enabled"))
     # Back-compat aliases from the removed planners.
     # `hybrid` → our v0.1 Hybrid A* + Ceres-smoothed planner.
@@ -2808,6 +2812,8 @@ def _launch_setup(context):
                         "prealign_corridor_frontier_bonus": prealign_corridor_frontier_bonus,
                         "prealign_keyframe_gain_bonus": prealign_keyframe_gain_bonus,
                         "prealign_goal_hold_sec": prealign_goal_hold_sec,
+                        "prealign_robust_acceptance_min_inliers": prealign_robust_acceptance_min_inliers,
+                        "prealign_scripted_overlap_demo": prealign_scripted_overlap_demo,
                     }],
                     output="screen",
                 )
@@ -3390,6 +3396,15 @@ def generate_launch_description():
         DeclareLaunchArgument("prealign_far_frontier_bonus", default_value="1.0"),
         DeclareLaunchArgument("prealign_corridor_frontier_bonus", default_value="0.5"),
         DeclareLaunchArgument("prealign_keyframe_gain_bonus", default_value="0.5"),
+        DeclareLaunchArgument("prealign_robust_acceptance_min_inliers", default_value="7"),
+        DeclareLaunchArgument(
+            "prealign_scripted_overlap_demo",
+            default_value="false",
+            description=(
+                "Use local-frame scripted overlap-seeking primitives in the visual demo. "
+                "This does not use GT, peer-frame goals, or a fake relative transform."
+            ),
+        ),
         DeclareLaunchArgument(
             "prealign_goal_hold_sec",
             default_value="5.0",

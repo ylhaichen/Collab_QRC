@@ -6,6 +6,8 @@ cd "${WS_DIR}"
 
 ROS2_SETUP_BASH="${ROS2_SETUP_BASH:-/opt/ros/humble/setup.bash}"
 DURATION_SEC="${DURATION_SEC:-90}"
+PREALIGN_SCRIPTED_OVERLAP_DEMO="${PREALIGN_SCRIPTED_OVERLAP_DEMO:-false}"
+PREALIGN_ROBUST_ACCEPTANCE_MIN_INLIERS="${PREALIGN_ROBUST_ACCEPTANCE_MIN_INLIERS:-7}"
 STAMP="$(date +%Y%m%d_%H%M%S)"
 OUT_DIR="${WS_DIR}/logs/prealignment_visual_demo_runtime_${STAMP}"
 mkdir -p "${OUT_DIR}"
@@ -51,6 +53,8 @@ timeout "$((DURATION_SEC + 90))s" ros2 launch go2_gazebo_sim nav_test_mujoco_fas
   prealign_corridor_frontier_bonus:=0.5 \
   prealign_keyframe_gain_bonus:=0.5 \
   prealign_goal_hold_sec:=5.0 \
+  prealign_robust_acceptance_min_inliers:="${PREALIGN_ROBUST_ACCEPTANCE_MIN_INLIERS}" \
+  prealign_scripted_overlap_demo:="${PREALIGN_SCRIPTED_OVERLAP_DEMO}" \
   mujoco_cameras:=false \
   enable_gt_drift_metrics:=false \
   session_duration_sec:="${DURATION_SEC}" \

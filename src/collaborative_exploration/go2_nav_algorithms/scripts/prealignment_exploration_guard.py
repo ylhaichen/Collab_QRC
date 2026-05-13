@@ -64,6 +64,8 @@ class PrealignmentExplorationGuard(Node):
         self.declare_parameter("prealign_far_frontier_bonus", 1.0)
         self.declare_parameter("prealign_corridor_frontier_bonus", 0.5)
         self.declare_parameter("prealign_keyframe_gain_bonus", 0.5)
+        self.declare_parameter("prealign_robust_acceptance_min_inliers", 7)
+        self.declare_parameter("prealign_scripted_overlap_demo", False)
 
         ns = str(self.get_parameter("namespace").value).strip().strip("/")
         self.ns = ns or "robot"
@@ -83,6 +85,10 @@ class PrealignmentExplorationGuard(Node):
             far_frontier_bonus=float(self.get_parameter("prealign_far_frontier_bonus").value),
             corridor_frontier_bonus=float(self.get_parameter("prealign_corridor_frontier_bonus").value),
             keyframe_gain_bonus=float(self.get_parameter("prealign_keyframe_gain_bonus").value),
+            robust_acceptance_min_inliers=int(
+                self.get_parameter("prealign_robust_acceptance_min_inliers").value
+            ),
+            scripted_overlap_demo=bool(self.get_parameter("prealign_scripted_overlap_demo").value),
         )
         self.policy = PrealignmentPolicy(robot_id=self.ns, config=cfg)
 
@@ -109,6 +115,8 @@ class PrealignmentExplorationGuard(Node):
         self.gt_used_runtime = False
         self.last_publish_sec = 0.0
         self.last_output_goal: GoalSample | None = None
+        self.last_goal_reason = "none"
+        self.last_goal_source = "none"
 
         self.create_subscription(PointStamped, in_goal, self._on_goal, 10)
         self.create_subscription(Odometry, odom_topic, self._on_odom, 20)
@@ -127,7 +135,8 @@ class PrealignmentExplorationGuard(Node):
         self.get_logger().info(
             "prealignment_exploration_guard active: "
             f"ns={self.ns} {in_goal} -> {out_goal} frame={self.output_frame_id} "
-            f"min_goal={cfg.min_goal_distance:.2f}m min_start={cfg.min_start_displacement:.2f}m"
+            f"min_goal={cfg.min_goal_distance:.2f}m min_start={cfg.min_start_displacement:.2f}m "
+            f"scripted_overlap_demo={cfg.scripted_overlap_demo}"
         )
 
     def _ns_topic(self, suffix: str) -> str:
@@ -186,7 +195,7 @@ class PrealignmentExplorationGuard(Node):
             int(payload.get("inlier_count", payload.get("robust_inliers", 0)) or 0),
         )
         self.policy.update_alignment_status(
-            status=status,
+            status=self._policy_status_for_exploration(status),
             cross_robot_candidates=self.cross_robot_candidates,
             verified_matches=self.verified_matches,
             robust_inliers=self.robust_inliers,
@@ -207,6 +216,13 @@ class PrealignmentExplorationGuard(Node):
         payload = _loads(msg.data)
         if payload.get("schema") == "team_cross_robot_candidate/v1":
             self.cross_robot_candidates += 1
+            self.policy.update_alignment_status(
+                status=self._policy_status_for_exploration(self.alignment_status),
+                cross_robot_candidates=self.cross_robot_candidates,
+                verified_matches=self.verified_matches,
+                robust_inliers=self.robust_inliers,
+                stamp_sec=self._now_sec(),
+            )
 
     def _on_robust(self, msg: String) -> None:
         payload = _loads(msg.data)
@@ -218,6 +234,24 @@ class PrealignmentExplorationGuard(Node):
             self.robust_inliers,
             int(payload.get("robust_inlier_set_size", 0) or 0),
         )
+        self.policy.update_alignment_status(
+            status=self._policy_status_for_exploration(str(payload.get("status", self.alignment_status))),
+            cross_robot_candidates=self.cross_robot_candidates,
+            verified_matches=self.verified_matches,
+            robust_inliers=self.robust_inliers,
+            stamp_sec=self._now_sec(),
+        )
+
+    def _policy_status_for_exploration(self, status: str) -> str:
+        clean = str(status or "unaligned").strip().lower()
+        if (
+            clean == "rejected"
+            and self.cross_robot_candidates > 0
+            and self.verified_matches > 0
+            and 0 < self.robust_inliers < self.policy.config.robust_acceptance_min_inliers
+        ):
+            return "tentative"
+        return clean
 
     def _tick(self) -> None:
         self._publish_status()
@@ -226,12 +260,26 @@ class PrealignmentExplorationGuard(Node):
         now = self._now_sec()
         if now - self.last_publish_sec < 2.0:
             return
-        if (
-            self.policy.phase.value
-            in {"unaligned_local_explore", "overlap_seeking", "tentative_alignment", "rejected_recover"}
-            and self.policy.metrics.distance_from_start < self.policy.config.min_start_displacement
-        ):
-            self._publish_decision(self.latest_goal, force=False)
+        prealign_phase = self.policy.phase.value in {
+            "unaligned_local_explore",
+            "overlap_seeking",
+            "tentative_alignment",
+            "rejected_recover",
+        }
+        if not prealign_phase:
+            return
+        needs_start_escape = (
+            self.policy.metrics.distance_from_start
+            < self.policy.config.min_start_displacement
+        )
+        needs_multiview_overlap = (
+            self.policy.phase.value in {"overlap_seeking", "tentative_alignment", "rejected_recover"}
+            and self.policy.metrics.robust_inliers < self.policy.config.robust_acceptance_min_inliers
+        )
+        scripted_demo = self.policy.config.scripted_overlap_demo
+        if needs_start_escape or needs_multiview_overlap or scripted_demo:
+            incoming = None if needs_multiview_overlap or scripted_demo else self.latest_goal
+            self._publish_decision(incoming, force=False)
 
     def _publish_decision(
         self,
@@ -261,10 +309,27 @@ class PrealignmentExplorationGuard(Node):
         if not force and decision.reason == "local_goal_allowed":
             return
         self._publish_goal(decision.goal)
+        self.last_goal_reason = decision.reason
+        self.last_goal_source = self._decision_source(decision.reason)
         self.get_logger().info(
             f"{self.ns}: prealign_goal reason={decision.reason} "
-            f"phase={decision.phase.value} goal=({decision.goal.x:+.2f},{decision.goal.y:+.2f})"
+            f"phase={decision.phase.value} source={self.last_goal_source} "
+            f"goal=({decision.goal.x:+.2f},{decision.goal.y:+.2f})"
         )
+
+    @staticmethod
+    def _decision_source(reason: str) -> str:
+        if reason == "scripted_local_overlap_demo":
+            return "scripted_local_overlap_demo"
+        if "frontier" in reason:
+            return "local_frontier"
+        if "primitive" in reason:
+            return "local_exploration_primitive"
+        if reason == "local_goal_allowed":
+            return "local_planner_goal"
+        if reason == "peer_frame_goal_blocked_until_alignment":
+            return "peer_frame_blocked_local_recovery"
+        return "local_policy"
 
     def _publish_goal(self, goal: GoalSample) -> None:
         msg = PointStamped()
@@ -352,6 +417,10 @@ class PrealignmentExplorationGuard(Node):
             "alignment_state": self.policy.phase.value,
             "alignment_status": self.alignment_status,
             "prealign_min_start_displacement": float(self.policy.config.min_start_displacement),
+            "prealign_scripted_overlap_demo": bool(self.policy.config.scripted_overlap_demo),
+            "prealign_robust_acceptance_min_inliers": int(
+                self.policy.config.robust_acceptance_min_inliers
+            ),
             "distance_from_start": round(float(m.distance_from_start), 4),
             "max_distance_from_start": round(float(m.max_distance_from_start), 4),
             "path_length": round(float(m.path_length), 4),
@@ -366,6 +435,20 @@ class PrealignmentExplorationGuard(Node):
             "cross_robot_candidates": int(self.cross_robot_candidates),
             "verified_matches": int(self.verified_matches),
             "robust_inliers": int(self.robust_inliers),
+            "robust_inlier_growth_rate": round(float(m.robust_inlier_growth_rate), 6),
+            "tentative_alignment_duration": round(float(m.tentative_alignment_duration), 4),
+            "overlap_seeking_active": bool(
+                self.policy.phase.value in {"overlap_seeking", "rejected_recover"}
+            ),
+            "tentative_alignment_exploration_active": bool(
+                self.policy.phase.value == "tentative_alignment"
+                and m.robust_inliers < self.policy.config.robust_acceptance_min_inliers
+            ),
+            "overlap_seeking_goals": int(m.overlap_seeking_goals),
+            "tentative_alignment_explore_goals": int(m.tentative_alignment_explore_goals),
+            "scripted_local_overlap_goals": int(m.scripted_local_overlap_goals),
+            "last_goal_reason": self.last_goal_reason,
+            "source": self.last_goal_source,
             "gt_used_runtime": bool(self.gt_used_runtime),
         }
         self.status_pub.publish(String(data=json.dumps(payload, sort_keys=True)))

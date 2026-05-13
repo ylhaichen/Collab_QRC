@@ -12,6 +12,8 @@ LOG_FILE="${LOG_DIR}/visualized_pointlio_disco_demo_${STAMP}.log"
 mkdir -p "${LOG_DIR}" "${ARTIFACT_DIR}" "${ROS_LOG_DIR:-/tmp/collab_qrc_ros_logs}"
 export ROS_LOG_DIR="${ROS_LOG_DIR:-/tmp/collab_qrc_ros_logs}"
 export FASTDDS_BUILTIN_TRANSPORTS="${FASTDDS_BUILTIN_TRANSPORTS:-UDPv4}"
+PREALIGN_SCRIPTED_OVERLAP_DEMO="${PREALIGN_SCRIPTED_OVERLAP_DEMO:-false}"
+PREALIGN_ROBUST_ACCEPTANCE_MIN_INLIERS="${PREALIGN_ROBUST_ACCEPTANCE_MIN_INLIERS:-7}"
 
 safe_source() { set +u; source "$1"; set -u; }
 safe_source "${ROS2_SETUP_BASH}"
@@ -26,6 +28,7 @@ Expected visible state:
 - /merged_map must stay closed until /team_slam/alignment_status reports status=aligned.
 - Runtime alignment uses discovered DiSCo-style loop closure only; GT runtime alignment is disabled.
 - Pre-alignment exploration is local-only: no peer-frame goals, no GT, and no /merged_map dependency.
+- Optional scripted overlap demo uses local-frame primitives only and still requires robust loop closure before merge.
 
 Useful topic checks in another terminal:
   ros2 topic hz /robot_a/Odometry
@@ -42,6 +45,8 @@ Useful topic checks in another terminal:
   ros2 topic list | grep merged_map
   ros2 topic hz /robot_a/cloud_static
   ros2 topic hz /robot_a/cloud_dynamic
+  ros2 topic echo --once /robot_a/prealignment_exploration_status
+  ros2 topic echo --once /robot_b/prealignment_exploration_status
 
 Success looks like:
 - /robot_a/Odometry and /robot_b/Odometry are nonzero-rate.
@@ -64,6 +69,8 @@ Failure looks like:
 Press Ctrl-C to stop. Log file:
 EOF
 printf '  %s\n\n' "${LOG_FILE}"
+printf 'Prealignment scripted overlap demo: %s\n' "${PREALIGN_SCRIPTED_OVERLAP_DEMO}"
+printf 'Robust inlier acceptance target for exploration policy: %s\n\n' "${PREALIGN_ROBUST_ACCEPTANCE_MIN_INLIERS}"
 
 launch_cmd=(
   ./scripts/launch/nav_test_demo3_mixed.sh
@@ -94,6 +101,8 @@ launch_cmd=(
   prealign_corridor_frontier_bonus:=0.5
   prealign_keyframe_gain_bonus:=0.5
   prealign_goal_hold_sec:=5.0
+  prealign_robust_acceptance_min_inliers:="${PREALIGN_ROBUST_ACCEPTANCE_MIN_INLIERS}"
+  prealign_scripted_overlap_demo:="${PREALIGN_SCRIPTED_OVERLAP_DEMO}"
   mujoco_cameras:=false
   enable_gt_drift_metrics:=false
   loop_risk_output_dir:="${ARTIFACT_DIR}"

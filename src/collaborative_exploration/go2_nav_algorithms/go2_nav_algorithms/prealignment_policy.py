@@ -32,6 +32,8 @@ class PrealignmentConfig:
     last_goal_memory: int = 8
     primitive_step_m: float = 3.5
     recent_goal_radius: float = 0.8
+    robust_acceptance_min_inliers: int = 7
+    scripted_overlap_demo: bool = False
 
 
 @dataclass(frozen=True)
@@ -60,6 +62,11 @@ class PrealignmentMetrics:
     cross_robot_candidates: int = 0
     verified_matches: int = 0
     robust_inliers: int = 0
+    robust_inlier_growth_rate: float = 0.0
+    tentative_alignment_duration: float = 0.0
+    overlap_seeking_goals: int = 0
+    tentative_alignment_explore_goals: int = 0
+    scripted_local_overlap_goals: int = 0
 
 
 @dataclass(frozen=True)
@@ -98,7 +105,11 @@ class PrealignmentPolicy:
         self.last_goals: deque[GoalSample] = deque(maxlen=max(1, self.config.last_goal_memory))
         self.blacklist: list[_BlacklistedGoal] = []
         self._primitive_index = 0
+        self._scripted_index = 0
         self._last_alignment_status = "unknown"
+        self._phase_entered_sec: float | None = None
+        self._tentative_started_sec: float | None = None
+        self._robust_history: deque[tuple[float, int]] = deque(maxlen=12)
 
     @property
     def local_frame_id(self) -> str:
@@ -140,23 +151,32 @@ class PrealignmentPolicy:
         robust_inliers: int,
         stamp_sec: float,
     ) -> None:
-        del stamp_sec
+        stamp = float(stamp_sec)
         status_clean = str(status or "").strip().lower()
         self._last_alignment_status = status_clean
-        self.metrics.cross_robot_candidates = max(self.metrics.cross_robot_candidates, int(cross_robot_candidates))
-        self.metrics.verified_matches = max(self.metrics.verified_matches, int(verified_matches))
-        self.metrics.robust_inliers = max(self.metrics.robust_inliers, int(robust_inliers))
+        candidates = int(cross_robot_candidates)
+        verified = int(verified_matches)
+        inliers = int(robust_inliers)
+        self.metrics.cross_robot_candidates = max(self.metrics.cross_robot_candidates, candidates)
+        self.metrics.verified_matches = max(self.metrics.verified_matches, verified)
+        self.metrics.robust_inliers = max(self.metrics.robust_inliers, inliers)
+        self._update_robust_growth(stamp, self.metrics.robust_inliers)
         if status_clean == "aligned":
-            self.phase = AlignmentPhase.ALIGNED_SHARED_EXPLORE
+            self._set_phase(AlignmentPhase.ALIGNED_SHARED_EXPLORE, stamp)
         elif status_clean == "rejected":
-            self.phase = AlignmentPhase.REJECTED_RECOVER
-        elif status_clean == "tentative" or cross_robot_candidates > 0 or verified_matches > 0 or robust_inliers > 0:
-            self.phase = AlignmentPhase.TENTATIVE_ALIGNMENT
+            self._set_phase(AlignmentPhase.REJECTED_RECOVER, stamp)
+        elif status_clean == "tentative" or candidates > 0 or verified > 0 or inliers > 0:
+            self._set_phase(AlignmentPhase.TENTATIVE_ALIGNMENT, stamp)
         elif self.phase not in {
             AlignmentPhase.OVERLAP_SEEKING,
             AlignmentPhase.REJECTED_RECOVER,
         }:
-            self.phase = AlignmentPhase.UNALIGNED_LOCAL_EXPLORE
+            self._set_phase(AlignmentPhase.UNALIGNED_LOCAL_EXPLORE, stamp)
+        if self._tentative_started_sec is not None:
+            self.metrics.tentative_alignment_duration = max(
+                self.metrics.tentative_alignment_duration,
+                max(0.0, stamp - self._tentative_started_sec),
+            )
 
     def mark_goal_failed(self, goal: GoalSample, *, stamp_sec: float) -> None:
         self.metrics.goal_failure_count += 1
@@ -164,7 +184,7 @@ class PrealignmentPolicy:
         if self.metrics.goal_failure_count >= self.config.stuck_replan_limit:
             self.metrics.stuck_replans += 1
             if self.phase != AlignmentPhase.ALIGNED_SHARED_EXPLORE:
-                self.phase = AlignmentPhase.OVERLAP_SEEKING
+                self._set_phase(AlignmentPhase.OVERLAP_SEEKING, stamp_sec)
 
     def is_blacklisted(self, goal: GoalSample, *, stamp_sec: float) -> bool:
         self._prune_blacklist(stamp_sec)
@@ -189,9 +209,7 @@ class PrealignmentPolicy:
 
         if incoming is not None and self._is_peer_frame(incoming):
             self.metrics.peer_frame_goals_blocked += 1
-            fallback = self._select_far_local_goal(local_frontiers, stamp_sec)
-            if fallback is None:
-                fallback = self._next_exploration_primitive()
+            fallback, _reason = self._choose_local_overlap_goal(local_frontiers, stamp_sec)
             self._remember_goal(fallback)
             return GoalDecision(
                 fallback,
@@ -200,9 +218,22 @@ class PrealignmentPolicy:
                 False,
             )
 
-        if incoming is not None and self._goal_allowed(incoming, stamp_sec, count_rejection=True):
+        incoming_allowed = (
+            incoming is not None and self._goal_allowed(incoming, stamp_sec, count_rejection=True)
+        )
+        if incoming_allowed and self._should_prefer_overlap_goal_over_incoming():
+            fallback, reason = self._choose_local_overlap_goal(local_frontiers, stamp_sec)
+            self._remember_goal(fallback)
+            return GoalDecision(fallback, self.phase, reason, False)
+
+        if incoming is not None and incoming_allowed:
             self._remember_goal(incoming)
             return GoalDecision(incoming, self.phase, "local_goal_allowed", True)
+
+        if incoming is None and self._should_prefer_overlap_goal_over_incoming():
+            fallback, reason = self._choose_local_overlap_goal(local_frontiers, stamp_sec)
+            self._remember_goal(fallback)
+            return GoalDecision(fallback, self.phase, reason, True)
 
         fallback = self._select_far_local_goal(local_frontiers, stamp_sec)
         if fallback is not None:
@@ -231,7 +262,7 @@ class PrealignmentPolicy:
         }:
             return
         if self.phase == AlignmentPhase.REJECTED_RECOVER:
-            self.phase = AlignmentPhase.OVERLAP_SEEKING
+            self._set_phase(AlignmentPhase.OVERLAP_SEEKING, stamp_sec)
             return
         if self.first_pose_stamp_sec is None:
             return
@@ -243,7 +274,116 @@ class PrealignmentPolicy:
         timed_out = elapsed >= self.config.overlap_timeout_sec
         enough_keyframes = self.metrics.keyframes >= self.config.min_keyframes_before_alignment
         if dwell or timed_out or enough_keyframes:
-            self.phase = AlignmentPhase.OVERLAP_SEEKING
+            self._set_phase(AlignmentPhase.OVERLAP_SEEKING, stamp_sec)
+
+    def _set_phase(self, phase: AlignmentPhase, stamp_sec: float) -> None:
+        if self.phase != phase:
+            self.phase = phase
+            self._phase_entered_sec = float(stamp_sec)
+        if phase == AlignmentPhase.TENTATIVE_ALIGNMENT and self._tentative_started_sec is None:
+            self._tentative_started_sec = float(stamp_sec)
+
+    def _update_robust_growth(self, stamp_sec: float, robust_inliers: int) -> None:
+        if not math.isfinite(float(stamp_sec)):
+            return
+        self._robust_history.append((float(stamp_sec), int(robust_inliers)))
+        if len(self._robust_history) < 2:
+            return
+        first_t, first_v = self._robust_history[0]
+        last_t, last_v = self._robust_history[-1]
+        dt = last_t - first_t
+        if dt > 1e-6:
+            self.metrics.robust_inlier_growth_rate = max(
+                0.0,
+                float(last_v - first_v) / dt,
+            )
+
+    def _should_prefer_overlap_goal_over_incoming(self) -> bool:
+        if self.phase == AlignmentPhase.ALIGNED_SHARED_EXPLORE:
+            return False
+        if self.config.scripted_overlap_demo:
+            return True
+        if self.phase not in {
+            AlignmentPhase.OVERLAP_SEEKING,
+            AlignmentPhase.TENTATIVE_ALIGNMENT,
+            AlignmentPhase.REJECTED_RECOVER,
+        }:
+            return False
+        return self.metrics.robust_inliers < int(self.config.robust_acceptance_min_inliers)
+
+    def _choose_local_overlap_goal(
+        self,
+        local_frontiers: Iterable[GoalSample],
+        stamp_sec: float,
+    ) -> tuple[GoalSample, str]:
+        frontiers = list(local_frontiers)
+        scripted_frontier = self._select_scripted_local_frontier(frontiers, stamp_sec)
+        if scripted_frontier is not None:
+            self.metrics.local_frontiers_selected += 1
+            self.metrics.scripted_local_overlap_goals += 1
+            if self.phase == AlignmentPhase.TENTATIVE_ALIGNMENT:
+                self.metrics.tentative_alignment_explore_goals += 1
+            else:
+                self.metrics.overlap_seeking_goals += 1
+            return scripted_frontier, "scripted_local_overlap_demo"
+
+        scripted = self._next_scripted_overlap_goal(stamp_sec)
+        if scripted is not None:
+            self.metrics.scripted_local_overlap_goals += 1
+            return scripted, "scripted_local_overlap_demo"
+
+        fallback = self._select_far_local_goal(frontiers, stamp_sec)
+        if fallback is not None:
+            self.metrics.local_frontiers_selected += 1
+            if self.phase == AlignmentPhase.TENTATIVE_ALIGNMENT:
+                self.metrics.tentative_alignment_explore_goals += 1
+                return fallback, "tentative_alignment_explore"
+            self.metrics.overlap_seeking_goals += 1
+            return fallback, "overlap_seeking_far_frontier"
+
+        primitive = self._next_exploration_primitive()
+        if self.phase == AlignmentPhase.TENTATIVE_ALIGNMENT:
+            self.metrics.tentative_alignment_explore_goals += 1
+            return primitive, "tentative_alignment_explore"
+        self.metrics.overlap_seeking_goals += 1
+        return primitive, "fallback_exploration_primitive"
+
+    def _select_scripted_local_frontier(
+        self,
+        local_frontiers: Iterable[GoalSample],
+        stamp_sec: float,
+    ) -> GoalSample | None:
+        if not self.config.scripted_overlap_demo:
+            return None
+        candidates = [
+            g for g in local_frontiers
+            if not self._is_peer_frame(g)
+            and self._goal_allowed(g, stamp_sec, count_rejection=False)
+            and not self._recently_used(g)
+        ]
+        if not candidates:
+            return None
+        rx, ry = self.last_xy or self.start_xy or (0.0, 0.0)
+        sx, sy = self.start_xy or (rx, ry)
+        waypoints = self._scripted_local_overlap_waypoints()
+        dx, dy = waypoints[self._scripted_index % len(waypoints)]
+        preferred_angle = math.atan2((sy + dy) - ry, (sx + dx) - rx)
+
+        def score(goal: GoalSample) -> float:
+            distance = math.hypot(goal.x - rx, goal.y - ry)
+            start_distance = math.hypot(goal.x - sx, goal.y - sy)
+            angle = math.atan2(goal.y - ry, goal.x - rx)
+            angle_bonus = math.cos(angle - preferred_angle)
+            return (
+                distance * (1.0 + self.config.far_frontier_bonus)
+                + start_distance * self.config.far_frontier_bonus
+                + float(goal.corridor_score) * self.config.corridor_frontier_bonus
+                + float(goal.keyframe_gain) * self.config.keyframe_gain_bonus
+                + angle_bonus * max(0.5, self.config.far_frontier_bonus)
+            )
+
+        self._scripted_index += 1
+        return max(candidates, key=score)
 
     def _select_far_local_goal(
         self,
@@ -281,7 +421,11 @@ class PrealignmentPolicy:
             return False
         rx, ry = self.last_xy or self.start_xy or (0.0, 0.0)
         current_min = self.config.min_goal_distance
-        if self.phase == AlignmentPhase.OVERLAP_SEEKING:
+        if self.phase in {
+            AlignmentPhase.OVERLAP_SEEKING,
+            AlignmentPhase.TENTATIVE_ALIGNMENT,
+            AlignmentPhase.REJECTED_RECOVER,
+        }:
             current_min *= max(1.0, self.config.exploration_radius_growth)
         too_close_current = math.hypot(goal.x - rx, goal.y - ry) < current_min
         too_close_start = False
@@ -317,6 +461,48 @@ class PrealignmentPolicy:
             rx + radius * math.cos(angle),
             ry + radius * math.sin(angle),
             frame_id=self.local_frame_id,
+        )
+
+    def _next_scripted_overlap_goal(self, stamp_sec: float) -> GoalSample | None:
+        if not self.config.scripted_overlap_demo:
+            return None
+        waypoints = self._scripted_local_overlap_waypoints()
+        sx, sy = self.start_xy or (0.0, 0.0)
+        for _ in range(len(waypoints)):
+            dx, dy = waypoints[self._scripted_index % len(waypoints)]
+            self._scripted_index += 1
+            goal = GoalSample(
+                sx + dx,
+                sy + dy,
+                frame_id=self.local_frame_id,
+                frontier_size=1.0,
+                corridor_score=2.0,
+                keyframe_gain=math.hypot(dx, dy),
+            )
+            if self._goal_allowed(goal, stamp_sec, count_rejection=False) and not self._recently_used(goal):
+                return goal
+        return None
+
+    def _scripted_local_overlap_waypoints(self) -> tuple[tuple[float, float], ...]:
+        robot = self.robot_id.lower()
+        if robot.endswith("b") or robot == "robot_b":
+            return (
+                (4.5, -1.2),
+                (5.5, 1.4),
+                (3.8, 3.2),
+                (1.5, 4.8),
+                (-2.5, 3.8),
+                (5.8, -0.4),
+                (4.8, 4.2),
+            )
+        return (
+            (4.5, 1.2),
+            (5.5, -1.2),
+            (3.8, 3.2),
+            (1.5, 4.8),
+            (-2.5, 3.8),
+            (5.8, 0.4),
+            (4.8, -1.8),
         )
 
     def _is_peer_frame(self, goal: GoalSample) -> bool:

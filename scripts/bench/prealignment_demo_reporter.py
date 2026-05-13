@@ -144,10 +144,32 @@ class PrealignmentDemoReporter(Node):
         robot_b_distance = float(b.get("distance_from_start", 0.0) or 0.0)
         robot_a_max_distance = max(robot_a_distance, float(a.get("max_distance_from_start", 0.0) or 0.0))
         robot_b_max_distance = max(robot_b_distance, float(b.get("max_distance_from_start", 0.0) or 0.0))
+        robust_growth_rate = max(
+            float(a.get("robust_inlier_growth_rate", 0.0) or 0.0),
+            float(b.get("robust_inlier_growth_rate", 0.0) or 0.0),
+        )
+        tentative_duration = max(
+            float(a.get("tentative_alignment_duration", 0.0) or 0.0),
+            float(b.get("tentative_alignment_duration", 0.0) or 0.0),
+        )
+        scripted_overlap_demo = bool(
+            a.get("prealign_scripted_overlap_demo", False)
+            or b.get("prealign_scripted_overlap_demo", False)
+        )
+        if robust_growth_rate <= 0.0 and robust_count > 0 and tentative_duration > 0.0:
+            robust_growth_rate = float(robust_count) / tentative_duration
         payload = {
             "schema": "visualized_discovered_pose_demo_eval/v1",
             "duration_sec": round(self._elapsed(), 3),
             "prealignment_anti_dwell_active": bool(a and b),
+            "overlap_seeking_active": bool(
+                a.get("overlap_seeking_active", False) or b.get("overlap_seeking_active", False)
+            ),
+            "tentative_alignment_exploration_active": bool(
+                a.get("tentative_alignment_exploration_active", False)
+                or b.get("tentative_alignment_exploration_active", False)
+            ),
+            "prealign_scripted_overlap_demo": scripted_overlap_demo,
             "robot_a_distance_from_start": round(robot_a_distance, 4),
             "robot_b_distance_from_start": round(robot_b_distance, 4),
             "robot_a_max_distance_from_start": round(robot_a_max_distance, 4),
@@ -167,6 +189,16 @@ class PrealignmentDemoReporter(Node):
             "cross_robot_candidates": int(max(self.cross_robot_candidates, int(a.get("cross_robot_candidates", 0) or 0), int(b.get("cross_robot_candidates", 0) or 0))),
             "verified_matches": verified,
             "robust_inliers": robust_count,
+            "robust_inlier_growth_rate": round(robust_growth_rate, 6),
+            "tentative_alignment_duration": round(tentative_duration, 4),
+            "overlap_seeking_goals": int(a.get("overlap_seeking_goals", 0) or 0)
+            + int(b.get("overlap_seeking_goals", 0) or 0),
+            "tentative_alignment_explore_goals": int(
+                a.get("tentative_alignment_explore_goals", 0) or 0
+            )
+            + int(b.get("tentative_alignment_explore_goals", 0) or 0),
+            "scripted_local_overlap_goals": int(a.get("scripted_local_overlap_goals", 0) or 0)
+            + int(b.get("scripted_local_overlap_goals", 0) or 0),
             "alignment_status": alignment_status,
             "physical_overlap_occurred": self.cross_robot_candidates > 0 or verified > 0 or robust_count > 0,
             "robust_alignment_occurred": alignment_status == "aligned" and robust_count > 0,
@@ -179,6 +211,13 @@ class PrealignmentDemoReporter(Node):
             "gt_used_runtime": gt_used_runtime,
             "both_robots_exceeded_min_start_displacement": (
                 robot_a_max_distance >= prealign_min and robot_b_max_distance >= prealign_min
+            ),
+            "no_overlap_rejection_result": (
+                "not_applicable_physical_overlap_detected"
+                if self.cross_robot_candidates > 0 or verified > 0 or robust_count > 0
+                else "merged_map_remained_closed_correctly"
+                if self.first_merged_sec is None and alignment_status != "aligned"
+                else "failed"
             ),
             "occupancy": {
                 "robot_a_local_grid_messages": self.occupancy_counts["robot_a"],
@@ -219,6 +258,9 @@ def _write_outputs(output_dir: Path, payload: dict[str, Any]) -> None:
         "schema": "prealignment_exploration_eval/v1",
         **{k: payload[k] for k in (
             "prealignment_anti_dwell_active",
+            "overlap_seeking_active",
+            "tentative_alignment_exploration_active",
+            "prealign_scripted_overlap_demo",
             "robot_a_distance_from_start",
             "robot_b_distance_from_start",
             "robot_a_max_distance_from_start",
@@ -234,6 +276,11 @@ def _write_outputs(output_dir: Path, payload: dict[str, Any]) -> None:
             "cross_robot_candidates",
             "verified_matches",
             "robust_inliers",
+            "robust_inlier_growth_rate",
+            "tentative_alignment_duration",
+            "overlap_seeking_goals",
+            "tentative_alignment_explore_goals",
+            "scripted_local_overlap_goals",
             "alignment_status",
             "merged_map_enabled_time_sec",
             "prealignment_gate_enabled",
@@ -247,6 +294,19 @@ def _write_outputs(output_dir: Path, payload: dict[str, Any]) -> None:
         "alignment_status": payload["alignment_status"],
         "gt_used_runtime": payload["gt_used_runtime"],
     }
+    cross_loop = {
+        "schema": "cross_loop_closure_final_eval/v1",
+        "cross_robot_candidates": payload["cross_robot_candidates"],
+        "verified_matches": payload["verified_matches"],
+        "robust_inliers": payload["robust_inliers"],
+        "robust_inlier_growth_rate": payload["robust_inlier_growth_rate"],
+        "tentative_alignment_duration": payload["tentative_alignment_duration"],
+        "alignment_status": payload["alignment_status"],
+        "robust_alignment_occurred": payload["robust_alignment_occurred"],
+        "merged_map_opened_only_after_gate": payload["merged_map_opened_only_after_gate"],
+        "no_overlap_rejection_result": payload["no_overlap_rejection_result"],
+        "gt_used_runtime": payload["gt_used_runtime"],
+    }
     visual = dict(payload)
     _write_json(output_dir / "prealignment_exploration_eval.json", prealignment)
     _write_md(output_dir / "prealignment_exploration_eval.md", "Prealignment Exploration Eval", prealignment)
@@ -254,6 +314,8 @@ def _write_outputs(output_dir: Path, payload: dict[str, Any]) -> None:
     _write_md(output_dir / "occupancy_map_visualization_eval.md", "Occupancy Map Visualization Eval", occupancy)
     _write_json(output_dir / "visualized_demo_eval.json", visual)
     _write_md(output_dir / "visualized_demo_eval.md", "Visualized Demo Eval", visual)
+    _write_json(output_dir / "cross_loop_closure_final_eval.json", cross_loop)
+    _write_md(output_dir / "cross_loop_closure_final_eval.md", "Cross Loop Closure Final Eval", cross_loop)
 
 
 def main() -> int:
