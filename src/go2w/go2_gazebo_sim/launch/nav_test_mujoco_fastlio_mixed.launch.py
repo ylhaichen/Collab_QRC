@@ -2081,7 +2081,23 @@ def _launch_setup(context):
         _get(context, "prealign_robust_acceptance_min_inliers").strip() or "7"
     )
     prealign_scripted_overlap_demo = _as_bool(_get(context, "prealign_scripted_overlap_demo"))
+    prealign_min_path_length = float(_get(context, "prealign_min_path_length").strip() or "4.0")
+    prealign_min_local_map_area_growth = float(
+        _get(context, "prealign_min_local_map_area_growth").strip() or "1.0"
+    )
+    prealign_min_keyframe_spatial_diversity = float(
+        _get(context, "prealign_min_keyframe_spatial_diversity").strip() or "0.0"
+    )
+    prealign_max_repeated_goal_ratio = float(
+        _get(context, "prealign_max_repeated_goal_ratio").strip() or "0.5"
+    )
     occupancy_grid_visualization_enabled = _as_bool(_get(context, "occupancy_grid_visualization_enabled"))
+    occupancy_rviz_view = (_get(context, "occupancy_rviz_view").strip() or "robot_a").lower()
+    if occupancy_rviz_view not in {"robot_a", "robot_b"}:
+        occupancy_rviz_view = "robot_a"
+    rviz_layout = (_get(context, "rviz_layout").strip() or "single").lower()
+    if rviz_layout not in {"single", "multi"}:
+        rviz_layout = "single"
     # Back-compat aliases from the removed planners.
     # `hybrid` → our v0.1 Hybrid A* + Ceres-smoothed planner.
     # `nav2`   → B-route: nav2_smac_planner library integration.
@@ -2792,6 +2808,10 @@ def _launch_setup(context):
                         "output_goal_topic": "way_point_coord",
                         "odom_topic": "odom/nav",
                         "map_topic": "map",
+                        "quality_map_topic": (
+                            "local_occupancy_grid"
+                            if occupancy_grid_visualization_enabled else ""
+                        ),
                         "frontier_replan_topic": "frontier_replan",
                         "nav_status_topic": "nav_status",
                         "alignment_status_topic": "/team_slam/alignment_status",
@@ -2814,6 +2834,10 @@ def _launch_setup(context):
                         "prealign_goal_hold_sec": prealign_goal_hold_sec,
                         "prealign_robust_acceptance_min_inliers": prealign_robust_acceptance_min_inliers,
                         "prealign_scripted_overlap_demo": prealign_scripted_overlap_demo,
+                        "prealign_min_path_length": prealign_min_path_length,
+                        "prealign_min_local_map_area_growth": prealign_min_local_map_area_growth,
+                        "prealign_min_keyframe_spatial_diversity": prealign_min_keyframe_spatial_diversity,
+                        "prealign_max_repeated_goal_ratio": prealign_max_repeated_goal_ratio,
                     }],
                     output="screen",
                 )
@@ -3030,6 +3054,13 @@ def _launch_setup(context):
                         "occupancy_height_max": 1.5,
                         "occupancy_decay_sec": 0.0,
                         "use_cloud_static": True,
+                        "occupancy_use_corrected_pose": True,
+                        "occupancy_rebuild_from_keyframes": True,
+                        "occupancy_static_min_observations": 2,
+                        "occupancy_dynamic_decay_sec": 3.0,
+                        "occupancy_self_clear_radius": 0.45,
+                        "occupancy_max_keyframes": 200,
+                        "occupancy_rebuild_period_sec": 2.0,
                     }],
                     output="screen",
                 )
@@ -3149,12 +3180,24 @@ def _launch_setup(context):
                 )
             )
 
-    rviz_config_path = os.path.join(
-        go2_gazebo_pkg,
-        "rviz",
-        "pointlio_disco_occupancy_maps.rviz"
-        if occupancy_grid_visualization_enabled else "nav_test_mixed.rviz",
-    )
+    if occupancy_grid_visualization_enabled and rviz_layout == "multi":
+        rviz_config_paths = [
+            ("rviz2_robot_a_local_map", os.path.join(go2_gazebo_pkg, "rviz", "pointlio_robot_a_local_map.rviz")),
+            ("rviz2_robot_b_local_map", os.path.join(go2_gazebo_pkg, "rviz", "pointlio_robot_b_local_map.rviz")),
+            ("rviz2_team_map", os.path.join(go2_gazebo_pkg, "rviz", "pointlio_team_map.rviz")),
+        ]
+    else:
+        if occupancy_grid_visualization_enabled:
+            rviz_config_file = (
+                "pointlio_disco_occupancy_maps_robot_b.rviz"
+                if occupancy_rviz_view == "robot_b"
+                else "pointlio_disco_occupancy_maps.rviz"
+            )
+        else:
+            rviz_config_file = "nav_test_mixed.rviz"
+        rviz_config_paths = [
+            ("rviz2_nav_test_mixed", os.path.join(go2_gazebo_pkg, "rviz", rviz_config_file))
+        ]
 
     # ── RViz ──
     # Namespaced /tf is invisible to RViz's default global /tf listener. We
@@ -3189,36 +3232,35 @@ def _launch_setup(context):
                     # /snap/core20/.../libpthread.so.0, which crashes rviz2 at
                     # runtime with "undefined symbol: __libc_pthread_init".
                     # Strip those vars before exec'ing rviz2.
-                    ExecuteProcess(
-                        cmd=[
-                            "bash", "-c",
-                            "unset XDG_DATA_HOME GSETTINGS_SCHEMA_DIR GTK_PATH LOCPATH "
-                            "SNAP SNAP_NAME SNAP_INSTANCE_NAME SNAP_REVISION "
-                            "SNAP_LIBRARY_PATH SNAP_USER_DATA SNAP_USER_COMMON; "
-                            # --log-level WARN silences rviz2's per-display
-                            # INFO spam ("Map received", "Using fixed frame",
-                            # TF-lookup INFO retries, Ogre mesh-loader info).
-                            # Warnings + errors still print so you notice real
-                            # problems (missing frames, topic QoS mismatches).
-                            "exec rviz2 -d \"$1\" "
-                            "--ros-args -p use_sim_time:=true "
-                            "--log-level rviz2:=WARN "
-                            "--log-level rviz_common:=WARN "
-                            "--log-level rviz_default_plugins:=WARN",
-                            "--",
-                            # nav_test_mixed.rviz points displays at
-                            # /robot_a/* (primary map) and /robot_b/map as a
-                            # secondary overlay — the stock nav_test.rviz
-                            # uses /robot/* which is single-robot only.
-                            rviz_config_path,
-                        ],
-                        name="rviz2_nav_test_mixed",
-                        # output="log" routes rviz2 stdout/stderr to the per-
-                        # launch log file under ~/.ros/log/<session>/rviz2*.log
-                        # instead of the shared terminal, keeping it readable.
-                        # Tail that file if you want to see rviz2 output live.
-                        output="log",
-                    ),
+                    *[
+                        ExecuteProcess(
+                            cmd=[
+                                "bash", "-c",
+                                "unset XDG_DATA_HOME GSETTINGS_SCHEMA_DIR GTK_PATH LOCPATH "
+                                "SNAP SNAP_NAME SNAP_INSTANCE_NAME SNAP_REVISION "
+                                "SNAP_LIBRARY_PATH SNAP_USER_DATA SNAP_USER_COMMON; "
+                                # --log-level WARN silences rviz2's per-display
+                                # INFO spam ("Map received", "Using fixed frame",
+                                # TF-lookup INFO retries, Ogre mesh-loader info).
+                                # Warnings + errors still print so you notice real
+                                # problems (missing frames, topic QoS mismatches).
+                                "exec rviz2 -d \"$1\" "
+                                "--ros-args -p use_sim_time:=true "
+                                "--log-level rviz2:=WARN "
+                                "--log-level rviz_common:=WARN "
+                                "--log-level rviz_default_plugins:=WARN",
+                                "--",
+                                config_path,
+                            ],
+                            name=rviz_name,
+                            # output="log" routes rviz2 stdout/stderr to the per-
+                            # launch log file under ~/.ros/log/<session>/rviz2*.log
+                            # instead of the shared terminal, keeping it readable.
+                            # Tail that file if you want to see rviz2 output live.
+                            output="log",
+                        )
+                        for rviz_name, config_path in rviz_config_paths
+                    ],
                 ],
             )
         )
@@ -3397,6 +3439,10 @@ def generate_launch_description():
         DeclareLaunchArgument("prealign_corridor_frontier_bonus", default_value="0.5"),
         DeclareLaunchArgument("prealign_keyframe_gain_bonus", default_value="0.5"),
         DeclareLaunchArgument("prealign_robust_acceptance_min_inliers", default_value="7"),
+        DeclareLaunchArgument("prealign_min_path_length", default_value="4.0"),
+        DeclareLaunchArgument("prealign_min_local_map_area_growth", default_value="1.0"),
+        DeclareLaunchArgument("prealign_min_keyframe_spatial_diversity", default_value="0.0"),
+        DeclareLaunchArgument("prealign_max_repeated_goal_ratio", default_value="0.5"),
         DeclareLaunchArgument(
             "prealign_scripted_overlap_demo",
             default_value="false",
@@ -3413,6 +3459,19 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "occupancy_grid_visualization_enabled", default_value="false",
             description="Publish per-robot local occupancy grids and gated merged occupancy grid for RViz.",
+        ),
+        DeclareLaunchArgument(
+            "occupancy_rviz_view",
+            default_value="robot_a",
+            description=(
+                "RViz occupancy view to open before alignment: robot_a uses robot_a/map, "
+                "robot_b uses robot_b/map. This only changes visualization."
+            ),
+        ),
+        DeclareLaunchArgument(
+            "rviz_layout",
+            default_value="single",
+            description="single | multi. multi opens robot_a local, robot_b local, and team-map RViz windows.",
         ),
         DeclareLaunchArgument(
             "local_slam_backend", default_value="fast_lio_scpgo",

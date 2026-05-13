@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import math
 from typing import Any
 
 import rclpy
@@ -12,7 +11,12 @@ from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPo
 from std_msgs.msg import String
 
 from .common import yaw_from_quat
-from .occupancy_grid_utils import AlignmentSnapshot, SimpleOccupancyGrid, merge_local_grids_if_aligned
+from .occupancy_grid_utils import (
+    AlignmentSnapshot,
+    SimpleOccupancyGrid,
+    merge_local_grids_if_aligned,
+    merged_grid_status_payload,
+)
 
 
 class MergedOccupancyGridNode(Node):
@@ -113,18 +117,8 @@ class MergedOccupancyGridNode(Node):
         )
 
     def _tick(self) -> None:
-        status_payload: dict[str, Any] = {
-            "schema": "merged_occupancy_grid_status/v1",
-            "alignment_status": self.alignment_status,
-            "active": False,
-            "gt_used_runtime": bool(self.gt_used_runtime),
-            "has_robot_a_grid": self.grid_a is not None,
-            "has_robot_b_grid": self.grid_b is not None,
-            "has_relative_transform": self.relative_xyyaw is not None,
-            "merged_map_enabled_time_sec": self.merged_map_enabled_time_sec,
-        }
         if self.grid_a is None or self.grid_b is None:
-            self.status_pub.publish(String(data=json.dumps(status_payload, sort_keys=True)))
+            self._publish_status(merged_grid_published=False)
             return
         merged = merge_local_grids_if_aligned(
             self._from_msg(self.grid_a),
@@ -137,15 +131,25 @@ class MergedOccupancyGridNode(Node):
             output_frame_id=self.output_frame_id,
         )
         if merged is None:
-            self.status_pub.publish(String(data=json.dumps(status_payload, sort_keys=True)))
+            self._publish_status(merged_grid_published=False)
             return
         if self.merged_map_enabled_time_sec is None:
             self.merged_map_enabled_time_sec = self._now_sec()
         out = self._to_msg(merged)
         self.pub.publish(out)
-        status_payload["active"] = True
-        status_payload["merged_map_enabled_time_sec"] = self.merged_map_enabled_time_sec
-        self.status_pub.publish(String(data=json.dumps(status_payload, sort_keys=True)))
+        self._publish_status(merged_grid_published=True)
+
+    def _publish_status(self, *, merged_grid_published: bool) -> None:
+        payload: dict[str, Any] = merged_grid_status_payload(
+            alignment_status=self.alignment_status,
+            gt_used_runtime=self.gt_used_runtime,
+            robot_a_grid_received=self.grid_a is not None,
+            robot_b_grid_received=self.grid_b is not None,
+            relative_transform_received=self.relative_xyyaw is not None,
+            merged_map_enabled_time_sec=self.merged_map_enabled_time_sec,
+            merged_grid_published=merged_grid_published,
+        )
+        self.status_pub.publish(String(data=json.dumps(payload, sort_keys=True)))
 
     @staticmethod
     def _from_msg(msg: OccupancyGrid) -> SimpleOccupancyGrid:

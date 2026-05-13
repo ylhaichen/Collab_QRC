@@ -1,13 +1,13 @@
 {
-  "alignment_status": "aligned",
-  "cross_robot_candidates": 311,
+  "alignment_status": "rejected",
+  "cross_robot_candidates": 138,
   "gt_used_runtime": false,
   "merged_map_opened_only_after_gate": true,
   "no_overlap_rejection_result": "not_applicable_physical_overlap_detected",
-  "robust_alignment_occurred": true,
-  "robust_inlier_growth_rate": 0.090897,
-  "robust_inliers": 7,
+  "robust_alignment_occurred": false,
+  "robust_inlier_growth_rate": 0.02999,
+  "robust_inliers": 3,
   "schema": "cross_loop_closure_final_eval/v1",
-  "tentative_alignment_duration": 77.01,
-  "verified_matches": 88
+  "tentative_alignment_duration": 100.032,
+  "verified_matches": 19
 }

@@ -6,10 +6,11 @@ import math
 from typing import Any
 
 import rclpy
-from geometry_msgs.msg import PointStamped
+from geometry_msgs.msg import Point, PointStamped
 from nav_msgs.msg import OccupancyGrid, Odometry
 from rclpy.node import Node
 from std_msgs.msg import Empty, String
+from visualization_msgs.msg import Marker, MarkerArray
 
 from go2_nav_algorithms.prealignment_policy import (
     GoalSample,
@@ -40,6 +41,7 @@ class PrealignmentExplorationGuard(Node):
         self.declare_parameter("output_goal_topic", "way_point_coord")
         self.declare_parameter("odom_topic", "odom/nav")
         self.declare_parameter("map_topic", "map")
+        self.declare_parameter("quality_map_topic", "")
         self.declare_parameter("frontier_replan_topic", "frontier_replan")
         self.declare_parameter("nav_status_topic", "nav_status")
         self.declare_parameter("alignment_status_topic", "/team_slam/alignment_status")
@@ -51,6 +53,8 @@ class PrealignmentExplorationGuard(Node):
         self.declare_parameter("publish_rate_hz", 1.0)
         self.declare_parameter("frontier_stride", 3)
         self.declare_parameter("max_frontiers", 80)
+        self.declare_parameter("frontier_marker_topic", "frontiers")
+        self.declare_parameter("frontier_obstacle_clearance_cells", 2)
         self.declare_parameter("prealign_goal_hold_sec", 5.0)
 
         self.declare_parameter("prealign_min_goal_distance", 2.0)
@@ -66,6 +70,10 @@ class PrealignmentExplorationGuard(Node):
         self.declare_parameter("prealign_keyframe_gain_bonus", 0.5)
         self.declare_parameter("prealign_robust_acceptance_min_inliers", 7)
         self.declare_parameter("prealign_scripted_overlap_demo", False)
+        self.declare_parameter("prealign_min_path_length", 4.0)
+        self.declare_parameter("prealign_min_local_map_area_growth", 1.0)
+        self.declare_parameter("prealign_min_keyframe_spatial_diversity", 0.0)
+        self.declare_parameter("prealign_max_repeated_goal_ratio", 0.5)
 
         ns = str(self.get_parameter("namespace").value).strip().strip("/")
         self.ns = ns or "robot"
@@ -89,6 +97,16 @@ class PrealignmentExplorationGuard(Node):
                 self.get_parameter("prealign_robust_acceptance_min_inliers").value
             ),
             scripted_overlap_demo=bool(self.get_parameter("prealign_scripted_overlap_demo").value),
+            min_path_length=float(self.get_parameter("prealign_min_path_length").value),
+            min_local_map_area_growth=float(
+                self.get_parameter("prealign_min_local_map_area_growth").value
+            ),
+            min_keyframe_spatial_diversity=float(
+                self.get_parameter("prealign_min_keyframe_spatial_diversity").value
+            ),
+            max_repeated_goal_ratio=float(
+                self.get_parameter("prealign_max_repeated_goal_ratio").value
+            ),
         )
         self.policy = PrealignmentPolicy(robot_id=self.ns, config=cfg)
 
@@ -96,13 +114,20 @@ class PrealignmentExplorationGuard(Node):
         out_goal = self._ns_topic(str(self.get_parameter("output_goal_topic").value))
         odom_topic = self._ns_topic(str(self.get_parameter("odom_topic").value))
         map_topic = self._ns_topic(str(self.get_parameter("map_topic").value))
+        quality_map_raw = str(self.get_parameter("quality_map_topic").value).strip()
+        quality_map_topic = self._ns_topic(quality_map_raw) if quality_map_raw else ""
         replan_topic = self._ns_topic(str(self.get_parameter("frontier_replan_topic").value))
         nav_status_topic = self._ns_topic(str(self.get_parameter("nav_status_topic").value))
         status_topic = self._ns_topic(str(self.get_parameter("status_topic").value))
         self.output_frame_id = str(self.get_parameter("output_frame_id").value).strip() or "map"
         self.frontier_stride = max(1, int(self.get_parameter("frontier_stride").value))
         self.max_frontiers = max(1, int(self.get_parameter("max_frontiers").value))
+        self.frontier_obstacle_clearance_cells = max(
+            1,
+            int(self.get_parameter("frontier_obstacle_clearance_cells").value),
+        )
         self.prealign_goal_hold_sec = max(0.0, float(self.get_parameter("prealign_goal_hold_sec").value))
+        frontier_marker_topic = self._ns_topic(str(self.get_parameter("frontier_marker_topic").value))
 
         self.latest_odom: Odometry | None = None
         self.latest_map: OccupancyGrid | None = None
@@ -117,10 +142,14 @@ class PrealignmentExplorationGuard(Node):
         self.last_output_goal: GoalSample | None = None
         self.last_goal_reason = "none"
         self.last_goal_source = "none"
+        self.initial_known_cells: int | None = None
+        self.keyframe_positions: list[tuple[float, float]] = []
 
         self.create_subscription(PointStamped, in_goal, self._on_goal, 10)
         self.create_subscription(Odometry, odom_topic, self._on_odom, 20)
         self.create_subscription(OccupancyGrid, map_topic, self._on_map, 2)
+        if quality_map_topic and quality_map_topic != map_topic:
+            self.create_subscription(OccupancyGrid, quality_map_topic, self._on_quality_map, 2)
         self.create_subscription(Empty, replan_topic, self._on_replan, 10)
         self.create_subscription(String, nav_status_topic, self._on_nav_status, 10)
         self.create_subscription(String, str(self.get_parameter("alignment_status_topic").value), self._on_alignment_status, 10)
@@ -130,6 +159,7 @@ class PrealignmentExplorationGuard(Node):
 
         self.goal_pub = self.create_publisher(PointStamped, out_goal, 10)
         self.status_pub = self.create_publisher(String, status_topic, 10)
+        self.frontier_pub = self.create_publisher(MarkerArray, frontier_marker_topic, 10)
         rate = max(0.2, float(self.get_parameter("publish_rate_hz").value))
         self.create_timer(1.0 / rate, self._tick)
         self.get_logger().info(
@@ -156,8 +186,27 @@ class PrealignmentExplorationGuard(Node):
 
     def _on_map(self, msg: OccupancyGrid) -> None:
         self.latest_map = msg
+        self._update_map_quality(msg, publish_frontiers=True)
+
+    def _on_quality_map(self, msg: OccupancyGrid) -> None:
+        self._update_map_quality(msg, publish_frontiers=False)
+
+    def _update_map_quality(self, msg: OccupancyGrid, *, publish_frontiers: bool) -> None:
         known = sum(1 for v in msg.data if int(v) >= 0)
         self.policy.update_map_coverage_cells(known)
+        if self.initial_known_cells is None:
+            self.initial_known_cells = known
+        frontiers = self._extract_local_frontiers()
+        local_map_area = float(known) * float(msg.info.resolution) * float(msg.info.resolution)
+        self.policy.update_map_quality(
+            local_map_area=local_map_area,
+            frontier_count=len(frontiers),
+            keyframe_spatial_diversity=self._keyframe_spatial_diversity(),
+            stamp_sec=self._now_sec(),
+            unknown_to_known_cells=max(0, known - int(self.initial_known_cells or 0)),
+        )
+        if publish_frontiers:
+            self._publish_frontier_markers(frontiers)
 
     def _on_goal(self, msg: PointStamped) -> None:
         incoming = GoalSample(
@@ -211,6 +260,14 @@ class PrealignmentExplorationGuard(Node):
         self.keyframes_by_robot[robot] = current
         if robot == self.ns:
             self.policy.update_keyframe_count(current)
+            pose = payload.get("pose", {})
+            if isinstance(pose, dict) and {"x", "y"}.issubset(pose):
+                try:
+                    self.keyframe_positions.append((float(pose["x"]), float(pose["y"])))
+                    if len(self.keyframe_positions) > 200:
+                        self.keyframe_positions = self.keyframe_positions[-200:]
+                except (TypeError, ValueError):
+                    pass
 
     def _on_candidate(self, msg: String) -> None:
         payload = _loads(msg.data)
@@ -363,7 +420,7 @@ class PrealignmentExplorationGuard(Node):
                 if value != 0:
                     continue
                 has_unknown = False
-                occupied_near = False
+                occupied_near = self._occupied_near(data, width, height, gx, gy)
                 for dy in (-1, 0, 1):
                     for dx in (-1, 0, 1):
                         if dx == 0 and dy == 0:
@@ -371,8 +428,6 @@ class PrealignmentExplorationGuard(Node):
                         n = int(data[(gy + dy) * width + gx + dx])
                         if n < 0:
                             has_unknown = True
-                        if n >= 50:
-                            occupied_near = True
                 if not has_unknown or occupied_near:
                     continue
                 wx = float(msg.info.origin.position.x) + (gx + 0.5) * float(msg.info.resolution)
@@ -381,6 +436,7 @@ class PrealignmentExplorationGuard(Node):
                 if distance < self.policy.config.min_goal_distance:
                     continue
                 corridor_score = self._corridor_score(data, width, height, gx, gy)
+                expected_gain = self._expected_coverage_gain(data, width, height, gx, gy)
                 out.append(
                     GoalSample(
                         wx,
@@ -389,9 +445,32 @@ class PrealignmentExplorationGuard(Node):
                         frontier_size=1.0,
                         corridor_score=corridor_score,
                         keyframe_gain=distance,
+                        expected_coverage_gain=expected_gain,
                     )
                 )
         return sorted(out, key=lambda g: math.hypot(g.x - rx, g.y - ry), reverse=True)[: self.max_frontiers]
+
+    def _occupied_near(self, data: list[int], width: int, height: int, gx: int, gy: int) -> bool:
+        r = self.frontier_obstacle_clearance_cells
+        for ny in range(max(0, gy - r), min(height, gy + r + 1)):
+            for nx in range(max(0, gx - r), min(width, gx + r + 1)):
+                if int(data[ny * width + nx]) >= 50:
+                    return True
+        return False
+
+    @staticmethod
+    def _expected_coverage_gain(data: list[int], width: int, height: int, gx: int, gy: int) -> float:
+        unknown = 0
+        free = 0
+        radius = 5
+        for ny in range(max(0, gy - radius), min(height, gy + radius + 1)):
+            for nx in range(max(0, gx - radius), min(width, gx + radius + 1)):
+                value = int(data[ny * width + nx])
+                if value < 0:
+                    unknown += 1
+                elif value == 0:
+                    free += 1
+        return float(unknown) + 0.1 * float(free)
 
     @staticmethod
     def _corridor_score(data: list[int], width: int, height: int, gx: int, gy: int) -> float:
@@ -408,6 +487,42 @@ class PrealignmentExplorationGuard(Node):
             if seen_free:
                 free_dirs += 1
         return float(free_dirs)
+
+    def _keyframe_spatial_diversity(self) -> float:
+        if len(self.keyframe_positions) < 2:
+            return 0.0
+        first = self.keyframe_positions[0]
+        return max(math.hypot(x - first[0], y - first[1]) for x, y in self.keyframe_positions)
+
+    def _publish_frontier_markers(self, frontiers: list[GoalSample]) -> None:
+        markers = MarkerArray()
+        clear = Marker()
+        clear.header.stamp = self.get_clock().now().to_msg()
+        clear.header.frame_id = f"{self.ns}/map"
+        clear.action = Marker.DELETEALL
+        markers.markers.append(clear)
+        marker = Marker()
+        marker.header.stamp = clear.header.stamp
+        marker.header.frame_id = f"{self.ns}/map"
+        marker.ns = f"{self.ns}_prealign_frontiers"
+        marker.id = 1
+        marker.type = Marker.SPHERE_LIST
+        marker.action = Marker.ADD
+        marker.scale.x = 0.18
+        marker.scale.y = 0.18
+        marker.scale.z = 0.18
+        marker.color.r = 0.0
+        marker.color.g = 0.8
+        marker.color.b = 1.0
+        marker.color.a = 0.9
+        for goal in frontiers[: self.max_frontiers]:
+            p = Point()
+            p.x = float(goal.x)
+            p.y = float(goal.y)
+            p.z = 0.08
+            marker.points.append(p)
+        markers.markers.append(marker)
+        self.frontier_pub.publish(markers)
 
     def _publish_status(self) -> None:
         m = self.policy.metrics
@@ -426,6 +541,19 @@ class PrealignmentExplorationGuard(Node):
             "path_length": round(float(m.path_length), 4),
             "keyframes": int(m.keyframes),
             "map_coverage_cells": int(m.map_coverage_cells),
+            "local_map_area": round(float(m.local_map_area), 4),
+            "local_map_area_growth": round(float(m.local_map_area_growth), 4),
+            "map_area_growth_rate": round(float(m.map_area_growth_rate), 6),
+            "unknown_to_known_cells": int(m.unknown_to_known_cells),
+            "frontier_count": int(m.frontier_count),
+            "new_frontiers_discovered": int(m.new_frontiers_discovered),
+            "keyframe_spatial_diversity": round(float(m.keyframe_spatial_diversity), 4),
+            "repeated_goal_ratio": round(float(m.repeated_goal_ratio), 4),
+            "stuck_recovery_count": int(m.stuck_recovery_count),
+            "failed_goal_blacklist_count": int(m.failed_goal_blacklist_count),
+            "coverage_gain_per_meter": round(float(m.coverage_gain_per_meter), 6),
+            "prealign_exploration_quality": m.prealign_exploration_quality.value,
+            "exploration_success": bool(m.exploration_success),
             "local_frontiers_selected": int(m.local_frontiers_selected),
             "goals_rejected_as_too_close": int(m.goals_rejected_as_too_close),
             "stuck_replans": int(m.stuck_replans),

@@ -3,6 +3,7 @@ import math
 from go2_nav_algorithms.prealignment_policy import (
     AlignmentPhase,
     GoalSample,
+    PrealignExplorationQuality,
     PrealignmentConfig,
     PrealignmentPolicy,
 )
@@ -300,3 +301,85 @@ def test_fallback_primitive_moves_outward_when_robot_is_still_inside_start_radiu
     assert decision.reason == "fallback_exploration_primitive"
     assert decision.goal.x > 4.0
     assert math.hypot(decision.goal.x, decision.goal.y) >= 4.0
+
+
+def test_policy_does_not_count_motion_as_exploration_without_map_growth() -> None:
+    policy = PrealignmentPolicy(
+        robot_id="robot_a",
+        config=PrealignmentConfig(
+            min_start_displacement=3.0,
+            min_path_length=4.0,
+            min_local_map_area_growth=1.0,
+            max_repeated_goal_ratio=0.5,
+        ),
+    )
+    policy.update_pose(0.0, 0.0, stamp_sec=0.0)
+    policy.update_pose(4.5, 0.0, stamp_sec=8.0)
+    policy.update_keyframe_count(8)
+    policy.update_map_quality(
+        local_map_area=2.0,
+        frontier_count=6,
+        keyframe_spatial_diversity=3.0,
+        stamp_sec=1.0,
+    )
+    policy.update_map_quality(
+        local_map_area=2.0,
+        frontier_count=6,
+        keyframe_spatial_diversity=3.0,
+        stamp_sec=8.0,
+    )
+
+    assert policy.metrics.distance_from_start > policy.config.min_start_displacement
+    assert policy.metrics.path_length > policy.config.min_path_length
+    assert policy.metrics.prealign_exploration_quality == PrealignExplorationQuality.MOVING_ONLY
+    assert not policy.metrics.exploration_success
+
+    policy.update_map_quality(
+        local_map_area=4.0,
+        frontier_count=11,
+        keyframe_spatial_diversity=4.2,
+        stamp_sec=16.0,
+    )
+
+    assert policy.metrics.local_map_area_growth >= 2.0
+    assert policy.metrics.map_area_growth_rate > 0.0
+    assert policy.metrics.new_frontiers_discovered >= 5
+    assert policy.metrics.coverage_gain_per_meter > 0.0
+    assert policy.metrics.prealign_exploration_quality == PrealignExplorationQuality.EXPLORING
+    assert policy.metrics.exploration_success
+
+
+def test_policy_tracks_repeated_goal_ratio_and_blocks_exploration_success() -> None:
+    policy = PrealignmentPolicy(
+        robot_id="robot_a",
+        config=PrealignmentConfig(
+            min_goal_distance=0.1,
+            min_start_displacement=1.0,
+            min_path_length=1.0,
+            min_local_map_area_growth=0.5,
+            max_repeated_goal_ratio=0.25,
+            recent_goal_radius=0.8,
+        ),
+    )
+    policy.update_pose(0.0, 0.0, stamp_sec=0.0)
+    policy.update_pose(2.0, 0.0, stamp_sec=5.0)
+    policy.update_keyframe_count(5)
+    policy.update_map_quality(
+        local_map_area=1.0,
+        frontier_count=4,
+        keyframe_spatial_diversity=2.0,
+        stamp_sec=0.0,
+    )
+    policy.update_map_quality(
+        local_map_area=2.0,
+        frontier_count=8,
+        keyframe_spatial_diversity=3.0,
+        stamp_sec=5.0,
+    )
+
+    for _ in range(4):
+        policy._remember_goal(GoalSample(3.0, 0.0, frame_id="robot_a/map"))
+
+    assert policy.metrics.repeated_goal_ratio > policy.config.max_repeated_goal_ratio
+    assert policy.metrics.prealign_exploration_quality == PrealignExplorationQuality.LOW_COVERAGE_GROWTH
+    assert not policy.metrics.exploration_success

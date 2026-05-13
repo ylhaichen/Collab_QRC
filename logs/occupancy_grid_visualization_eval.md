@@ -1,4 +1,4 @@
-# Occupancy Map Visualization Eval
+# Occupancy Grid Visualization Eval
 
 - schema: `occupancy_grid_visualization_eval/v1`
 - robot_a_local_grid_messages: `48`

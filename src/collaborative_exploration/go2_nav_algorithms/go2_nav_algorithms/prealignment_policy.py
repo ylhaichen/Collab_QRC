@@ -15,6 +15,15 @@ class AlignmentPhase(str, Enum):
     REJECTED_RECOVER = "rejected_recover"
 
 
+class PrealignExplorationQuality(str, Enum):
+    MOVING_ONLY = "moving_only"
+    EXPLORING = "exploring"
+    STUCK = "stuck"
+    LOW_COVERAGE_GROWTH = "low_coverage_growth"
+    TENTATIVE_ALIGNMENT_EXPLORE = "tentative_alignment_explore"
+    ALIGNED = "aligned"
+
+
 @dataclass(frozen=True)
 class PrealignmentConfig:
     min_goal_distance: float = 2.0
@@ -34,6 +43,10 @@ class PrealignmentConfig:
     recent_goal_radius: float = 0.8
     robust_acceptance_min_inliers: int = 7
     scripted_overlap_demo: bool = False
+    min_path_length: float = 4.0
+    min_local_map_area_growth: float = 1.0
+    min_keyframe_spatial_diversity: float = 0.0
+    max_repeated_goal_ratio: float = 0.5
 
 
 @dataclass(frozen=True)
@@ -44,6 +57,7 @@ class GoalSample:
     frontier_size: float = 0.0
     corridor_score: float = 0.0
     keyframe_gain: float = 0.0
+    expected_coverage_gain: float = 0.0
 
 
 @dataclass
@@ -53,6 +67,21 @@ class PrealignmentMetrics:
     path_length: float = 0.0
     keyframes: int = 0
     map_coverage_cells: int = 0
+    local_map_area: float = 0.0
+    local_map_area_growth: float = 0.0
+    map_area_growth_rate: float = 0.0
+    unknown_to_known_cells: int = 0
+    frontier_count: int = 0
+    new_frontiers_discovered: int = 0
+    keyframe_spatial_diversity: float = 0.0
+    repeated_goal_ratio: float = 0.0
+    stuck_recovery_count: int = 0
+    failed_goal_blacklist_count: int = 0
+    coverage_gain_per_meter: float = 0.0
+    prealign_exploration_quality: PrealignExplorationQuality = (
+        PrealignExplorationQuality.MOVING_ONLY
+    )
+    exploration_success: bool = False
     local_frontiers_selected: int = 0
     goals_rejected_as_too_close: int = 0
     stuck_replans: int = 0
@@ -110,6 +139,12 @@ class PrealignmentPolicy:
         self._phase_entered_sec: float | None = None
         self._tentative_started_sec: float | None = None
         self._robust_history: deque[tuple[float, int]] = deque(maxlen=12)
+        self._first_map_area: float | None = None
+        self._first_map_stamp_sec: float | None = None
+        self._frontier_min: int | None = None
+        self._frontier_max: int | None = None
+        self._remembered_goal_count = 0
+        self._repeated_goal_count = 0
 
     @property
     def local_frame_id(self) -> str:
@@ -135,12 +170,66 @@ class PrealignmentPolicy:
                 self.metrics.max_distance_from_start,
                 self.metrics.distance_from_start,
             )
+        self._update_exploration_quality()
 
     def update_keyframe_count(self, count: int) -> None:
         self.metrics.keyframes = max(self.metrics.keyframes, int(count))
+        self._update_exploration_quality()
 
     def update_map_coverage_cells(self, known_cells: int) -> None:
         self.metrics.map_coverage_cells = max(self.metrics.map_coverage_cells, int(known_cells))
+        self._update_exploration_quality()
+
+    def update_map_quality(
+        self,
+        *,
+        local_map_area: float,
+        frontier_count: int,
+        keyframe_spatial_diversity: float,
+        stamp_sec: float,
+        unknown_to_known_cells: int | None = None,
+    ) -> None:
+        area = max(0.0, float(local_map_area)) if math.isfinite(float(local_map_area)) else 0.0
+        stamp = float(stamp_sec) if math.isfinite(float(stamp_sec)) else 0.0
+        count = max(0, int(frontier_count))
+        if self._first_map_area is None:
+            self._first_map_area = area
+            self._first_map_stamp_sec = stamp
+            self._frontier_min = count
+            self._frontier_max = count
+        else:
+            self._frontier_min = min(int(self._frontier_min or 0), count)
+            self._frontier_max = max(int(self._frontier_max or 0), count)
+        self.metrics.local_map_area = max(self.metrics.local_map_area, area)
+        self.metrics.local_map_area_growth = max(
+            self.metrics.local_map_area_growth,
+            max(0.0, area - float(self._first_map_area or 0.0)),
+        )
+        if unknown_to_known_cells is not None:
+            self.metrics.unknown_to_known_cells = max(
+                self.metrics.unknown_to_known_cells,
+                int(unknown_to_known_cells),
+            )
+        self.metrics.frontier_count = count
+        self.metrics.new_frontiers_discovered = max(
+            self.metrics.new_frontiers_discovered,
+            max(0, int(self._frontier_max or 0) - int(self._frontier_min or 0)),
+        )
+        self.metrics.keyframe_spatial_diversity = max(
+            self.metrics.keyframe_spatial_diversity,
+            max(0.0, float(keyframe_spatial_diversity)),
+        )
+        dt = stamp - float(self._first_map_stamp_sec or stamp)
+        if dt > 1e-6:
+            self.metrics.map_area_growth_rate = max(
+                0.0,
+                self.metrics.local_map_area_growth / dt,
+            )
+        if self.metrics.path_length > 1e-6:
+            self.metrics.coverage_gain_per_meter = (
+                self.metrics.local_map_area_growth / self.metrics.path_length
+            )
+        self._update_exploration_quality()
 
     def update_alignment_status(
         self,
@@ -181,10 +270,13 @@ class PrealignmentPolicy:
     def mark_goal_failed(self, goal: GoalSample, *, stamp_sec: float) -> None:
         self.metrics.goal_failure_count += 1
         self._add_blacklist(goal, stamp_sec)
+        self.metrics.failed_goal_blacklist_count = self.metrics.goal_failure_count
         if self.metrics.goal_failure_count >= self.config.stuck_replan_limit:
             self.metrics.stuck_replans += 1
+            self.metrics.stuck_recovery_count = self.metrics.stuck_replans
             if self.phase != AlignmentPhase.ALIGNED_SHARED_EXPLORE:
                 self._set_phase(AlignmentPhase.OVERLAP_SEEKING, stamp_sec)
+        self._update_exploration_quality()
 
     def is_blacklisted(self, goal: GoalSample, *, stamp_sec: float) -> bool:
         self._prune_blacklist(stamp_sec)
@@ -282,6 +374,7 @@ class PrealignmentPolicy:
             self._phase_entered_sec = float(stamp_sec)
         if phase == AlignmentPhase.TENTATIVE_ALIGNMENT and self._tentative_started_sec is None:
             self._tentative_started_sec = float(stamp_sec)
+        self._update_exploration_quality()
 
     def _update_robust_growth(self, stamp_sec: float, robust_inliers: int) -> None:
         if not math.isfinite(float(stamp_sec)):
@@ -379,6 +472,7 @@ class PrealignmentPolicy:
                 + start_distance * self.config.far_frontier_bonus
                 + float(goal.corridor_score) * self.config.corridor_frontier_bonus
                 + float(goal.keyframe_gain) * self.config.keyframe_gain_bonus
+                + float(goal.expected_coverage_gain) * 1.5
                 + angle_bonus * max(0.5, self.config.far_frontier_bonus)
             )
 
@@ -409,6 +503,7 @@ class PrealignmentPolicy:
                 + start_distance * self.config.far_frontier_bonus
                 + float(goal.corridor_score) * self.config.corridor_frontier_bonus
                 + float(goal.keyframe_gain) * self.config.keyframe_gain_bonus
+                + float(goal.expected_coverage_gain) * 1.5
                 + float(goal.frontier_size) * 0.01
             )
 
@@ -478,6 +573,7 @@ class PrealignmentPolicy:
                 frontier_size=1.0,
                 corridor_score=2.0,
                 keyframe_gain=math.hypot(dx, dy),
+                expected_coverage_gain=math.hypot(dx, dy),
             )
             if self._goal_allowed(goal, stamp_sec, count_rejection=False) and not self._recently_used(goal):
                 return goal
@@ -514,13 +610,25 @@ class PrealignmentPolicy:
         return any(self._dist(goal, prev) < radius for prev in self.last_goals)
 
     def _remember_goal(self, goal: GoalSample) -> None:
+        if any(self._dist(goal, prev) < self.config.recent_goal_radius for prev in self.last_goals):
+            self._repeated_goal_count += 1
+        self._remembered_goal_count += 1
         self.last_goals.append(goal)
+        if self._remembered_goal_count > 0:
+            self.metrics.repeated_goal_ratio = (
+                float(self._repeated_goal_count) / float(self._remembered_goal_count)
+            )
+        self._update_exploration_quality()
 
     def _add_blacklist(self, goal: GoalSample, stamp_sec: float) -> None:
         self.blacklist.append(
             _BlacklistedGoal(goal=goal, until_sec=float(stamp_sec) + self.config.goal_blacklist_ttl_sec)
         )
         self.metrics.blacklisted_goals = len(self.blacklist)
+        self.metrics.failed_goal_blacklist_count = max(
+            self.metrics.failed_goal_blacklist_count,
+            self.metrics.goal_failure_count,
+        )
 
     def _prune_blacklist(self, stamp_sec: float) -> None:
         self.blacklist = [item for item in self.blacklist if item.until_sec >= float(stamp_sec)]
@@ -533,3 +641,49 @@ class PrealignmentPolicy:
     @staticmethod
     def _finite_goal(goal: GoalSample) -> bool:
         return math.isfinite(float(goal.x)) and math.isfinite(float(goal.y))
+
+    def _update_exploration_quality(self) -> None:
+        if self.phase == AlignmentPhase.ALIGNED_SHARED_EXPLORE:
+            self.metrics.prealign_exploration_quality = PrealignExplorationQuality.ALIGNED
+            self.metrics.exploration_success = True
+            return
+
+        moving_enough = (
+            self.metrics.distance_from_start >= self.config.min_start_displacement
+            and self.metrics.path_length >= self.config.min_path_length
+            and self.metrics.keyframes >= self.config.min_keyframes_before_alignment
+        )
+        map_growth_enough = (
+            self.metrics.local_map_area_growth >= self.config.min_local_map_area_growth
+        )
+        frontier_changed = self.metrics.new_frontiers_discovered > 0
+        repeated_ok = self.metrics.repeated_goal_ratio <= self.config.max_repeated_goal_ratio
+        diversity_ok = (
+            self.metrics.keyframe_spatial_diversity
+            >= self.config.min_keyframe_spatial_diversity
+        )
+        success = (
+            moving_enough
+            and map_growth_enough
+            and frontier_changed
+            and repeated_ok
+            and diversity_ok
+        )
+        self.metrics.exploration_success = bool(success)
+
+        if self.metrics.stuck_replans > 0 and not map_growth_enough:
+            self.metrics.prealign_exploration_quality = PrealignExplorationQuality.STUCK
+        elif success and self.phase == AlignmentPhase.TENTATIVE_ALIGNMENT:
+            self.metrics.prealign_exploration_quality = (
+                PrealignExplorationQuality.TENTATIVE_ALIGNMENT_EXPLORE
+            )
+        elif success:
+            self.metrics.prealign_exploration_quality = PrealignExplorationQuality.EXPLORING
+        elif moving_enough and not map_growth_enough:
+            self.metrics.prealign_exploration_quality = PrealignExplorationQuality.MOVING_ONLY
+        elif self.metrics.distance_from_start > 0.5 or self.metrics.path_length > 0.5:
+            self.metrics.prealign_exploration_quality = (
+                PrealignExplorationQuality.LOW_COVERAGE_GROWTH
+            )
+        else:
+            self.metrics.prealign_exploration_quality = PrealignExplorationQuality.STUCK

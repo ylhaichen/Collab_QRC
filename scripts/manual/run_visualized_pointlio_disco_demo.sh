@@ -14,6 +14,8 @@ export ROS_LOG_DIR="${ROS_LOG_DIR:-/tmp/collab_qrc_ros_logs}"
 export FASTDDS_BUILTIN_TRANSPORTS="${FASTDDS_BUILTIN_TRANSPORTS:-UDPv4}"
 PREALIGN_SCRIPTED_OVERLAP_DEMO="${PREALIGN_SCRIPTED_OVERLAP_DEMO:-false}"
 PREALIGN_ROBUST_ACCEPTANCE_MIN_INLIERS="${PREALIGN_ROBUST_ACCEPTANCE_MIN_INLIERS:-7}"
+OCCUPANCY_RVIZ_VIEW="${OCCUPANCY_RVIZ_VIEW:-robot_a}"
+RVIZ_LAYOUT="${RVIZ_LAYOUT:-single}"
 
 safe_source() { set +u; source "$1"; set -u; }
 safe_source "${ROS2_SETUP_BASH}"
@@ -29,6 +31,8 @@ Expected visible state:
 - Runtime alignment uses discovered DiSCo-style loop closure only; GT runtime alignment is disabled.
 - Pre-alignment exploration is local-only: no peer-frame goals, no GT, and no /merged_map dependency.
 - Optional scripted overlap demo uses local-frame primitives only and still requires robust loop closure before merge.
+- RViz occupancy view can be switched with OCCUPANCY_RVIZ_VIEW=robot_b; this only changes visualization frame/display selection.
+- RVIZ_LAYOUT=multi opens robot_a local, robot_b local, and team-map RViz windows.
 
 Useful topic checks in another terminal:
   ros2 topic hz /robot_a/Odometry
@@ -42,11 +46,13 @@ Useful topic checks in another terminal:
   ros2 topic hz /robot_a/local_occupancy_grid
   ros2 topic hz /robot_b/local_occupancy_grid
   ros2 topic hz /team_slam/merged_occupancy_grid
+  ros2 topic echo --once --full-length /team_slam/merged_occupancy_grid_status
   ros2 topic list | grep merged_map
   ros2 topic hz /robot_a/cloud_static
   ros2 topic hz /robot_a/cloud_dynamic
   ros2 topic echo --once /robot_a/prealignment_exploration_status
   ros2 topic echo --once /robot_b/prealignment_exploration_status
+  ros2 topic echo --once --full-length /team_slam/merged_occupancy_grid_status
 
 Success looks like:
 - /robot_a/Odometry and /robot_b/Odometry are nonzero-rate.
@@ -71,6 +77,8 @@ EOF
 printf '  %s\n\n' "${LOG_FILE}"
 printf 'Prealignment scripted overlap demo: %s\n' "${PREALIGN_SCRIPTED_OVERLAP_DEMO}"
 printf 'Robust inlier acceptance target for exploration policy: %s\n\n' "${PREALIGN_ROBUST_ACCEPTANCE_MIN_INLIERS}"
+printf 'Occupancy RViz view: %s\n\n' "${OCCUPANCY_RVIZ_VIEW}"
+printf 'RViz layout: %s\n\n' "${RVIZ_LAYOUT}"
 
 launch_cmd=(
   ./scripts/launch/nav_test_demo3_mixed.sh
@@ -89,6 +97,8 @@ launch_cmd=(
   map_merge:=true
   prealignment_exploration_enabled:=true
   occupancy_grid_visualization_enabled:=true
+  occupancy_rviz_view:="${OCCUPANCY_RVIZ_VIEW}"
+  rviz_layout:="${RVIZ_LAYOUT}"
   prealign_min_goal_distance:=2.0
   prealign_min_start_displacement:=3.0
   prealign_dwell_timeout_sec:=20.0
@@ -100,6 +110,10 @@ launch_cmd=(
   prealign_far_frontier_bonus:=1.0
   prealign_corridor_frontier_bonus:=0.5
   prealign_keyframe_gain_bonus:=0.5
+  prealign_min_path_length:=4.0
+  prealign_min_local_map_area_growth:=1.0
+  prealign_min_keyframe_spatial_diversity:=0.0
+  prealign_max_repeated_goal_ratio:=0.5
   prealign_goal_hold_sec:=5.0
   prealign_robust_acceptance_min_inliers:="${PREALIGN_ROBUST_ACCEPTANCE_MIN_INLIERS}"
   prealign_scripted_overlap_demo:="${PREALIGN_SCRIPTED_OVERLAP_DEMO}"

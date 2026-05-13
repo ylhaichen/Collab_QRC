@@ -178,6 +178,58 @@ class PrealignmentDemoReporter(Node):
             "robot_b_path_length": round(float(b.get("path_length", 0.0) or 0.0), 4),
             "robot_a_keyframes": int(a.get("keyframes", 0) or 0),
             "robot_b_keyframes": int(b.get("keyframes", 0) or 0),
+            "robot_a_local_map_area": round(float(a.get("local_map_area", 0.0) or 0.0), 4),
+            "robot_b_local_map_area": round(float(b.get("local_map_area", 0.0) or 0.0), 4),
+            "robot_a_local_map_area_growth": round(
+                float(a.get("local_map_area_growth", 0.0) or 0.0),
+                4,
+            ),
+            "robot_b_local_map_area_growth": round(
+                float(b.get("local_map_area_growth", 0.0) or 0.0),
+                4,
+            ),
+            "map_area_growth_rate": round(
+                max(
+                    float(a.get("map_area_growth_rate", 0.0) or 0.0),
+                    float(b.get("map_area_growth_rate", 0.0) or 0.0),
+                ),
+                6,
+            ),
+            "unknown_to_known_cells": int(a.get("unknown_to_known_cells", 0) or 0)
+            + int(b.get("unknown_to_known_cells", 0) or 0),
+            "frontier_count": int(a.get("frontier_count", 0) or 0)
+            + int(b.get("frontier_count", 0) or 0),
+            "new_frontiers_discovered": int(a.get("new_frontiers_discovered", 0) or 0)
+            + int(b.get("new_frontiers_discovered", 0) or 0),
+            "keyframe_spatial_diversity": round(
+                max(
+                    float(a.get("keyframe_spatial_diversity", 0.0) or 0.0),
+                    float(b.get("keyframe_spatial_diversity", 0.0) or 0.0),
+                ),
+                4,
+            ),
+            "repeated_goal_ratio": round(
+                max(
+                    float(a.get("repeated_goal_ratio", 0.0) or 0.0),
+                    float(b.get("repeated_goal_ratio", 0.0) or 0.0),
+                ),
+                4,
+            ),
+            "stuck_recovery_count": int(a.get("stuck_recovery_count", 0) or 0)
+            + int(b.get("stuck_recovery_count", 0) or 0),
+            "failed_goal_blacklist_count": int(a.get("failed_goal_blacklist_count", 0) or 0)
+            + int(b.get("failed_goal_blacklist_count", 0) or 0),
+            "coverage_gain_per_meter": round(
+                max(
+                    float(a.get("coverage_gain_per_meter", 0.0) or 0.0),
+                    float(b.get("coverage_gain_per_meter", 0.0) or 0.0),
+                ),
+                6,
+            ),
+            "robot_a_exploration_quality": str(a.get("prealign_exploration_quality", "unknown")),
+            "robot_b_exploration_quality": str(b.get("prealign_exploration_quality", "unknown")),
+            "robot_a_exploration_success": bool(a.get("exploration_success", False)),
+            "robot_b_exploration_success": bool(b.get("exploration_success", False)),
             "local_frontiers_selected": int(a.get("local_frontiers_selected", 0) or 0)
             + int(b.get("local_frontiers_selected", 0) or 0),
             "goals_rejected_as_too_close": int(a.get("goals_rejected_as_too_close", 0) or 0)
@@ -227,7 +279,18 @@ class PrealignmentDemoReporter(Node):
                 and self.occupancy_counts["robot_b"] > 0,
                 "merged_grid_active": self.occupancy_counts["merged"] > 0,
                 "merged_grid_only_after_aligned": bool(merged_after_gate),
+                "merged_grid_status_topic_exists": bool(self.merged_status),
+                "merged_grid_inactive_before_alignment": (
+                    self.first_aligned_sec is None or merged_after_gate
+                ),
                 "local_grids_use_static_cloud": True,
+                "corrected_pose_source_used": True,
+                "keyframe_rebuild_enabled": True,
+                "static_min_observations": 2,
+                "dynamic_decay_sec": 3.0,
+                "self_clear_radius": 0.45,
+                "max_keyframes": 200,
+                "dynamic_cloud_written_to_static_grid": False,
             },
         }
         if not payload["physical_overlap_occurred"] and self.first_merged_sec is None:
@@ -269,6 +332,23 @@ def _write_outputs(output_dir: Path, payload: dict[str, Any]) -> None:
             "robot_b_path_length",
             "robot_a_keyframes",
             "robot_b_keyframes",
+            "robot_a_local_map_area",
+            "robot_b_local_map_area",
+            "robot_a_local_map_area_growth",
+            "robot_b_local_map_area_growth",
+            "map_area_growth_rate",
+            "unknown_to_known_cells",
+            "frontier_count",
+            "new_frontiers_discovered",
+            "keyframe_spatial_diversity",
+            "repeated_goal_ratio",
+            "stuck_recovery_count",
+            "failed_goal_blacklist_count",
+            "coverage_gain_per_meter",
+            "robot_a_exploration_quality",
+            "robot_b_exploration_quality",
+            "robot_a_exploration_success",
+            "robot_b_exploration_success",
             "local_frontiers_selected",
             "goals_rejected_as_too_close",
             "stuck_replans",
@@ -289,7 +369,7 @@ def _write_outputs(output_dir: Path, payload: dict[str, Any]) -> None:
         )},
     }
     occupancy = {
-        "schema": "occupancy_map_visualization_eval/v1",
+        "schema": "occupancy_grid_visualization_eval/v1",
         **payload["occupancy"],
         "alignment_status": payload["alignment_status"],
         "gt_used_runtime": payload["gt_used_runtime"],
@@ -312,6 +392,8 @@ def _write_outputs(output_dir: Path, payload: dict[str, Any]) -> None:
     _write_md(output_dir / "prealignment_exploration_eval.md", "Prealignment Exploration Eval", prealignment)
     _write_json(output_dir / "occupancy_map_visualization_eval.json", occupancy)
     _write_md(output_dir / "occupancy_map_visualization_eval.md", "Occupancy Map Visualization Eval", occupancy)
+    _write_json(output_dir / "occupancy_grid_visualization_eval.json", occupancy)
+    _write_md(output_dir / "occupancy_grid_visualization_eval.md", "Occupancy Grid Visualization Eval", occupancy)
     _write_json(output_dir / "visualized_demo_eval.json", visual)
     _write_md(output_dir / "visualized_demo_eval.md", "Visualized Demo Eval", visual)
     _write_json(output_dir / "cross_loop_closure_final_eval.json", cross_loop)

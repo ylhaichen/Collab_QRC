@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import math
+from collections import deque
 from typing import Iterable
 
 import rclpy
@@ -11,7 +11,13 @@ from sensor_msgs.msg import PointCloud2
 from sensor_msgs_py import point_cloud2
 
 from .common import yaw_from_quat
-from .occupancy_grid_utils import LocalGridSpec, SimpleOccupancyGrid, project_static_points_to_grid
+from .occupancy_grid_utils import (
+    LocalGridSpec,
+    OccupancyKeyframe,
+    SimpleOccupancyGrid,
+    build_static_grid_from_keyframes,
+    project_static_points_to_grid,
+)
 
 
 class LocalOccupancyGridNode(Node):
@@ -33,6 +39,13 @@ class LocalOccupancyGridNode(Node):
         self.declare_parameter("use_cloud_static", True)
         self.declare_parameter("cloud_static_stale_sec", 2.0)
         self.declare_parameter("max_points_per_cloud", 60000)
+        self.declare_parameter("occupancy_use_corrected_pose", True)
+        self.declare_parameter("occupancy_rebuild_from_keyframes", True)
+        self.declare_parameter("occupancy_static_min_observations", 2)
+        self.declare_parameter("occupancy_dynamic_decay_sec", 3.0)
+        self.declare_parameter("occupancy_self_clear_radius", 0.45)
+        self.declare_parameter("occupancy_max_keyframes", 200)
+        self.declare_parameter("occupancy_rebuild_period_sec", 2.0)
 
         self.ns = str(self.get_parameter("robot_namespace").value).strip().strip("/") or "robot"
         self.frame_id = str(self.get_parameter("frame_id").value).strip() or f"{self.ns}/map"
@@ -46,10 +59,35 @@ class LocalOccupancyGridNode(Node):
         self.use_cloud_static = bool(self.get_parameter("use_cloud_static").value)
         self.cloud_static_stale_sec = max(0.0, float(self.get_parameter("cloud_static_stale_sec").value))
         self.max_points = max(1, int(self.get_parameter("max_points_per_cloud").value))
+        self.use_corrected_pose = bool(self.get_parameter("occupancy_use_corrected_pose").value)
+        self.rebuild_from_keyframes = bool(
+            self.get_parameter("occupancy_rebuild_from_keyframes").value
+        )
+        self.static_min_observations = max(
+            1,
+            int(self.get_parameter("occupancy_static_min_observations").value),
+        )
+        self.dynamic_decay_sec = max(
+            0.0,
+            float(self.get_parameter("occupancy_dynamic_decay_sec").value),
+        )
+        self.self_clear_radius = max(
+            0.0,
+            float(self.get_parameter("occupancy_self_clear_radius").value),
+        )
+        self.max_keyframes = max(1, int(self.get_parameter("occupancy_max_keyframes").value))
+        self.rebuild_period_sec = max(
+            0.0,
+            float(self.get_parameter("occupancy_rebuild_period_sec").value),
+        )
         self.latest_raw_odom: Odometry | None = None
         self.latest_corrected_odom: Odometry | None = None
         self.static_last_sec: float | None = None
         self.grid = SimpleOccupancyGrid.empty(self.frame_id, self.spec)
+        self.keyframes: deque[OccupancyKeyframe] = deque(maxlen=self.max_keyframes)
+        self.keyframe_seq = 0
+        self.last_rebuild_sec: float | None = None
+        self.last_pose_source = "none"
 
         qos_latched = QoSProfile(
             reliability=ReliabilityPolicy.RELIABLE,
@@ -86,7 +124,8 @@ class LocalOccupancyGridNode(Node):
         self.get_logger().info(
             "local_occupancy_grid_node up: "
             f"ns={self.ns} output={out_topic} frame={self.frame_id} "
-            f"resolution={self.spec.resolution:.3f} static_cloud={self.use_cloud_static}"
+            f"resolution={self.spec.resolution:.3f} static_cloud={self.use_cloud_static} "
+            f"corrected_pose={self.use_corrected_pose} rebuild_from_keyframes={self.rebuild_from_keyframes}"
         )
 
     def _ns_topic(self, suffix: str) -> str:
@@ -105,8 +144,12 @@ class LocalOccupancyGridNode(Node):
         else:
             self.latest_raw_odom = msg
 
-    def _latest_odom(self) -> Odometry | None:
-        return self.latest_corrected_odom or self.latest_raw_odom
+    def _latest_odom(self) -> tuple[Odometry | None, str]:
+        if self.use_corrected_pose and self.latest_corrected_odom is not None:
+            return self.latest_corrected_odom, "corrected_odom"
+        if self.latest_raw_odom is not None:
+            return self.latest_raw_odom, "Odometry"
+        return None, "none"
 
     def _on_cloud(self, msg: PointCloud2, *, source: str) -> None:
         if source == "static":
@@ -114,11 +157,16 @@ class LocalOccupancyGridNode(Node):
         elif self.use_cloud_static and self.static_last_sec is not None:
             if self._now_sec() - self.static_last_sec <= self.cloud_static_stale_sec:
                 return
-        odom = self._latest_odom()
+        odom, pose_source = self._latest_odom()
         if odom is None:
             return
         points = self._cloud_points(msg)
         if not points:
+            return
+        if self.rebuild_from_keyframes:
+            self._append_keyframe(points, odom, source=f"cloud_{source}", stamp_sec=self._now_sec())
+            if self._should_rebuild_grid(pose_source):
+                self._rebuild_and_publish(msg.header.stamp, pose_source=pose_source)
             return
         projected = project_static_points_to_grid(
             points_xyz=points,
@@ -132,6 +180,54 @@ class LocalOccupancyGridNode(Node):
         out = self._to_msg(self.grid)
         out.header.stamp = msg.header.stamp
         self.pub.publish(out)
+
+    def _append_keyframe(
+        self,
+        points: list[tuple[float, float, float]],
+        odom: Odometry,
+        *,
+        source: str,
+        stamp_sec: float,
+    ) -> None:
+        self.keyframes.append(
+            OccupancyKeyframe(
+                keyframe_id=f"{self.ns}_occ_kf_{self.keyframe_seq:06d}",
+                corrected_pose_xyyaw=self._pose_xyyaw(odom),
+                points_xyz=points,
+                stamp_sec=float(stamp_sec),
+                source=source,
+            )
+        )
+        self.keyframe_seq += 1
+
+    def _should_rebuild_grid(self, pose_source: str) -> bool:
+        now = self._now_sec()
+        if self.last_rebuild_sec is None:
+            return True
+        if self.last_pose_source != pose_source and pose_source == "corrected_odom":
+            return True
+        return now - self.last_rebuild_sec >= self.rebuild_period_sec
+
+    def _rebuild_and_publish(self, stamp, *, pose_source: str) -> None:
+        now = self._now_sec()
+        keyframes = list(self.keyframes)
+        if self.dynamic_decay_sec > 0.0:
+            keyframes = [
+                kf for kf in keyframes
+                if kf.source == "cloud_static" or now - float(kf.stamp_sec) <= self.dynamic_decay_sec
+            ]
+        self.grid = build_static_grid_from_keyframes(
+            keyframes,
+            frame_id=self.frame_id,
+            spec=self.spec,
+            static_min_observations=self.static_min_observations,
+            self_clear_radius=self.self_clear_radius,
+        )
+        out = self._to_msg(self.grid)
+        out.header.stamp = stamp
+        self.pub.publish(out)
+        self.last_rebuild_sec = now
+        self.last_pose_source = pose_source
 
     def _cloud_points(self, msg: PointCloud2) -> list[tuple[float, float, float]]:
         pts: list[tuple[float, float, float]] = []
