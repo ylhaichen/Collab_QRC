@@ -52,6 +52,8 @@ Useful topic checks in another terminal:
   ros2 topic hz /robot_a/cloud_dynamic
   ros2 topic echo --once /robot_a/prealignment_exploration_status
   ros2 topic echo --once /robot_b/prealignment_exploration_status
+  ros2 topic echo --once --full-length /robot_a/nav_start_cell_diagnostics
+  ros2 topic echo --once --full-length /robot_b/nav_start_cell_diagnostics
   ros2 topic echo --once --full-length /team_slam/merged_occupancy_grid_status
 
 Success looks like:
@@ -114,6 +116,9 @@ launch_cmd=(
   prealign_min_local_map_area_growth:=1.0
   prealign_min_keyframe_spatial_diversity:=0.0
   prealign_max_repeated_goal_ratio:=0.5
+  occupancy_self_clear_radius:=0.65
+  costmap_self_clear_radius:=0.65
+  near_robot_ignore_radius:=0.6
   prealign_goal_hold_sec:=5.0
   prealign_robust_acceptance_min_inliers:="${PREALIGN_ROBUST_ACCEPTANCE_MIN_INLIERS}"
   prealign_scripted_overlap_demo:="${PREALIGN_SCRIPTED_OVERLAP_DEMO}"

@@ -1,11 +1,11 @@
 # Occupancy Map Visualization Eval
 
 - schema: `occupancy_grid_visualization_eval/v1`
-- robot_a_local_grid_messages: `48`
-- robot_b_local_grid_messages: `45`
-- merged_grid_messages: `0`
+- robot_a_local_grid_messages: `32`
+- robot_b_local_grid_messages: `28`
+- merged_grid_messages: `31`
 - local_grids_nonzero_rate: `True`
-- merged_grid_active: `False`
+- merged_grid_active: `True`
 - merged_grid_only_after_aligned: `True`
 - merged_grid_status_topic_exists: `True`
 - merged_grid_inactive_before_alignment: `True`
@@ -14,8 +14,8 @@
 - keyframe_rebuild_enabled: `True`
 - static_min_observations: `2`
 - dynamic_decay_sec: `3.0`
-- self_clear_radius: `0.45`
+- self_clear_radius: `0.65`
 - max_keyframes: `200`
 - dynamic_cloud_written_to_static_grid: `False`
-- alignment_status: `rejected`
+- alignment_status: `aligned`
 - gt_used_runtime: `False`

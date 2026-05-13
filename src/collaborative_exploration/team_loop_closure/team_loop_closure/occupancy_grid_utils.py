@@ -134,7 +134,7 @@ def build_static_grid_from_keyframes(
     frame_id: str,
     spec: LocalGridSpec,
     static_min_observations: int = 2,
-    self_clear_radius: float = 0.45,
+    self_clear_radius: float = 0.65,
 ) -> SimpleOccupancyGrid:
     grid = SimpleOccupancyGrid.empty(frame_id, spec)
     occupied_counts = [0] * (grid.width * grid.height)

@@ -6,5 +6,5 @@ dynamic_decay_time_sec: 5.0
 dynamic_obstacle_ttl_sec: 2.0
 dynamic_max_static_velocity: 0.15
 dynamic_min_dynamic_velocity: 0.35
-dynamic_near_robot_ignore_radius: 0.4
+dynamic_near_robot_ignore_radius: 0.6
 dynamic_publish_debug_clouds: true

@@ -83,3 +83,23 @@ def test_body_frame_static_wall_is_classified_in_odom_frame() -> None:
     static_points, dynamic_points = split_original_points_by_labels(latest_body_points, result.labels)
     assert static_points == [(1.0, 0.0, 0.2)]
     assert dynamic_points == []
+
+
+def test_near_robot_points_are_excluded_from_static_cloud() -> None:
+    filt = TemporalVoxelFilter(
+        DynamicFilterParams(
+            near_robot_ignore_radius=0.6,
+            static_min_observations=1,
+            static_min_lifetime_sec=0.0,
+        )
+    )
+
+    result = filt.classify_points([(0.35, 0.0, 0.2), (1.2, 0.0, 0.2)], stamp_sec=3.0)
+
+    assert result.labels == ["ignored_near_robot", "static"]
+    static_points, dynamic_points = split_original_points_by_labels(
+        [(0.35, 0.0, 0.2), (1.2, 0.0, 0.2)],
+        result.labels,
+    )
+    assert static_points == [(1.2, 0.0, 0.2)]
+    assert dynamic_points == []

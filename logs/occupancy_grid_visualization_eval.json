@@ -1,5 +1,5 @@
 {
-  "alignment_status": "rejected",
+  "alignment_status": "aligned",
   "corrected_pose_source_used": true,
   "dynamic_cloud_written_to_static_grid": false,
   "dynamic_decay_sec": 3.0,
@@ -8,14 +8,14 @@
   "local_grids_nonzero_rate": true,
   "local_grids_use_static_cloud": true,
   "max_keyframes": 200,
-  "merged_grid_active": false,
+  "merged_grid_active": true,
   "merged_grid_inactive_before_alignment": true,
-  "merged_grid_messages": 0,
+  "merged_grid_messages": 31,
   "merged_grid_only_after_aligned": true,
   "merged_grid_status_topic_exists": true,
-  "robot_a_local_grid_messages": 48,
-  "robot_b_local_grid_messages": 45,
+  "robot_a_local_grid_messages": 32,
+  "robot_b_local_grid_messages": 28,
   "schema": "occupancy_grid_visualization_eval/v1",
-  "self_clear_radius": 0.45,
+  "self_clear_radius": 0.65,
   "static_min_observations": 2
 }

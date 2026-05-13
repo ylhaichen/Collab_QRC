@@ -40,7 +40,7 @@ class DynamicObstacleFilterNode(Node):
         self.declare_parameter("dynamic_obstacle_ttl_sec", 2.0)
         self.declare_parameter("dynamic_max_static_velocity", 0.15)
         self.declare_parameter("dynamic_min_dynamic_velocity", 0.35)
-        self.declare_parameter("dynamic_near_robot_ignore_radius", 0.4)
+        self.declare_parameter("dynamic_near_robot_ignore_radius", 0.6)
         self.declare_parameter("dynamic_track_new_voxel_motion", False)
         self.declare_parameter("dynamic_publish_debug_clouds", True)
         self.declare_parameter("input_cloud_topic", "cloud_registered_body")

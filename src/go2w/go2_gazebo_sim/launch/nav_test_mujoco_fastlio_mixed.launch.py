@@ -419,6 +419,8 @@ def _build_fastlio_nav_stack(
     bootstrap_from_gt: bool = True,
     peer_obstacle_enabled: bool = False,
     local_slam_backend: str = "fast_lio_scpgo",
+    near_robot_ignore_radius: float = 0.6,
+    costmap_self_clear_radius: float = 0.65,
 ):
     """Per-robot Fast-LIO + octomap + FAR nav stack.
 
@@ -465,7 +467,8 @@ def _build_fastlio_nav_stack(
     # planar position lies within `peer_filter_radius_m` of any peer.
     # On real hardware the peer-pose source becomes whatever the swarm-
     # comm layer broadcasts; only this parameter changes.
-    if peer_namespaces:
+    run_self_filter = bool(peer_namespaces) or float(near_robot_ignore_radius) > 0.0
+    if run_self_filter:
         actions.append(
             Node(
                 package="go2w_perception",
@@ -476,7 +479,10 @@ def _build_fastlio_nav_stack(
                     "use_sim_time": use_sim_time,
                     "input_topic": "registered_scan_reliable",
                     "output_topic": "registered_scan_octomap",
-                    "peer_namespaces": list(peer_namespaces),
+                    # launch_ros on Humble rejects empty sequence parameters.
+                    # The C++ filter strips empty entries, so this still means
+                    # "no peers" while allowing near-body self filtering.
+                    "peer_namespaces": list(peer_namespaces) or [""],
                     "peer_pose_topic": "/odom/ground_truth",
                     # Go2W body half-diag 0.45 m, Go2 0.36 m. Radius
                     # bumped 0.50 → 0.80 (2026-04-26): 0.50 was barely
@@ -496,6 +502,7 @@ def _build_fastlio_nav_stack(
                     # crossed. 1.20 m absorbs the worst-case frame
                     # mismatch + body envelope + pose lag.
                     "peer_filter_radius_m": 1.20,
+                    "near_robot_ignore_radius": float(near_robot_ignore_radius),
                     # Stale tolerance tightened 2.0 → 0.3 s. With 2 s
                     # peer could be 0.6 m off (0.3 m/s × 2 s) — filter
                     # circle drawn in wrong place, peer body untouched
@@ -601,7 +608,7 @@ def _build_fastlio_nav_stack(
                 # octomap and Fast-LIO above. Single-robot case still
                 # uses the raw cloud since no filter exists.
                 ("cloud_in",
-                 f"/{ns}/registered_scan_octomap" if peer_namespaces
+                 f"/{ns}/registered_scan_octomap" if run_self_filter
                  else f"/{ns}/registered_scan_reliable"),
                 ("scan", f"/{ns}/scan_3d"),
             ] + tf_remaps,
@@ -1009,7 +1016,8 @@ def _build_fastlio_nav_stack(
                          "-p", "clear_robot_footprint_enabled:=true",
                          "-p", f"clear_robot_footprint_length_m:={clear_fp_length_m:.2f}",
                          "-p", f"clear_robot_footprint_width_m:={clear_fp_width_m:.2f}",
-                         "-p", "clear_robot_footprint_padding_m:=0.04"],
+                         "-p", "clear_robot_footprint_padding_m:=0.04",
+                         "-p", f"costmap_self_clear_radius:={float(costmap_self_clear_radius):.2f}"],
                     name=f"map_augmenter_{ns}",
                     output="screen",
                 ),
@@ -1284,6 +1292,18 @@ def _build_fastlio_nav_stack(
                 "-p", f"namespace:={ns}",
                 "-p", f"use_sim_time:={'true' if use_sim_time else 'false'}",
                 "-p", "waypoint_topic:=way_point_coord",
+                "-p", "goal_projection_enabled:=true",
+                "-p", "goal_projection_search_radius_m:=1.5",
+                "-p", f"costmap_self_clear_radius:={float(costmap_self_clear_radius):.2f}",
+                "-p", "failed_goal_blacklist_radius:=1.0",
+                "-p", f"local_inflation_radius:={0.45 if has_wheels else 0.22}",
+                "-p", f"global_inflation_radius:={0.30 if has_wheels else 0.20}",
+                "-p", f"robot_radius:={0.41 if has_wheels else 0.36}",
+                "-p", (
+                    "footprint:=0.35,0.20;0.35,-0.20;-0.35,-0.20;-0.35,0.20"
+                    if has_wheels else
+                    "footprint:=0.325,0.15;0.325,-0.15;-0.325,-0.15;-0.325,0.15"
+                ),
             ],
             name=f"cfpa2_to_nav2_bridge_{ns}",
             output="screen",
@@ -2091,6 +2111,9 @@ def _launch_setup(context):
     prealign_max_repeated_goal_ratio = float(
         _get(context, "prealign_max_repeated_goal_ratio").strip() or "0.5"
     )
+    occupancy_self_clear_radius = float(_get(context, "occupancy_self_clear_radius").strip() or "0.65")
+    costmap_self_clear_radius = float(_get(context, "costmap_self_clear_radius").strip() or "0.65")
+    near_robot_ignore_radius = float(_get(context, "near_robot_ignore_radius").strip() or "0.6")
     occupancy_grid_visualization_enabled = _as_bool(_get(context, "occupancy_grid_visualization_enabled"))
     occupancy_rviz_view = (_get(context, "occupancy_rviz_view").strip() or "robot_a").lower()
     if occupancy_rviz_view not in {"robot_a", "robot_b"}:
@@ -2402,6 +2425,8 @@ def _launch_setup(context):
             bootstrap_from_gt=slam_bootstrap_from_gt,
             peer_obstacle_enabled=peer_obstacle_enabled,
             local_slam_backend=local_slam_backend,
+            near_robot_ignore_radius=near_robot_ignore_radius,
+            costmap_self_clear_radius=costmap_self_clear_radius,
         )
     )
     actions.extend(
@@ -2438,6 +2463,8 @@ def _launch_setup(context):
             bootstrap_from_gt=slam_bootstrap_from_gt,
             peer_obstacle_enabled=peer_obstacle_enabled,
             local_slam_backend=local_slam_backend,
+            near_robot_ignore_radius=near_robot_ignore_radius,
+            costmap_self_clear_radius=costmap_self_clear_radius,
         )
     )
 
@@ -2456,6 +2483,7 @@ def _launch_setup(context):
                         "use_sim_time": use_sim_time,
                         "namespaces": ["robot_a", "robot_b"],
                         "dynamic_filter_enabled": True,
+                        "dynamic_near_robot_ignore_radius": near_robot_ignore_radius,
                     }],
                     output="screen",
                 ),
@@ -3058,7 +3086,7 @@ def _launch_setup(context):
                         "occupancy_rebuild_from_keyframes": True,
                         "occupancy_static_min_observations": 2,
                         "occupancy_dynamic_decay_sec": 3.0,
-                        "occupancy_self_clear_radius": 0.45,
+                        "occupancy_self_clear_radius": occupancy_self_clear_radius,
                         "occupancy_max_keyframes": 200,
                         "occupancy_rebuild_period_sec": 2.0,
                     }],
@@ -3443,6 +3471,21 @@ def generate_launch_description():
         DeclareLaunchArgument("prealign_min_local_map_area_growth", default_value="1.0"),
         DeclareLaunchArgument("prealign_min_keyframe_spatial_diversity", default_value="0.0"),
         DeclareLaunchArgument("prealign_max_repeated_goal_ratio", default_value="0.5"),
+        DeclareLaunchArgument(
+            "occupancy_self_clear_radius",
+            default_value="0.65",
+            description="Radius cleared around the robot in visualization occupancy grids.",
+        ),
+        DeclareLaunchArgument(
+            "costmap_self_clear_radius",
+            default_value="0.65",
+            description="Radius cleared around the robot in planning maps and Nav2 recovery clear-around calls.",
+        ),
+        DeclareLaunchArgument(
+            "near_robot_ignore_radius",
+            default_value="0.6",
+            description="Drop near-body LiDAR returns from cloud_static and octomap planning input.",
+        ),
         DeclareLaunchArgument(
             "prealign_scripted_overlap_demo",
             default_value="false",

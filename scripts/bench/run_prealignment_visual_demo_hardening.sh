@@ -55,6 +55,9 @@ timeout "$((DURATION_SEC + 90))s" ros2 launch go2_gazebo_sim nav_test_mujoco_fas
   prealign_goal_hold_sec:=5.0 \
   prealign_robust_acceptance_min_inliers:="${PREALIGN_ROBUST_ACCEPTANCE_MIN_INLIERS}" \
   prealign_scripted_overlap_demo:="${PREALIGN_SCRIPTED_OVERLAP_DEMO}" \
+  occupancy_self_clear_radius:=0.65 \
+  costmap_self_clear_radius:=0.65 \
+  near_robot_ignore_radius:=0.6 \
   mujoco_cameras:=false \
   enable_gt_drift_metrics:=false \
   session_duration_sec:="${DURATION_SEC}" \

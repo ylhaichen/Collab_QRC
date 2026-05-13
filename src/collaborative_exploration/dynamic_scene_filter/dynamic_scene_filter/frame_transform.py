@@ -38,7 +38,10 @@ def split_original_points_by_labels(
     static_points: list[Point3] = []
     dynamic_points: list[Point3] = []
     for point, label in zip(original_points, labels):
-        if str(label) == "dynamic":
+        label_text = str(label)
+        if label_text == "ignored_near_robot":
+            continue
+        if label_text == "dynamic":
             dynamic_points.append(point)
         else:
             static_points.append(point)

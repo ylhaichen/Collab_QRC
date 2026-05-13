@@ -27,6 +27,7 @@ class PrealignmentDemoReporter(Node):
         self.duration = max(1.0, float(duration))
         self.start_wall = time.monotonic()
         self.robot_status: dict[str, dict[str, Any]] = {}
+        self.nav_start_diagnostics: dict[str, dict[str, Any]] = {}
         self.alignment_status: dict[str, Any] = {}
         self.merged_status: dict[str, Any] = {}
         self.cross_robot_candidates = 0
@@ -48,6 +49,18 @@ class PrealignmentDemoReporter(Node):
             String,
             "/robot_b/prealignment_exploration_status",
             lambda msg: self._on_robot_status("robot_b", msg),
+            10,
+        )
+        self.create_subscription(
+            String,
+            "/robot_a/nav_start_cell_diagnostics",
+            lambda msg: self._on_nav_start_diagnostics("robot_a", msg),
+            10,
+        )
+        self.create_subscription(
+            String,
+            "/robot_b/nav_start_cell_diagnostics",
+            lambda msg: self._on_nav_start_diagnostics("robot_b", msg),
             10,
         )
         self.create_subscription(String, "/team_slam/alignment_status", self._on_alignment, 10)
@@ -84,6 +97,9 @@ class PrealignmentDemoReporter(Node):
     def _on_robot_status(self, robot: str, msg: String) -> None:
         self.robot_status[robot] = _loads(msg.data)
 
+    def _on_nav_start_diagnostics(self, robot: str, msg: String) -> None:
+        self.nav_start_diagnostics[robot] = _loads(msg.data)
+
     def _on_alignment(self, msg: String) -> None:
         self.alignment_status = _loads(msg.data)
         if self.alignment_status.get("status") == "aligned" and self.first_aligned_sec is None:
@@ -112,6 +128,8 @@ class PrealignmentDemoReporter(Node):
     def summary(self) -> dict[str, Any]:
         a = self.robot_status.get("robot_a", {})
         b = self.robot_status.get("robot_b", {})
+        nav_a = self.nav_start_diagnostics.get("robot_a", {})
+        nav_b = self.nav_start_diagnostics.get("robot_b", {})
         alignment_status = str(self.alignment_status.get("status", "unknown"))
         robust_count = int(
             self.robust_inliers.get(
@@ -288,9 +306,24 @@ class PrealignmentDemoReporter(Node):
                 "keyframe_rebuild_enabled": True,
                 "static_min_observations": 2,
                 "dynamic_decay_sec": 3.0,
-                "self_clear_radius": 0.45,
+                "self_clear_radius": 0.65,
                 "max_keyframes": 200,
                 "dynamic_cloud_written_to_static_grid": False,
+            },
+            "nav_start_cell_diagnostics": {
+                "robot_a": nav_a,
+                "robot_b": nav_b,
+                "robot_b_start_cell_not_lethal": (
+                    nav_b.get("global_start_cell_status") != "lethal"
+                    and nav_b.get("local_start_cell_status") != "lethal"
+                ) if nav_b else False,
+                "robot_b_projection_success": bool(nav_b.get("projection_success", False)),
+                "robot_b_rejected_frontier_goals": int(nav_b.get("rejected_frontier_goals", 0) or 0),
+                "robot_b_start_in_lethal_recoveries": int(nav_b.get("start_in_lethal_recoveries", 0) or 0),
+                "costmap_self_clear_radius": float(
+                    nav_b.get("costmap_self_clear_radius", nav_a.get("costmap_self_clear_radius", 0.65)) or 0.65
+                ),
+                "near_robot_ignore_radius": 0.6,
             },
         }
         if not payload["physical_overlap_occurred"] and self.first_merged_sec is None:
@@ -387,6 +420,11 @@ def _write_outputs(output_dir: Path, payload: dict[str, Any]) -> None:
         "no_overlap_rejection_result": payload["no_overlap_rejection_result"],
         "gt_used_runtime": payload["gt_used_runtime"],
     }
+    nav_diag = {
+        "schema": "nav_start_cell_diagnostics_eval/v1",
+        **payload["nav_start_cell_diagnostics"],
+        "gt_used_runtime": payload["gt_used_runtime"],
+    }
     visual = dict(payload)
     _write_json(output_dir / "prealignment_exploration_eval.json", prealignment)
     _write_md(output_dir / "prealignment_exploration_eval.md", "Prealignment Exploration Eval", prealignment)
@@ -396,6 +434,8 @@ def _write_outputs(output_dir: Path, payload: dict[str, Any]) -> None:
     _write_md(output_dir / "occupancy_grid_visualization_eval.md", "Occupancy Grid Visualization Eval", occupancy)
     _write_json(output_dir / "visualized_demo_eval.json", visual)
     _write_md(output_dir / "visualized_demo_eval.md", "Visualized Demo Eval", visual)
+    _write_json(output_dir / "nav_start_cell_diagnostics.json", nav_diag)
+    _write_md(output_dir / "nav_start_cell_diagnostics.md", "Nav Start Cell Diagnostics", nav_diag)
     _write_json(output_dir / "cross_loop_closure_final_eval.json", cross_loop)
     _write_md(output_dir / "cross_loop_closure_final_eval.md", "Cross Loop Closure Final Eval", cross_loop)
 

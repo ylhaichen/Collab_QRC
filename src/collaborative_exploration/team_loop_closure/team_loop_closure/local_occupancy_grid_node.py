@@ -43,7 +43,7 @@ class LocalOccupancyGridNode(Node):
         self.declare_parameter("occupancy_rebuild_from_keyframes", True)
         self.declare_parameter("occupancy_static_min_observations", 2)
         self.declare_parameter("occupancy_dynamic_decay_sec", 3.0)
-        self.declare_parameter("occupancy_self_clear_radius", 0.45)
+        self.declare_parameter("occupancy_self_clear_radius", 0.65)
         self.declare_parameter("occupancy_max_keyframes", 200)
         self.declare_parameter("occupancy_rebuild_period_sec", 2.0)
 

@@ -1,64 +1,64 @@
 # Visualized Demo Eval
 
 - schema: `visualized_discovered_pose_demo_eval/v1`
-- duration_sec: `120.004`
+- duration_sec: `120.003`
 - prealignment_anti_dwell_active: `True`
 - overlap_seeking_active: `False`
-- tentative_alignment_exploration_active: `True`
+- tentative_alignment_exploration_active: `False`
 - prealign_scripted_overlap_demo: `False`
-- robot_a_distance_from_start: `8.7396`
-- robot_b_distance_from_start: `0.9647`
-- robot_a_max_distance_from_start: `8.7396`
-- robot_b_max_distance_from_start: `1.682`
-- robot_a_path_length: `9.2712`
-- robot_b_path_length: `12.4016`
-- robot_a_keyframes: `7`
-- robot_b_keyframes: `26`
-- robot_a_local_map_area: `209.56`
-- robot_b_local_map_area: `140.73`
-- robot_a_local_map_area_growth: `193.345`
-- robot_b_local_map_area_growth: `112.43`
-- map_area_growth_rate: `1.126305`
-- unknown_to_known_cells: `84158`
-- frontier_count: `150`
+- robot_a_distance_from_start: `5.7792`
+- robot_b_distance_from_start: `5.8365`
+- robot_a_max_distance_from_start: `5.7792`
+- robot_b_max_distance_from_start: `5.8365`
+- robot_a_path_length: `11.3344`
+- robot_b_path_length: `10.4285`
+- robot_a_keyframes: `23`
+- robot_b_keyframes: `24`
+- robot_a_local_map_area: `2409.6626`
+- robot_b_local_map_area: `2414.7226`
+- robot_a_local_map_area_growth: `2384.8626`
+- robot_b_local_map_area_growth: `2375.7226`
+- map_area_growth_rate: `36.708265`
+- unknown_to_known_cells: `1923374`
+- frontier_count: `0`
 - new_frontiers_discovered: `160`
-- keyframe_spatial_diversity: `8.6564`
-- repeated_goal_ratio: `0.0`
-- stuck_recovery_count: `0`
-- failed_goal_blacklist_count: `0`
-- coverage_gain_per_meter: `20.854365`
-- robot_a_exploration_quality: `tentative_alignment_explore`
-- robot_b_exploration_quality: `low_coverage_growth`
+- keyframe_spatial_diversity: `5.7761`
+- repeated_goal_ratio: `0.2`
+- stuck_recovery_count: `16`
+- failed_goal_blacklist_count: `20`
+- coverage_gain_per_meter: `227.811609`
+- robot_a_exploration_quality: `aligned`
+- robot_b_exploration_quality: `tentative_alignment_explore`
 - robot_a_exploration_success: `True`
-- robot_b_exploration_success: `False`
-- local_frontiers_selected: `40`
-- goals_rejected_as_too_close: `2`
-- stuck_replans: `0`
-- blacklisted_goals: `2`
-- cross_robot_candidates: `138`
-- verified_matches: `19`
-- robust_inliers: `3`
-- robust_inlier_growth_rate: `0.02999`
-- tentative_alignment_duration: `100.032`
+- robot_b_exploration_success: `True`
+- local_frontiers_selected: `27`
+- goals_rejected_as_too_close: `3`
+- stuck_replans: `16`
+- blacklisted_goals: `23`
+- cross_robot_candidates: `189`
+- verified_matches: `40`
+- robust_inliers: `7`
+- robust_inlier_growth_rate: `0.107392`
+- tentative_alignment_duration: `65.182`
 - overlap_seeking_goals: `0`
-- tentative_alignment_explore_goals: `35`
+- tentative_alignment_explore_goals: `5`
 - scripted_local_overlap_goals: `0`
-- alignment_status: `rejected`
+- alignment_status: `aligned`
 - physical_overlap_occurred: `True`
-- robust_alignment_occurred: `False`
-- merged_map_enabled_time_sec: `None`
+- robust_alignment_occurred: `True`
+- merged_map_enabled_time_sec: `58.051997590999235`
 - merged_map_opened_only_after_gate: `True`
 - prealignment_gate_enabled: `True`
-- prealignment_gate_satisfied: `False`
+- prealignment_gate_satisfied: `True`
 - gt_used_runtime: `False`
-- both_robots_exceeded_min_start_displacement: `False`
+- both_robots_exceeded_min_start_displacement: `True`
 - no_overlap_rejection_result: `not_applicable_physical_overlap_detected`
 - occupancy:
-  - robot_a_local_grid_messages: `48`
-  - robot_b_local_grid_messages: `45`
-  - merged_grid_messages: `0`
+  - robot_a_local_grid_messages: `32`
+  - robot_b_local_grid_messages: `28`
+  - merged_grid_messages: `31`
   - local_grids_nonzero_rate: `True`
-  - merged_grid_active: `False`
+  - merged_grid_active: `True`
   - merged_grid_only_after_aligned: `True`
   - merged_grid_status_topic_exists: `True`
   - merged_grid_inactive_before_alignment: `True`
@@ -67,6 +67,15 @@
   - keyframe_rebuild_enabled: `True`
   - static_min_observations: `2`
   - dynamic_decay_sec: `3.0`
-  - self_clear_radius: `0.45`
+  - self_clear_radius: `0.65`
   - max_keyframes: `200`
   - dynamic_cloud_written_to_static_grid: `False`
+- nav_start_cell_diagnostics:
+  - robot_a: `{'active': True, 'costmap_self_clear_radius': 0.65, 'footprint_collision_status': 'free', 'global_costmap_received': True, 'global_start_cell_cost': 0, 'global_start_cell_status': 'free', 'inflation_radius': {'global': 0.3, 'local': 0.45}, 'last_sent_goal_cost': 0, 'last_sent_goal_status': 'free', 'local_costmap_received': True, 'local_start_cell_cost': 0, 'local_start_cell_status': 'free', 'nearest_free_cell_distance_m': 0.0253, 'projected_approach_goal': [5.3, 4.825], 'projected_goal_cost': 0, 'projection_success': True, 'projection_success_count': 14, 'raw_frontier_goal': [6.0126, 5.1969], 'reason': 'projected_to_free_approach_pose', 'rejected_frontier_goals': 11, 'robot_footprint': [[0.35, 0.2], [0.35, -0.2], [-0.35, -0.2], [-0.35, 0.2]], 'robot_radius': 0.41, 'schema': 'nav_start_cell_diagnostics/v1', 'start_cell_lethal': False, 'start_in_lethal_recoveries': 0}`
+  - robot_b: `{'active': True, 'costmap_self_clear_radius': 0.65, 'footprint_collision_status': 'free', 'global_costmap_received': True, 'global_start_cell_cost': 0, 'global_start_cell_status': 'free', 'inflation_radius': {'global': 0.2, 'local': 0.22}, 'last_sent_goal_cost': 0, 'last_sent_goal_status': 'free', 'local_costmap_received': True, 'local_start_cell_cost': 0, 'local_start_cell_status': 'free', 'nearest_free_cell_distance_m': 0.0122, 'projected_approach_goal': [3.025, 1.675], 'projected_goal_cost': 0, 'projection_success': True, 'projection_success_count': 13, 'raw_frontier_goal': [2.9862, 1.6994], 'reason': 'projected_to_free_approach_pose', 'rejected_frontier_goals': 4, 'robot_footprint': [[0.325, 0.15], [0.325, -0.15], [-0.325, -0.15], [-0.325, 0.15]], 'robot_radius': 0.36, 'schema': 'nav_start_cell_diagnostics/v1', 'start_cell_lethal': False, 'start_in_lethal_recoveries': 0}`
+  - robot_b_start_cell_not_lethal: `True`
+  - robot_b_projection_success: `True`
+  - robot_b_rejected_frontier_goals: `4`
+  - robot_b_start_in_lethal_recoveries: `0`
+  - costmap_self_clear_radius: `0.65`
+  - near_robot_ignore_radius: `0.6`

@@ -81,6 +81,7 @@ def clear_robot_footprint_cells(
     footprint_length_m: float,
     footprint_width_m: float,
     padding_m: float,
+    self_clear_radius_m: float = 0.0,
 ) -> int:
     """Clear the cells physically occupied by this robot in its own map.
 
@@ -104,10 +105,12 @@ def clear_robot_footprint_cells(
 
     half_l = 0.5 * float(footprint_length_m) + max(0.0, float(padding_m))
     half_w = 0.5 * float(footprint_width_m) + max(0.0, float(padding_m))
-    gx_min = max(0, int(math.floor((robot_x - half_l - origin_x) / resolution)) - 1)
-    gx_max = min(width - 1, int(math.ceil((robot_x + half_l - origin_x) / resolution)) + 1)
-    gy_min = max(0, int(math.floor((robot_y - half_l - origin_y) / resolution)) - 1)
-    gy_max = min(height - 1, int(math.ceil((robot_y + half_l - origin_y) / resolution)) + 1)
+    clear_r = max(0.0, float(self_clear_radius_m))
+    bbox_r = max(half_l, half_w, clear_r)
+    gx_min = max(0, int(math.floor((robot_x - bbox_r - origin_x) / resolution)) - 1)
+    gx_max = min(width - 1, int(math.ceil((robot_x + bbox_r - origin_x) / resolution)) + 1)
+    gy_min = max(0, int(math.floor((robot_y - bbox_r - origin_y) / resolution)) - 1)
+    gy_max = min(height - 1, int(math.ceil((robot_y + bbox_r - origin_y) / resolution)) + 1)
     if gx_min > gx_max or gy_min > gy_max:
         return 0
 
@@ -122,7 +125,9 @@ def clear_robot_footprint_cells(
             dy = wy - robot_y
             local_x = c * dx + s * dy
             local_y = -s * dx + c * dy
-            if abs(local_x) <= half_l and abs(local_y) <= half_w:
+            in_rect = abs(local_x) <= half_l and abs(local_y) <= half_w
+            in_radius = clear_r > 0.0 and math.hypot(dx, dy) <= clear_r
+            if in_rect or in_radius:
                 idx = gy * width + gx
                 if int(grid[idx]) != 0:
                     grid[idx] = 0
@@ -157,6 +162,7 @@ class MapAugmenter(Node):
         self.declare_parameter("clear_robot_footprint_length_m", 0.70)
         self.declare_parameter("clear_robot_footprint_width_m", 0.40)
         self.declare_parameter("clear_robot_footprint_padding_m", 0.04)
+        self.declare_parameter("costmap_self_clear_radius", 0.65)
 
         local_topic = self.get_parameter("local_map_topic").value
         merged_topic = self.get_parameter("merged_map_topic").value
@@ -174,6 +180,9 @@ class MapAugmenter(Node):
         )
         self._clear_robot_footprint_padding_m = max(
             0.0, float(self.get_parameter("clear_robot_footprint_padding_m").value)
+        )
+        self._costmap_self_clear_radius = max(
+            0.0, float(self.get_parameter("costmap_self_clear_radius").value)
         )
 
         # Octomap and multirobot_map_merge both publish RELIABLE +
@@ -200,7 +209,8 @@ class MapAugmenter(Node):
         self.get_logger().info(
             f"map_augmenter started: local={local_topic} merged={merged_topic} "
             f"→ {out_topic} (heartbeat={hb_rate:.1f} Hz, "
-            f"self_clear={self._clear_robot_footprint_enabled})"
+            f"self_clear={self._clear_robot_footprint_enabled} "
+            f"radius={self._costmap_self_clear_radius:.2f}m)"
         )
 
     def _on_local(self, msg: OccupancyGrid) -> None:
@@ -414,6 +424,7 @@ class MapAugmenter(Node):
             footprint_length_m=self._clear_robot_footprint_length_m,
             footprint_width_m=self._clear_robot_footprint_width_m,
             padding_m=self._clear_robot_footprint_padding_m,
+            self_clear_radius_m=self._costmap_self_clear_radius,
         )
 
 

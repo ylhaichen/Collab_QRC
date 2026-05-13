@@ -30,6 +30,7 @@ Checks:
   ros2 topic echo --once /team_slam/alignment_status
   ros2 topic echo --once /robot_a/prealignment_exploration_status
   ros2 topic echo --once /robot_b/prealignment_exploration_status
+  ros2 topic echo --once --full-length /robot_b/nav_start_cell_diagnostics
   ros2 topic hz /robot_a/local_occupancy_grid
   ros2 topic hz /robot_b/local_occupancy_grid
   ros2 topic hz /team_slam/merged_occupancy_grid

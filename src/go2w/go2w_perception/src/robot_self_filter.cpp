@@ -1,5 +1,5 @@
 /*
- * robot_self_filter.cpp — drop LiDAR returns hitting OTHER robots' bodies
+ * robot_self_filter.cpp — drop LiDAR returns hitting robot bodies
  * before the cloud reaches octomap.
  *
  * Problem
@@ -21,7 +21,9 @@
  * Each robot already publishes its own pose (in sim: /{ns}/odom/ground_truth;
  * on real swarm: whatever the comm layer broadcasts). Subscribe to peers'
  * poses, and for each incoming cloud drop points whose world (x, y) lies
- * within `peer_filter_radius_m` of any peer's last-known position.
+ * within `peer_filter_radius_m` of any peer's last-known position. Also drop
+ * points within `near_robot_ignore_radius` in the local sensor/body frame so
+ * leg/body returns do not poison octomap and Nav2's start cell.
  * Octomap then sees only the static environment.
  *
  * Pipeline:
@@ -45,6 +47,7 @@
  * path; C++ keeps the entire pipeline well under 1 ms per scan.
  */
 #include <chrono>
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -76,6 +79,7 @@ public:
         // a safety margin without eating real environment returns near
         // the peer.
         declare_parameter<double>("peer_filter_radius_m", 0.50);
+        declare_parameter<double>("near_robot_ignore_radius", 0.0);
         // Drop the peer from the filter if we haven't received a pose
         // update in this long (peer offline / comms loss). LiDAR is
         // 10 Hz so missing one filter frame is far better than over-
@@ -106,6 +110,8 @@ public:
         pose_topic_suffix_ = get_parameter("peer_pose_topic").as_string();
         const double radius = get_parameter("peer_filter_radius_m").as_double();
         radius_sq_ = radius * radius;
+        const double near_robot_radius = get_parameter("near_robot_ignore_radius").as_double();
+        near_robot_radius_sq_ = std::max(0.0, near_robot_radius) * std::max(0.0, near_robot_radius);
         stale_sec_ = get_parameter("peer_pose_stale_sec").as_double();
         const double stats_period = get_parameter("stats_log_period_sec").as_double();
 
@@ -165,9 +171,9 @@ public:
 
         RCLCPP_INFO(get_logger(),
                     "robot_self_filter started: in=%s out=%s peers=[%s] "
-                    "radius=%.2fm",
+                    "peer_radius=%.2fm near_robot_ignore_radius=%.2fm",
                     input_topic_.c_str(), output_topic_.c_str(),
-                    join(peer_ns_).c_str(), radius);
+                    join(peer_ns_).c_str(), radius, near_robot_radius);
     }
 
 private:
@@ -222,7 +228,7 @@ private:
 
     void on_cloud(sensor_msgs::msg::PointCloud2::ConstSharedPtr msg) {
         const auto peers = active_peer_xy();
-        if (peers.empty()) {
+        if (peers.empty() && near_robot_radius_sq_ <= 0.0) {
             // No fresh peer poses: pass through unchanged. Subscribers
             // see the same cloud they would have seen pre-filter.
             pub_->publish(*msg);
@@ -272,16 +278,25 @@ private:
             float x, y;
             std::memcpy(&x, p + x_off, sizeof(float));
             std::memcpy(&y, p + y_off, sizeof(float));
+            bool drop = false;
+            if (near_robot_radius_sq_ > 0.0) {
+                const double local_r2 = static_cast<double>(x) * static_cast<double>(x)
+                    + static_cast<double>(y) * static_cast<double>(y);
+                if (local_r2 < near_robot_radius_sq_) {
+                    drop = true;
+                }
+            }
             // sensor-frame (x, y) → world-frame (wx, wy)
             const double wx = sx + cos_y * x - sin_y * y;
             const double wy = sy + sin_y * x + cos_y * y;
-            bool drop = false;
-            for (const auto &peer : peers) {
-                const double dx = wx - peer.first;
-                const double dy = wy - peer.second;
-                if ((dx * dx + dy * dy) < radius_sq_) {
-                    drop = true;
-                    break;
+            if (!drop) {
+                for (const auto &peer : peers) {
+                    const double dx = wx - peer.first;
+                    const double dy = wy - peer.second;
+                    if ((dx * dx + dy * dy) < radius_sq_) {
+                        drop = true;
+                        break;
+                    }
                 }
             }
             if (!drop) {
@@ -353,6 +368,7 @@ private:
     std::vector<std::string> peer_ns_;
     std::string pose_topic_suffix_;
     double radius_sq_;
+    double near_robot_radius_sq_;
     double stale_sec_;
 
     // State.

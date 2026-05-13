@@ -17,7 +17,7 @@ class DynamicFilterParams:
     dynamic_obstacle_ttl_sec: float = 2.0
     max_static_velocity: float = 0.15
     min_dynamic_velocity: float = 0.35
-    near_robot_ignore_radius: float = 0.4
+    near_robot_ignore_radius: float = 0.6
     track_new_voxel_motion: bool = False
 
 
@@ -107,6 +107,8 @@ class TemporalVoxelFilter:
     def _label(self, key: tuple[int, int, int], point: Point3, record: VoxelRecord, stamp_sec: float) -> str:
         lifetime = stamp_sec - record.first_seen_time
         near_robot = math.hypot(point[0], point[1]) < self.params.near_robot_ignore_radius
+        if near_robot:
+            return "ignored_near_robot"
         is_static = (
             record.observation_count >= self.params.static_min_observations
             and lifetime >= self.params.static_min_lifetime_sec
@@ -142,6 +144,8 @@ class TemporalVoxelFilter:
             record = self._update_record(key, point, stamp_sec)
             label = self._label(key, point, record, stamp_sec)
             result.labels.append(label)
+            if label == "ignored_near_robot":
+                continue
             if label == "dynamic":
                 result.dynamic_points.append(point)
             else:

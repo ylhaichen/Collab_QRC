@@ -1,19 +1,133 @@
 {
-  "alignment_status": "rejected",
-  "blacklisted_goals": 2,
-  "both_robots_exceeded_min_start_displacement": false,
-  "coverage_gain_per_meter": 20.854365,
-  "cross_robot_candidates": 138,
-  "duration_sec": 120.004,
-  "failed_goal_blacklist_count": 0,
-  "frontier_count": 150,
-  "goals_rejected_as_too_close": 2,
+  "alignment_status": "aligned",
+  "blacklisted_goals": 23,
+  "both_robots_exceeded_min_start_displacement": true,
+  "coverage_gain_per_meter": 227.811609,
+  "cross_robot_candidates": 189,
+  "duration_sec": 120.003,
+  "failed_goal_blacklist_count": 20,
+  "frontier_count": 0,
+  "goals_rejected_as_too_close": 3,
   "gt_used_runtime": false,
-  "keyframe_spatial_diversity": 8.6564,
-  "local_frontiers_selected": 40,
-  "map_area_growth_rate": 1.126305,
-  "merged_map_enabled_time_sec": null,
+  "keyframe_spatial_diversity": 5.7761,
+  "local_frontiers_selected": 27,
+  "map_area_growth_rate": 36.708265,
+  "merged_map_enabled_time_sec": 58.051997590999235,
   "merged_map_opened_only_after_gate": true,
+  "nav_start_cell_diagnostics": {
+    "costmap_self_clear_radius": 0.65,
+    "near_robot_ignore_radius": 0.6,
+    "robot_a": {
+      "active": true,
+      "costmap_self_clear_radius": 0.65,
+      "footprint_collision_status": "free",
+      "global_costmap_received": true,
+      "global_start_cell_cost": 0,
+      "global_start_cell_status": "free",
+      "inflation_radius": {
+        "global": 0.3,
+        "local": 0.45
+      },
+      "last_sent_goal_cost": 0,
+      "last_sent_goal_status": "free",
+      "local_costmap_received": true,
+      "local_start_cell_cost": 0,
+      "local_start_cell_status": "free",
+      "nearest_free_cell_distance_m": 0.0253,
+      "projected_approach_goal": [
+        5.3,
+        4.825
+      ],
+      "projected_goal_cost": 0,
+      "projection_success": true,
+      "projection_success_count": 14,
+      "raw_frontier_goal": [
+        6.0126,
+        5.1969
+      ],
+      "reason": "projected_to_free_approach_pose",
+      "rejected_frontier_goals": 11,
+      "robot_footprint": [
+        [
+          0.35,
+          0.2
+        ],
+        [
+          0.35,
+          -0.2
+        ],
+        [
+          -0.35,
+          -0.2
+        ],
+        [
+          -0.35,
+          0.2
+        ]
+      ],
+      "robot_radius": 0.41,
+      "schema": "nav_start_cell_diagnostics/v1",
+      "start_cell_lethal": false,
+      "start_in_lethal_recoveries": 0
+    },
+    "robot_b": {
+      "active": true,
+      "costmap_self_clear_radius": 0.65,
+      "footprint_collision_status": "free",
+      "global_costmap_received": true,
+      "global_start_cell_cost": 0,
+      "global_start_cell_status": "free",
+      "inflation_radius": {
+        "global": 0.2,
+        "local": 0.22
+      },
+      "last_sent_goal_cost": 0,
+      "last_sent_goal_status": "free",
+      "local_costmap_received": true,
+      "local_start_cell_cost": 0,
+      "local_start_cell_status": "free",
+      "nearest_free_cell_distance_m": 0.0122,
+      "projected_approach_goal": [
+        3.025,
+        1.675
+      ],
+      "projected_goal_cost": 0,
+      "projection_success": true,
+      "projection_success_count": 13,
+      "raw_frontier_goal": [
+        2.9862,
+        1.6994
+      ],
+      "reason": "projected_to_free_approach_pose",
+      "rejected_frontier_goals": 4,
+      "robot_footprint": [
+        [
+          0.325,
+          0.15
+        ],
+        [
+          0.325,
+          -0.15
+        ],
+        [
+          -0.325,
+          -0.15
+        ],
+        [
+          -0.325,
+          0.15
+        ]
+      ],
+      "robot_radius": 0.36,
+      "schema": "nav_start_cell_diagnostics/v1",
+      "start_cell_lethal": false,
+      "start_in_lethal_recoveries": 0
+    },
+    "robot_b_projection_success": true,
+    "robot_b_rejected_frontier_goals": 4,
+    "robot_b_start_cell_not_lethal": true,
+    "robot_b_start_in_lethal_recoveries": 0
+  },
   "new_frontiers_discovered": 160,
   "no_overlap_rejection_result": "not_applicable_physical_overlap_detected",
   "occupancy": {
@@ -24,14 +138,14 @@
     "local_grids_nonzero_rate": true,
     "local_grids_use_static_cloud": true,
     "max_keyframes": 200,
-    "merged_grid_active": false,
+    "merged_grid_active": true,
     "merged_grid_inactive_before_alignment": true,
-    "merged_grid_messages": 0,
+    "merged_grid_messages": 31,
     "merged_grid_only_after_aligned": true,
     "merged_grid_status_topic_exists": true,
-    "robot_a_local_grid_messages": 48,
-    "robot_b_local_grid_messages": 45,
-    "self_clear_radius": 0.45,
+    "robot_a_local_grid_messages": 32,
+    "robot_b_local_grid_messages": 28,
+    "self_clear_radius": 0.65,
     "static_min_observations": 2
   },
   "overlap_seeking_active": false,
@@ -40,34 +154,34 @@
   "prealign_scripted_overlap_demo": false,
   "prealignment_anti_dwell_active": true,
   "prealignment_gate_enabled": true,
-  "prealignment_gate_satisfied": false,
-  "repeated_goal_ratio": 0.0,
-  "robot_a_distance_from_start": 8.7396,
-  "robot_a_exploration_quality": "tentative_alignment_explore",
+  "prealignment_gate_satisfied": true,
+  "repeated_goal_ratio": 0.2,
+  "robot_a_distance_from_start": 5.7792,
+  "robot_a_exploration_quality": "aligned",
   "robot_a_exploration_success": true,
-  "robot_a_keyframes": 7,
-  "robot_a_local_map_area": 209.56,
-  "robot_a_local_map_area_growth": 193.345,
-  "robot_a_max_distance_from_start": 8.7396,
-  "robot_a_path_length": 9.2712,
-  "robot_b_distance_from_start": 0.9647,
-  "robot_b_exploration_quality": "low_coverage_growth",
-  "robot_b_exploration_success": false,
-  "robot_b_keyframes": 26,
-  "robot_b_local_map_area": 140.73,
-  "robot_b_local_map_area_growth": 112.43,
-  "robot_b_max_distance_from_start": 1.682,
-  "robot_b_path_length": 12.4016,
-  "robust_alignment_occurred": false,
-  "robust_inlier_growth_rate": 0.02999,
-  "robust_inliers": 3,
+  "robot_a_keyframes": 23,
+  "robot_a_local_map_area": 2409.6626,
+  "robot_a_local_map_area_growth": 2384.8626,
+  "robot_a_max_distance_from_start": 5.7792,
+  "robot_a_path_length": 11.3344,
+  "robot_b_distance_from_start": 5.8365,
+  "robot_b_exploration_quality": "tentative_alignment_explore",
+  "robot_b_exploration_success": true,
+  "robot_b_keyframes": 24,
+  "robot_b_local_map_area": 2414.7226,
+  "robot_b_local_map_area_growth": 2375.7226,
+  "robot_b_max_distance_from_start": 5.8365,
+  "robot_b_path_length": 10.4285,
+  "robust_alignment_occurred": true,
+  "robust_inlier_growth_rate": 0.107392,
+  "robust_inliers": 7,
   "schema": "visualized_discovered_pose_demo_eval/v1",
   "scripted_local_overlap_goals": 0,
-  "stuck_recovery_count": 0,
-  "stuck_replans": 0,
-  "tentative_alignment_duration": 100.032,
-  "tentative_alignment_exploration_active": true,
-  "tentative_alignment_explore_goals": 35,
-  "unknown_to_known_cells": 84158,
-  "verified_matches": 19
+  "stuck_recovery_count": 16,
+  "stuck_replans": 16,
+  "tentative_alignment_duration": 65.182,
+  "tentative_alignment_exploration_active": false,
+  "tentative_alignment_explore_goals": 5,
+  "unknown_to_known_cells": 1923374,
+  "verified_matches": 40
 }

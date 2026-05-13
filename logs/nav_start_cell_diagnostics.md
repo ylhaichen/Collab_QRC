@@ -1,0 +1,62 @@
+# Nav Start Cell Diagnostics
+
+- schema: `nav_start_cell_diagnostics_eval/v1`
+- robot_a:
+  - active: `True`
+  - costmap_self_clear_radius: `0.65`
+  - footprint_collision_status: `free`
+  - global_costmap_received: `True`
+  - global_start_cell_cost: `0`
+  - global_start_cell_status: `free`
+  - inflation_radius: `{'global': 0.3, 'local': 0.45}`
+  - last_sent_goal_cost: `0`
+  - last_sent_goal_status: `free`
+  - local_costmap_received: `True`
+  - local_start_cell_cost: `0`
+  - local_start_cell_status: `free`
+  - nearest_free_cell_distance_m: `0.0253`
+  - projected_approach_goal: `[5.3, 4.825]`
+  - projected_goal_cost: `0`
+  - projection_success: `True`
+  - projection_success_count: `14`
+  - raw_frontier_goal: `[6.0126, 5.1969]`
+  - reason: `projected_to_free_approach_pose`
+  - rejected_frontier_goals: `11`
+  - robot_footprint: `[[0.35, 0.2], [0.35, -0.2], [-0.35, -0.2], [-0.35, 0.2]]`
+  - robot_radius: `0.41`
+  - schema: `nav_start_cell_diagnostics/v1`
+  - start_cell_lethal: `False`
+  - start_in_lethal_recoveries: `0`
+- robot_b:
+  - active: `True`
+  - costmap_self_clear_radius: `0.65`
+  - footprint_collision_status: `free`
+  - global_costmap_received: `True`
+  - global_start_cell_cost: `0`
+  - global_start_cell_status: `free`
+  - inflation_radius: `{'global': 0.2, 'local': 0.22}`
+  - last_sent_goal_cost: `0`
+  - last_sent_goal_status: `free`
+  - local_costmap_received: `True`
+  - local_start_cell_cost: `0`
+  - local_start_cell_status: `free`
+  - nearest_free_cell_distance_m: `0.0122`
+  - projected_approach_goal: `[3.025, 1.675]`
+  - projected_goal_cost: `0`
+  - projection_success: `True`
+  - projection_success_count: `13`
+  - raw_frontier_goal: `[2.9862, 1.6994]`
+  - reason: `projected_to_free_approach_pose`
+  - rejected_frontier_goals: `4`
+  - robot_footprint: `[[0.325, 0.15], [0.325, -0.15], [-0.325, -0.15], [-0.325, 0.15]]`
+  - robot_radius: `0.36`
+  - schema: `nav_start_cell_diagnostics/v1`
+  - start_cell_lethal: `False`
+  - start_in_lethal_recoveries: `0`
+- robot_b_start_cell_not_lethal: `True`
+- robot_b_projection_success: `True`
+- robot_b_rejected_frontier_goals: `4`
+- robot_b_start_in_lethal_recoveries: `0`
+- costmap_self_clear_radius: `0.65`
+- near_robot_ignore_radius: `0.6`
+- gt_used_runtime: `False`

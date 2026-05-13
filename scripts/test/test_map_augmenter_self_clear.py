@@ -81,3 +81,41 @@ def test_clear_robot_footprint_cells_respects_robot_yaw() -> None:
 
     assert data[inside_y] == 0
     assert data[outside_x] == 100
+
+
+def test_clear_robot_footprint_cells_supports_costmap_self_clear_radius() -> None:
+    mod = _load_map_augmenter()
+    width = 50
+    height = 50
+    resolution = 0.05
+    origin_x = -1.25
+    origin_y = -1.25
+    data = np.full(width * height, -1, dtype=np.int8)
+
+    # This cell is outside the rectangular body footprint but inside the
+    # requested circular costmap self-clear radius. It represents a leg or
+    # near-base return that can poison Nav2's start cell neighborhood.
+    near_leg = int((0.0 - origin_y) / resolution) * width + int((0.55 - origin_x) / resolution)
+    far_wall = int((0.0 - origin_y) / resolution) * width + int((0.90 - origin_x) / resolution)
+    data[near_leg] = 100
+    data[far_wall] = 100
+
+    cleared = mod.clear_robot_footprint_cells(
+        data,
+        width=width,
+        height=height,
+        resolution=resolution,
+        origin_x=origin_x,
+        origin_y=origin_y,
+        robot_x=0.0,
+        robot_y=0.0,
+        robot_yaw=0.0,
+        footprint_length_m=0.65,
+        footprint_width_m=0.30,
+        padding_m=0.0,
+        self_clear_radius_m=0.65,
+    )
+
+    assert cleared > 0
+    assert data[near_leg] == 0
+    assert data[far_wall] == 100
