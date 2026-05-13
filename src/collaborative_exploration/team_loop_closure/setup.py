@@ -30,6 +30,8 @@ setup(
             "relative_transform_manager_node = team_loop_closure.relative_transform_manager_node:main",
             "discovered_map_merge_bootstrap_node = team_loop_closure.discovered_map_merge_bootstrap_node:main",
             "team_slam_peer_node = team_loop_closure.team_slam_peer_node:main",
+            "local_occupancy_grid_node = team_loop_closure.local_occupancy_grid_node:main",
+            "merged_occupancy_grid_node = team_loop_closure.merged_occupancy_grid_node:main",
         ],
     },
 )

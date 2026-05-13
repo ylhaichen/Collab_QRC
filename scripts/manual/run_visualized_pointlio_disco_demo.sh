@@ -22,9 +22,10 @@ Point-LIO DiSCo-style visual simulation demo
 
 Expected visible state:
 - MuJoCo GUI opens with robot_a and robot_b in the overlap scene.
-- RViz opens with robot poses, keyframes/candidates/inliers markers where configured, local maps, and /merged_map after robust alignment.
+- RViz opens with robot poses, local goals, keyframe clouds, individual occupancy grids, and the gated merged occupancy grid after robust alignment.
 - /merged_map must stay closed until /team_slam/alignment_status reports status=aligned.
 - Runtime alignment uses discovered DiSCo-style loop closure only; GT runtime alignment is disabled.
+- Pre-alignment exploration is local-only: no peer-frame goals, no GT, and no /merged_map dependency.
 
 Useful topic checks in another terminal:
   ros2 topic hz /robot_a/Odometry
@@ -32,8 +33,13 @@ Useful topic checks in another terminal:
   ros2 topic echo --once /robot_a/way_point_coord
   ros2 topic echo --once /robot_b/way_point_coord
   ros2 topic echo --once /team_slam/alignment_status
-  ros2 topic echo --once /team_slam/robust_loop_inliers
-  ros2 topic hz /merged_map
+  ros2 topic hz /team_slam/keyframes
+  ros2 topic hz /team_slam/cross_robot_candidates
+  ros2 topic hz /team_slam/robust_loop_inliers
+  ros2 topic hz /robot_a/local_occupancy_grid
+  ros2 topic hz /robot_b/local_occupancy_grid
+  ros2 topic hz /team_slam/merged_occupancy_grid
+  ros2 topic list | grep merged_map
   ros2 topic hz /robot_a/cloud_static
   ros2 topic hz /robot_a/cloud_dynamic
 
@@ -43,6 +49,8 @@ Success looks like:
 - /team_slam/robust_loop_inliers reaches the configured threshold.
 - /team_slam/alignment_status becomes aligned.
 - /merged_map appears only after robust evidence and accepted pose-graph factors.
+- /team_slam/merged_occupancy_grid appears only after robust alignment; /robot_a/local_occupancy_grid and /robot_b/local_occupancy_grid publish before alignment.
+- /robot_a/prealignment_exploration_status and /robot_b/prealignment_exploration_status show distance_from_start growth beyond the configured minimum.
 - CFPA2 logs ASSIGN [cfpa2] repeatedly and /robot_a/way_point_coord plus /robot_b/way_point_coord move away from the start area.
 - If /merged_map is occupied-heavy, CFPA2 logs a shared-map quality-gate warning and falls back to per-robot maps for frontier extraction.
 
@@ -67,12 +75,25 @@ launch_cmd=(
   inter_robot_loop_closure:=true
   local_slam_backend:=point_lio
   registration_backend:=icp_2d
-  robust_selection_backend:=greedy_consistency_fallback
   team_pose_graph_backend:=gtsam_cpp
   team_alignment_allow_export_only_gate:=false
   no_overlap_rejection_passed:=true
   use_dynamic_filter:=true
   map_merge:=true
+  prealignment_exploration_enabled:=true
+  occupancy_grid_visualization_enabled:=true
+  prealign_min_goal_distance:=2.0
+  prealign_min_start_displacement:=3.0
+  prealign_dwell_timeout_sec:=20.0
+  prealign_stuck_replan_limit:=3
+  prealign_goal_blacklist_radius:=1.0
+  prealign_overlap_timeout_sec:=60.0
+  prealign_min_keyframes_before_alignment:=5
+  prealign_exploration_radius_growth:=1.5
+  prealign_far_frontier_bonus:=1.0
+  prealign_corridor_frontier_bonus:=0.5
+  prealign_keyframe_gain_bonus:=0.5
+  prealign_goal_hold_sec:=5.0
   mujoco_cameras:=false
   enable_gt_drift_metrics:=false
   loop_risk_output_dir:="${ARTIFACT_DIR}"

@@ -132,3 +132,22 @@ def test_safety_gate_opens_only_after_robust_factor_and_no_overlap_gates() -> No
     assert decision.status == "aligned"
     assert decision.open_merged_map is True
     assert decision.reason == "robust_alignment_pose_graph_and_no_overlap_gate_accepted"
+
+
+def test_safety_gate_waits_for_prealignment_displacement_when_enabled() -> None:
+    decision = evaluate_alignment_gate(
+        AlignmentGateInputs(
+            robust_accepted=True,
+            robust_status="accepted",
+            robust_inlier_set_size=7,
+            pose_graph_inter_robot_factors=7,
+            relative_transform_finite=True,
+            no_overlap_rejection_passed=True,
+            gt_used_runtime=False,
+            prealignment_gate_satisfied=False,
+        )
+    )
+
+    assert decision.status == "tentative"
+    assert decision.open_merged_map is False
+    assert decision.reason == "waiting_for_prealignment_min_displacement"

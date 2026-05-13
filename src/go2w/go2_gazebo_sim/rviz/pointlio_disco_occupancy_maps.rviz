@@ -1,0 +1,307 @@
+Panels:
+  - Class: rviz_common/Displays
+    Help Height: 78
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /Global Options1
+        - /Local Occupancy (robot_a)1
+        - /Merged Occupancy (gated)1
+      Splitter Ratio: 0.5
+    Tree Height: 640
+  - Class: rviz_common/Views
+    Expanded:
+      - /Current View1
+    Name: Views
+    Splitter Ratio: 0.5
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Alpha: 0.18
+      Cell Size: 1
+      Class: rviz_default_plugins/Grid
+      Color: 55; 89; 122
+      Enabled: true
+      Line Style:
+        Line Width: 0.03
+        Value: Lines
+      Name: Grid
+      Normal Cell Count: 0
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Plane: XY
+      Plane Cell Count: 160
+      Reference Frame: <Fixed Frame>
+      Value: true
+    - Class: rviz_default_plugins/TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: true
+      Marker Scale: 0.45
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Update Interval: 0
+      Value: true
+    - Alpha: 0.75
+      Class: rviz_default_plugins/Map
+      Color Scheme: map
+      Draw Behind: true
+      Enabled: true
+      Name: Local Occupancy (robot_a)
+      Topic:
+        Depth: 1
+        Durability Policy: Transient Local
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /robot_a/local_occupancy_grid
+      Update Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /robot_a/local_occupancy_grid_updates
+      Use Timestamp: false
+      Value: true
+    - Alpha: 0.45
+      Class: rviz_default_plugins/Map
+      Color Scheme: costmap
+      Draw Behind: true
+      Enabled: false
+      Name: Local Occupancy (robot_b debug frame)
+      Topic:
+        Depth: 1
+        Durability Policy: Transient Local
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /robot_b/local_occupancy_grid
+      Update Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /robot_b/local_occupancy_grid_updates
+      Use Timestamp: false
+      Value: false
+    - Alpha: 0.95
+      Class: rviz_default_plugins/Map
+      Color Scheme: map
+      Draw Behind: false
+      Enabled: true
+      Name: Merged Occupancy (gated)
+      Topic:
+        Depth: 1
+        Durability Policy: Transient Local
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /team_slam/merged_occupancy_grid
+      Update Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /team_slam/merged_occupancy_grid_updates
+      Use Timestamp: false
+      Value: true
+    - Alpha: 0.65
+      Class: rviz_default_plugins/Map
+      Color Scheme: map
+      Draw Behind: false
+      Enabled: false
+      Name: Legacy /merged_map
+      Topic:
+        Depth: 1
+        Durability Policy: Transient Local
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /merged_map
+      Update Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /merged_map_updates
+      Use Timestamp: false
+      Value: false
+    - Class: rviz_default_plugins/Odometry
+      Angle Tolerance: 0.1
+      Color: 30; 144; 255
+      Enabled: true
+      Keep: 200
+      Name: Odometry robot_a
+      Position Tolerance: 0.1
+      Shape: Arrow
+      Topic:
+        Depth: 10
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /robot_a/Odometry
+      Value: true
+    - Class: rviz_default_plugins/Odometry
+      Angle Tolerance: 0.1
+      Color: 255; 180; 0
+      Enabled: false
+      Keep: 200
+      Name: Odometry robot_b debug frame
+      Position Tolerance: 0.1
+      Shape: Arrow
+      Topic:
+        Depth: 10
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /robot_b/Odometry
+      Value: false
+    - Class: rviz_default_plugins/Path
+      Color: 30; 144; 255
+      Enabled: true
+      Line Style: Lines
+      Line Width: 0.04
+      Name: PlannedPath robot_a
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0.06
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /robot_a/planned_path
+      Value: true
+    - Class: rviz_default_plugins/Path
+      Color: 255; 180; 0
+      Enabled: false
+      Line Style: Lines
+      Line Width: 0.04
+      Name: PlannedPath robot_b debug frame
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0.06
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /robot_b/planned_path
+      Value: false
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: CFPA2 Frontiers
+      Namespaces: {}
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /mtare/frontier_markers
+      Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: CFPA2 Robots Goals
+      Namespaces: {}
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /mtare/robot_markers
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 1
+        Min Value: 0
+        Value: true
+      Axis: Z
+      Channel Name: z
+      Class: rviz_default_plugins/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: AxisColor
+      Decay Time: 10
+      Enabled: true
+      Max Color: 255; 255; 255
+      Min Color: 0; 0; 0
+      Name: Team Keyframe Clouds
+      Position Transformer: XYZ
+      Selectable: true
+      Size (Pixels): 2
+      Size (m): 0.03
+      Style: Points
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /team_slam/keyframe_clouds
+      Use Fixed Frame: false
+      Use rainbow: true
+      Value: true
+  Enabled: true
+  Global Options:
+    Background Color: 30; 30; 30
+    Fixed Frame: robot_a/map
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz_default_plugins/Interact
+      Hide Inactive Objects: true
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+    - Class: rviz_default_plugins/FocusCamera
+    - Class: rviz_default_plugins/Measure
+      Line color: 128; 128; 0
+    - Class: rviz_default_plugins/SetGoal
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /goal_pose
+    - Class: rviz_default_plugins/PublishPoint
+      Single click: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /clicked_point
+  Transformation:
+    Current:
+      Class: rviz_default_plugins/TF
+  Value: true
+  Views:
+    Current:
+      Class: rviz_default_plugins/TopDownOrtho
+      Name: Current View
+      Near Clip Distance: 0.01
+      Scale: 45
+      Target Frame: robot_a/map
+      Value: TopDownOrtho (rviz_default_plugins)
+      X: 0
+      Y: 0
+    Saved: ~
+Window Geometry:
+  Displays:
+    collapsed: false
+  Height: 900
+  Hide Left Dock: false
+  Hide Right Dock: true
+  Width: 1200
+  X: 80
+  Y: 80

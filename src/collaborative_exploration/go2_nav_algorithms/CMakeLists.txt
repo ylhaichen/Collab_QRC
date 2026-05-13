@@ -45,6 +45,7 @@ install(PROGRAMS
   scripts/multi_robot_goal_assigner.py
   scripts/geometric_frontier.py
   scripts/gbplanner2_local.py
+  scripts/prealignment_exploration_guard.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

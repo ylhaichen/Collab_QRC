@@ -1,0 +1,24 @@
+# Prealignment Exploration Eval
+
+- schema: `prealignment_exploration_eval/v1`
+- prealignment_anti_dwell_active: `True`
+- robot_a_distance_from_start: `5.6095`
+- robot_b_distance_from_start: `6.0275`
+- robot_a_max_distance_from_start: `5.6844`
+- robot_b_max_distance_from_start: `6.0275`
+- robot_a_path_length: `17.6971`
+- robot_b_path_length: `14.3183`
+- robot_a_keyframes: `32`
+- robot_b_keyframes: `35`
+- local_frontiers_selected: `24`
+- goals_rejected_as_too_close: `5`
+- stuck_replans: `3`
+- blacklisted_goals: `12`
+- cross_robot_candidates: `256`
+- verified_matches: `46`
+- robust_inliers: `6`
+- alignment_status: `rejected`
+- merged_map_enabled_time_sec: `None`
+- prealignment_gate_enabled: `True`
+- prealignment_gate_satisfied: `True`
+- gt_used_runtime: `False`

@@ -30,6 +30,7 @@ class AlignmentGateInputs:
     relative_transform_finite: bool
     no_overlap_rejection_passed: bool
     gt_used_runtime: bool
+    prealignment_gate_satisfied: bool = True
 
 
 @dataclass(frozen=True)
@@ -53,6 +54,8 @@ def evaluate_alignment_gate(inputs: AlignmentGateInputs) -> AlignmentGateDecisio
         return AlignmentGateDecision("rejected", False, "relative_transform_not_finite")
     if not inputs.no_overlap_rejection_passed:
         return AlignmentGateDecision("tentative", False, "no_overlap_rejection_not_passed")
+    if not inputs.prealignment_gate_satisfied:
+        return AlignmentGateDecision("tentative", False, "waiting_for_prealignment_min_displacement")
     return AlignmentGateDecision(
         "aligned",
         True,
@@ -79,6 +82,10 @@ class RelativeTransformManager(Node):
         self.declare_parameter("publish_tf", False)
         self.declare_parameter("require_no_overlap_rejection_pass", True)
         self.declare_parameter("no_overlap_rejection_passed", False)
+        self.declare_parameter("prealignment_gate_enabled", False)
+        self.declare_parameter("prealignment_min_start_displacement", 3.0)
+        self.declare_parameter("robot_a_prealignment_status_topic", "/robot_a/prealignment_exploration_status")
+        self.declare_parameter("robot_b_prealignment_status_topic", "/robot_b/prealignment_exploration_status")
 
         self.robust_topic = str(self.get_parameter("robust_inliers_topic").value)
         self.metrics_topic = str(self.get_parameter("pose_graph_metrics_topic").value)
@@ -99,9 +106,16 @@ class RelativeTransformManager(Node):
         self.configured_no_overlap_passed = bool(
             self.get_parameter("no_overlap_rejection_passed").value
         )
+        self.prealignment_gate_enabled = bool(
+            self.get_parameter("prealignment_gate_enabled").value
+        )
+        self.prealignment_min_start_displacement = float(
+            self.get_parameter("prealignment_min_start_displacement").value
+        )
 
         self.robust_payload: dict[str, Any] | None = None
         self.metrics_payload: dict[str, Any] | None = None
+        self.prealignment_status: dict[str, dict[str, Any]] = {}
         self.first_robust_stamp_sec: float | None = None
         self.status = "unaligned"
         self.last_reason = "waiting_for_robust_loop_inliers"
@@ -109,6 +123,19 @@ class RelativeTransformManager(Node):
 
         self.create_subscription(String, self.robust_topic, self._on_robust, 10)
         self.create_subscription(String, self.metrics_topic, self._on_metrics, 10)
+        if self.prealignment_gate_enabled:
+            self.create_subscription(
+                String,
+                str(self.get_parameter("robot_a_prealignment_status_topic").value),
+                lambda msg: self._on_prealignment_status("robot_a", msg),
+                10,
+            )
+            self.create_subscription(
+                String,
+                str(self.get_parameter("robot_b_prealignment_status_topic").value),
+                lambda msg: self._on_prealignment_status("robot_b", msg),
+                10,
+            )
         self.status_pub = self.create_publisher(String, self.status_topic, 10)
         self.local_status_pub = self.create_publisher(String, self.local_status_topic, 10)
         self.tf_pub = self.create_publisher(TransformStamped, self.relative_topic, 10)
@@ -119,6 +146,11 @@ class RelativeTransformManager(Node):
             "relative_transform_manager_node up as robust PGO gate: "
             f"{self.parent_frame} -> {self.child_frame}"
         )
+
+    def _on_prealignment_status(self, robot: str, msg: String) -> None:
+        payload = loads_dict(msg.data)
+        if payload and payload.get("schema") == "prealignment_exploration_status/v1":
+            self.prealignment_status[robot] = payload
 
     def _on_robust(self, msg: String) -> None:
         payload = loads_dict(msg.data)
@@ -142,6 +174,25 @@ class RelativeTransformManager(Node):
             return se2_from_xyyaw(float(tf["x"]), float(tf["y"]), float(tf.get("yaw", 0.0)))
         except Exception:
             return None
+
+    def _prealignment_gate_satisfied(self) -> bool:
+        if not self.prealignment_gate_enabled:
+            return True
+        for robot in ("robot_a", "robot_b"):
+            payload = self.prealignment_status.get(robot)
+            if not payload:
+                return False
+            threshold = max(
+                self.prealignment_min_start_displacement,
+                float(payload.get("prealign_min_start_displacement", 0.0) or 0.0),
+            )
+            max_distance = max(
+                float(payload.get("distance_from_start", 0.0) or 0.0),
+                float(payload.get("max_distance_from_start", 0.0) or 0.0),
+            )
+            if max_distance < threshold:
+                return False
+        return True
 
     def _update_status(self) -> None:
         robust = self.robust_payload or {}
@@ -220,6 +271,7 @@ class RelativeTransformManager(Node):
                     and bool(np.all(np.isfinite(self.current_transform))),
                     no_overlap_rejection_passed=no_overlap_passed,
                     gt_used_runtime=gt_used,
+                    prealignment_gate_satisfied=self._prealignment_gate_satisfied(),
                 )
             )
             self.status = decision.status
@@ -270,6 +322,8 @@ class RelativeTransformManager(Node):
             "pose_graph_optimization_success": bool(metrics.get("optimization_success", False)),
             "no_overlap_rejection_passed": self.configured_no_overlap_passed
             or bool(metrics.get("no_overlap_rejection_passed", False)),
+            "prealignment_gate_enabled": self.prealignment_gate_enabled,
+            "prealignment_gate_satisfied": self._prealignment_gate_satisfied(),
             "merged_map_open": self.status == "aligned",
             "gt_used_runtime": bool(robust.get("gt_used_runtime", False))
             or bool(metrics.get("gt_used_runtime", False)),

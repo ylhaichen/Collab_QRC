@@ -2047,6 +2047,30 @@ def _launch_setup(context):
     reconstruction_quality_enabled = _as_bool(_get(context, "reconstruction_quality_enabled"))
     scene_graph_enabled = _as_bool(_get(context, "scene_graph_enabled"))
     loop_risk_output_dir = _get(context, "loop_risk_output_dir").strip()
+    prealignment_exploration_enabled = _as_bool(_get(context, "prealignment_exploration_enabled"))
+    prealign_min_goal_distance = float(_get(context, "prealign_min_goal_distance").strip() or "2.0")
+    prealign_min_start_displacement = float(
+        _get(context, "prealign_min_start_displacement").strip() or "3.0"
+    )
+    prealign_dwell_timeout_sec = float(_get(context, "prealign_dwell_timeout_sec").strip() or "20.0")
+    prealign_stuck_replan_limit = int(_get(context, "prealign_stuck_replan_limit").strip() or "3")
+    prealign_goal_blacklist_radius = float(
+        _get(context, "prealign_goal_blacklist_radius").strip() or "1.0"
+    )
+    prealign_overlap_timeout_sec = float(_get(context, "prealign_overlap_timeout_sec").strip() or "60.0")
+    prealign_min_keyframes_before_alignment = int(
+        _get(context, "prealign_min_keyframes_before_alignment").strip() or "5"
+    )
+    prealign_exploration_radius_growth = float(
+        _get(context, "prealign_exploration_radius_growth").strip() or "1.5"
+    )
+    prealign_far_frontier_bonus = float(_get(context, "prealign_far_frontier_bonus").strip() or "1.0")
+    prealign_corridor_frontier_bonus = float(
+        _get(context, "prealign_corridor_frontier_bonus").strip() or "0.5"
+    )
+    prealign_keyframe_gain_bonus = float(_get(context, "prealign_keyframe_gain_bonus").strip() or "0.5")
+    prealign_goal_hold_sec = float(_get(context, "prealign_goal_hold_sec").strip() or "5.0")
+    occupancy_grid_visualization_enabled = _as_bool(_get(context, "occupancy_grid_visualization_enabled"))
     # Back-compat aliases from the removed planners.
     # `hybrid` → our v0.1 Hybrid A* + Ceres-smoothed planner.
     # `nav2`   → B-route: nav2_smac_planner library integration.
@@ -2178,6 +2202,17 @@ def _launch_setup(context):
         actions.append(LogInfo(msg=(
             "[dynamic_scene_filter] enabled: raw Fast-LIO cloud remains unchanged; "
             "team loop-closure keyframes use /robot_*/cloud_static."
+        )))
+    if prealignment_exploration_enabled:
+        actions.append(LogInfo(msg=(
+            "[prealignment_exploration] enabled: CFPA2 goals are routed through "
+            "local anti-dwell guards before robust team alignment; peer-frame "
+            "goals remain blocked until /team_slam/alignment_status:=aligned."
+        )))
+    if occupancy_grid_visualization_enabled:
+        actions.append(LogInfo(msg=(
+            "[occupancy_grid_visualization] enabled: publishing /robot_a/local_occupancy_grid, "
+            "/robot_b/local_occupancy_grid, and gated /team_slam/merged_occupancy_grid."
         )))
 
     # ── T=0: cleanup stale ──
@@ -2560,6 +2595,11 @@ def _launch_setup(context):
                             "alignment_reject_timeout_sec": alignment_reject_timeout_sec,
                             "alignment_reject_min_verified_matches": alignment_reject_min_verified_matches,
                             "no_overlap_rejection_passed": no_overlap_rejection_passed,
+                            "prealignment_gate_enabled": prealignment_exploration_enabled
+                            and relative_pose_source == "discovered",
+                            "prealignment_min_start_displacement": prealign_min_start_displacement,
+                            "robot_a_prealignment_status_topic": "/robot_a/prealignment_exploration_status",
+                            "robot_b_prealignment_status_topic": "/robot_b/prealignment_exploration_status",
                             "publish_tf": False,
                         }],
                         output="screen",
@@ -2713,6 +2753,60 @@ def _launch_setup(context):
     if awareness_nodes:
         actions.append(TimerAction(period=nav_delay + 1.0, actions=awareness_nodes))
 
+    # ── Pre-alignment local exploration guards ──
+    # In discovered-pose mode the robots' local map frames intentionally
+    # start at independent origins. CFPA2 may still produce local goals before
+    # alignment, but those goals must not keep a robot inside its start bubble
+    # forever and must not route peer-frame coordinates. The guard consumes
+    # CFPA2's raw waypoint topic and republishes only local, anti-dwell goals
+    # to the planner-facing /<ns>/way_point_coord topic. After robust
+    # alignment it becomes a pass-through so shared frontier allocation can
+    # start normally.
+    cfpa2_goal_topic_suffix = (
+        "/way_point_coord_raw" if prealignment_exploration_enabled else "/way_point_coord"
+    )
+    if explore and prealignment_exploration_enabled:
+        guard_nodes = []
+        for ns in ("robot_a", "robot_b"):
+            guard_nodes.append(
+                Node(
+                    package="go2_nav_algorithms",
+                    executable="prealignment_exploration_guard.py",
+                    namespace=ns,
+                    name="prealignment_exploration_guard",
+                    parameters=[{
+                        "use_sim_time": use_sim_time,
+                        "namespace": ns,
+                        "input_goal_topic": "way_point_coord_raw",
+                        "output_goal_topic": "way_point_coord",
+                        "odom_topic": "odom/nav",
+                        "map_topic": "map",
+                        "frontier_replan_topic": "frontier_replan",
+                        "nav_status_topic": "nav_status",
+                        "alignment_status_topic": "/team_slam/alignment_status",
+                        "keyframe_topic": "/team_slam/keyframes",
+                        "candidate_topic": "/team_slam/cross_robot_candidates",
+                        "robust_inliers_topic": "/team_slam/robust_loop_inliers",
+                        "status_topic": "prealignment_exploration_status",
+                        "output_frame_id": "map",
+                        "prealign_min_goal_distance": prealign_min_goal_distance,
+                        "prealign_min_start_displacement": prealign_min_start_displacement,
+                        "prealign_dwell_timeout_sec": prealign_dwell_timeout_sec,
+                        "prealign_stuck_replan_limit": prealign_stuck_replan_limit,
+                        "prealign_goal_blacklist_radius": prealign_goal_blacklist_radius,
+                        "prealign_overlap_timeout_sec": prealign_overlap_timeout_sec,
+                        "prealign_min_keyframes_before_alignment": prealign_min_keyframes_before_alignment,
+                        "prealign_exploration_radius_growth": prealign_exploration_radius_growth,
+                        "prealign_far_frontier_bonus": prealign_far_frontier_bonus,
+                        "prealign_corridor_frontier_bonus": prealign_corridor_frontier_bonus,
+                        "prealign_keyframe_gain_bonus": prealign_keyframe_gain_bonus,
+                        "prealign_goal_hold_sec": prealign_goal_hold_sec,
+                    }],
+                    output="screen",
+                )
+            )
+        actions.append(TimerAction(period=nav_delay + 1.5, actions=guard_nodes))
+
     # ── CFPA2 dual-robot coordinator (shared) ──
     if explore:
         cfpa2_config_path = os.path.join(cfpa2_pkg, "config", "cfpa2_coordinator.yaml")
@@ -2745,7 +2839,7 @@ def _launch_setup(context):
                                 "role_loop_enabled": loop_candidates_enabled,
                                 "role_mobility_risk_enabled": morphology_risk_enabled,
                                 "scene_area_m2": scene_area_m2,
-                                "goal_topic_suffix": "/way_point_coord",
+                                "goal_topic_suffix": cfpa2_goal_topic_suffix,
                                 "marker_frame_override": "map",
                                 # ── Shared-map frontier extraction ──
                                 # Without this, CFPA2 extracts frontiers
@@ -2859,6 +2953,27 @@ def _launch_setup(context):
                     ],
                 )
             )
+        if prealignment_exploration_enabled or occupancy_grid_visualization_enabled:
+            prealign_reporter_script = str(
+                workspace_root / "scripts" / "bench" / "prealignment_demo_reporter.py"
+            )
+            actions.append(
+                TimerAction(
+                    period=nav_delay + 2.0,
+                    actions=[
+                        ExecuteProcess(
+                            cmd=[
+                                "python3", "-u", prealign_reporter_script,
+                                "--duration", str(session_duration_sec),
+                                "--output-dir", session_output_dir,
+                                "--mirror-output-dir", os.path.join(str(workspace_root), "logs"),
+                            ],
+                            name="prealignment_demo_reporter",
+                            output="screen",
+                        ),
+                    ],
+                )
+            )
         # Shut down the whole launch when the last reporter exits.
         actions.append(
             RegisterEventHandler(
@@ -2871,6 +2986,60 @@ def _launch_setup(context):
                 )
             )
         )
+
+    # ── Occupancy-grid visualization for Point-LIO + DiSCo-style demo ──
+    # These grids are visualization products, not a shortcut around the
+    # discovered-pose safety gate. Local grids are always per-robot and use
+    # static cloud input when available. The merged grid node subscribes to
+    # /team_slam/alignment_status + /team_slam/relative_transform and publishes
+    # nothing until status:=aligned with gt_used_runtime:=false.
+    if occupancy_grid_visualization_enabled:
+        occupancy_nodes = []
+        for ns in ("robot_a", "robot_b"):
+            occupancy_nodes.append(
+                Node(
+                    package="team_loop_closure",
+                    executable="local_occupancy_grid_node",
+                    name=f"{ns}_local_occupancy_grid_node",
+                    parameters=[{
+                        "use_sim_time": use_sim_time,
+                        "robot_namespace": ns,
+                        "cloud_static_topic": "cloud_static",
+                        "fallback_cloud_topic": "cloud_registered_body",
+                        "odom_topic": "Odometry",
+                        "corrected_odom_topic": "corrected_odom",
+                        "output_topic": "local_occupancy_grid",
+                        "frame_id": f"{ns}/map",
+                        "occupancy_resolution": 0.1,
+                        "occupancy_size_x": 40.0,
+                        "occupancy_size_y": 40.0,
+                        "occupancy_height_min": -0.2,
+                        "occupancy_height_max": 1.5,
+                        "occupancy_decay_sec": 0.0,
+                        "use_cloud_static": True,
+                    }],
+                    output="screen",
+                )
+            )
+        occupancy_nodes.append(
+            Node(
+                package="team_loop_closure",
+                executable="merged_occupancy_grid_node",
+                name="merged_occupancy_grid_node",
+                parameters=[{
+                    "use_sim_time": use_sim_time,
+                    "robot_a_grid_topic": "/robot_a/local_occupancy_grid",
+                    "robot_b_grid_topic": "/robot_b/local_occupancy_grid",
+                    "alignment_status_topic": "/team_slam/alignment_status",
+                    "relative_transform_topic": "/team_slam/relative_transform",
+                    "output_topic": "/team_slam/merged_occupancy_grid",
+                    "status_topic": "/team_slam/merged_occupancy_grid_status",
+                    "output_frame_id": "robot_a/map",
+                }],
+                output="screen",
+            )
+        )
+        actions.append(TimerAction(period=slam_delay + 5.0, actions=occupancy_nodes))
 
     # ── multirobot_map_merge ──
     # robot_a and robot_b each publish `/robot_*/map` (OccupancyGrid,
@@ -2967,6 +3136,13 @@ def _launch_setup(context):
                 )
             )
 
+    rviz_config_path = os.path.join(
+        go2_gazebo_pkg,
+        "rviz",
+        "pointlio_disco_occupancy_maps.rviz"
+        if occupancy_grid_visualization_enabled else "nav_test_mixed.rviz",
+    )
+
     # ── RViz ──
     # Namespaced /tf is invisible to RViz's default global /tf listener. We
     # fan `/robot_a/tf` + `/robot_b/tf` (and _static) into `/tf` so RViz can
@@ -3021,7 +3197,7 @@ def _launch_setup(context):
                             # /robot_a/* (primary map) and /robot_b/map as a
                             # secondary overlay — the stock nav_test.rviz
                             # uses /robot/* which is single-robot only.
-                            os.path.join(go2_gazebo_pkg, "rviz", "nav_test_mixed.rviz"),
+                            rviz_config_path,
                         ],
                         name="rviz2_nav_test_mixed",
                         # output="log" routes rviz2 stdout/stderr to the per-
@@ -3191,6 +3367,30 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "no_overlap_rejection_passed", default_value="false",
             description="Validation gate: true only after a no-overlap run proves false-positive rejection.",
+        ),
+        DeclareLaunchArgument(
+            "prealignment_exploration_enabled", default_value="false",
+            description="Enable local-only anti-dwell exploration guard before discovered team alignment.",
+        ),
+        DeclareLaunchArgument("prealign_min_goal_distance", default_value="2.0"),
+        DeclareLaunchArgument("prealign_min_start_displacement", default_value="3.0"),
+        DeclareLaunchArgument("prealign_dwell_timeout_sec", default_value="20.0"),
+        DeclareLaunchArgument("prealign_stuck_replan_limit", default_value="3"),
+        DeclareLaunchArgument("prealign_goal_blacklist_radius", default_value="1.0"),
+        DeclareLaunchArgument("prealign_overlap_timeout_sec", default_value="60.0"),
+        DeclareLaunchArgument("prealign_min_keyframes_before_alignment", default_value="5"),
+        DeclareLaunchArgument("prealign_exploration_radius_growth", default_value="1.5"),
+        DeclareLaunchArgument("prealign_far_frontier_bonus", default_value="1.0"),
+        DeclareLaunchArgument("prealign_corridor_frontier_bonus", default_value="0.5"),
+        DeclareLaunchArgument("prealign_keyframe_gain_bonus", default_value="0.5"),
+        DeclareLaunchArgument(
+            "prealign_goal_hold_sec",
+            default_value="5.0",
+            description="Minimum hold time for a pre-alignment local goal before accepting a replacement.",
+        ),
+        DeclareLaunchArgument(
+            "occupancy_grid_visualization_enabled", default_value="false",
+            description="Publish per-robot local occupancy grids and gated merged occupancy grid for RViz.",
         ),
         DeclareLaunchArgument(
             "local_slam_backend", default_value="fast_lio_scpgo",
