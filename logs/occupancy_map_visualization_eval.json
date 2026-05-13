@@ -6,7 +6,7 @@
   "merged_grid_active": false,
   "merged_grid_messages": 0,
   "merged_grid_only_after_aligned": true,
-  "robot_a_local_grid_messages": 1477,
-  "robot_b_local_grid_messages": 1363,
+  "robot_a_local_grid_messages": 721,
+  "robot_b_local_grid_messages": 651,
   "schema": "occupancy_map_visualization_eval/v1"
 }

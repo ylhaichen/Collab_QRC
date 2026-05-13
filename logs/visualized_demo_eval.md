@@ -1,23 +1,23 @@
 # Visualized Demo Eval
 
 - schema: `visualized_discovered_pose_demo_eval/v1`
-- duration_sec: `120.025`
+- duration_sec: `60.098`
 - prealignment_anti_dwell_active: `True`
-- robot_a_distance_from_start: `5.6095`
-- robot_b_distance_from_start: `6.0275`
-- robot_a_max_distance_from_start: `5.6844`
-- robot_b_max_distance_from_start: `6.0275`
-- robot_a_path_length: `17.6971`
-- robot_b_path_length: `14.3183`
-- robot_a_keyframes: `32`
-- robot_b_keyframes: `35`
-- local_frontiers_selected: `24`
-- goals_rejected_as_too_close: `5`
-- stuck_replans: `3`
-- blacklisted_goals: `12`
-- cross_robot_candidates: `256`
-- verified_matches: `46`
-- robust_inliers: `6`
+- robot_a_distance_from_start: `3.2321`
+- robot_b_distance_from_start: `5.0312`
+- robot_a_max_distance_from_start: `3.2321`
+- robot_b_max_distance_from_start: `5.0312`
+- robot_a_path_length: `9.5899`
+- robot_b_path_length: `8.0113`
+- robot_a_keyframes: `22`
+- robot_b_keyframes: `28`
+- local_frontiers_selected: `6`
+- goals_rejected_as_too_close: `2`
+- stuck_replans: `0`
+- blacklisted_goals: `2`
+- cross_robot_candidates: `198`
+- verified_matches: `42`
+- robust_inliers: `3`
 - alignment_status: `rejected`
 - physical_overlap_occurred: `True`
 - robust_alignment_occurred: `False`
@@ -28,8 +28,8 @@
 - gt_used_runtime: `False`
 - both_robots_exceeded_min_start_displacement: `True`
 - occupancy:
-  - robot_a_local_grid_messages: `1477`
-  - robot_b_local_grid_messages: `1363`
+  - robot_a_local_grid_messages: `721`
+  - robot_b_local_grid_messages: `651`
   - merged_grid_messages: `0`
   - local_grids_nonzero_rate: `True`
   - merged_grid_active: `False`

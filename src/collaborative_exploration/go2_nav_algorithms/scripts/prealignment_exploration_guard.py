@@ -227,7 +227,8 @@ class PrealignmentExplorationGuard(Node):
         if now - self.last_publish_sec < 2.0:
             return
         if (
-            self.policy.phase.value in {"unaligned_local_explore", "overlap_seeking", "rejected_recover"}
+            self.policy.phase.value
+            in {"unaligned_local_explore", "overlap_seeking", "tentative_alignment", "rejected_recover"}
             and self.policy.metrics.distance_from_start < self.policy.config.min_start_displacement
         ):
             self._publish_decision(self.latest_goal, force=False)

@@ -95,6 +95,40 @@ def test_state_machine_enters_tentative_aligned_and_rejected_recover() -> None:
     assert policy.phase == AlignmentPhase.REJECTED_RECOVER
 
 
+def test_tentative_alignment_keeps_local_anti_dwell_goal_selection() -> None:
+    policy = PrealignmentPolicy(
+        robot_id="robot_b",
+        config=PrealignmentConfig(
+            min_goal_distance=2.0,
+            min_start_displacement=3.0,
+            goal_blacklist_radius=1.0,
+        ),
+    )
+    policy.update_pose(0.0, 0.0, stamp_sec=0.0)
+    policy.update_pose(0.2, 0.0, stamp_sec=5.0)
+    policy.update_alignment_status(
+        status="tentative",
+        cross_robot_candidates=4,
+        verified_matches=2,
+        robust_inliers=1,
+        stamp_sec=5.0,
+    )
+
+    decision = policy.choose_goal(
+        incoming=GoalSample(0.5, 0.0, frame_id="robot_b/map"),
+        local_frontiers=[
+            GoalSample(1.0, 0.0, frame_id="robot_b/map"),
+            GoalSample(5.0, 0.0, frame_id="robot_b/map"),
+        ],
+        stamp_sec=5.0,
+    )
+
+    assert decision.phase == AlignmentPhase.TENTATIVE_ALIGNMENT
+    assert decision.reason == "selected_far_local_frontier"
+    assert decision.goal is not None
+    assert math.isclose(decision.goal.x, 5.0)
+
+
 def test_policy_tracks_path_length_keyframes_and_blacklists_failed_goal() -> None:
     policy = PrealignmentPolicy(robot_id="robot_a")
     policy.update_pose(0.0, 0.0, stamp_sec=0.0)

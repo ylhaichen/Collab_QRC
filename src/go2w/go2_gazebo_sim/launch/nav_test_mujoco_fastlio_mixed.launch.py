@@ -990,6 +990,8 @@ def _build_fastlio_nav_stack(
     map_augmenter_script = str(
         _workspace_root() / "scripts" / "runtime" / "map_augmenter.py"
     )
+    clear_fp_length_m = 0.70 if has_wheels else 0.65
+    clear_fp_width_m = 0.40 if has_wheels else 0.30
     actions.append(
         TimerAction(
             period=slam_delay + 2.0,  # after octomap is up
@@ -1002,7 +1004,12 @@ def _build_fastlio_nav_stack(
                          "-p", "local_map_topic:=map_raw",
                          "-p", "merged_map_topic:=/merged_map",
                          "-p", "augmented_map_topic:=map",
-                         "-p", "heartbeat_rate_hz:=1.0"],
+                         "-p", "heartbeat_rate_hz:=1.0",
+                         "-p", "robot_pose_topic:=odom/nav",
+                         "-p", "clear_robot_footprint_enabled:=true",
+                         "-p", f"clear_robot_footprint_length_m:={clear_fp_length_m:.2f}",
+                         "-p", f"clear_robot_footprint_width_m:={clear_fp_width_m:.2f}",
+                         "-p", "clear_robot_footprint_padding_m:=0.04"],
                     name=f"map_augmenter_{ns}",
                     output="screen",
                 ),

@@ -48,15 +48,86 @@ silent miscompose.
 """
 from __future__ import annotations
 import array
+import math
 import sys
 
 import numpy as np
 import rclpy
+from nav_msgs.msg import Odometry
 from nav_msgs.msg import OccupancyGrid
 from rclpy.node import Node
 from rclpy.qos import (
     DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPolicy,
 )
+
+
+def _yaw_from_quaternion(q) -> float:
+    siny_cosp = 2.0 * (float(q.w) * float(q.z) + float(q.x) * float(q.y))
+    cosy_cosp = 1.0 - 2.0 * (float(q.y) * float(q.y) + float(q.z) * float(q.z))
+    return math.atan2(siny_cosp, cosy_cosp)
+
+
+def clear_robot_footprint_cells(
+    grid: np.ndarray,
+    *,
+    width: int,
+    height: int,
+    resolution: float,
+    origin_x: float,
+    origin_y: float,
+    robot_x: float,
+    robot_y: float,
+    robot_yaw: float,
+    footprint_length_m: float,
+    footprint_width_m: float,
+    padding_m: float,
+) -> int:
+    """Clear the cells physically occupied by this robot in its own map.
+
+    Octomap can occasionally project self returns into /<ns>/map. Nav2 then
+    rejects every exploration goal with "Starting point in lethal space".
+    Clearing only the current robot footprint is valid: the robot's body
+    proves those cells are traversable for its own planner, and the live local
+    costmap still observes nearby walls from LaserScan.
+    """
+    if (
+        grid.size != int(width) * int(height)
+        or width <= 0
+        or height <= 0
+        or resolution <= 0.0
+        or footprint_length_m <= 0.0
+        or footprint_width_m <= 0.0
+    ):
+        return 0
+    if not all(math.isfinite(v) for v in (robot_x, robot_y, robot_yaw)):
+        return 0
+
+    half_l = 0.5 * float(footprint_length_m) + max(0.0, float(padding_m))
+    half_w = 0.5 * float(footprint_width_m) + max(0.0, float(padding_m))
+    gx_min = max(0, int(math.floor((robot_x - half_l - origin_x) / resolution)) - 1)
+    gx_max = min(width - 1, int(math.ceil((robot_x + half_l - origin_x) / resolution)) + 1)
+    gy_min = max(0, int(math.floor((robot_y - half_l - origin_y) / resolution)) - 1)
+    gy_max = min(height - 1, int(math.ceil((robot_y + half_l - origin_y) / resolution)) + 1)
+    if gx_min > gx_max or gy_min > gy_max:
+        return 0
+
+    c = math.cos(robot_yaw)
+    s = math.sin(robot_yaw)
+    cleared = 0
+    for gy in range(gy_min, gy_max + 1):
+        wy = origin_y + (gy + 0.5) * resolution
+        for gx in range(gx_min, gx_max + 1):
+            wx = origin_x + (gx + 0.5) * resolution
+            dx = wx - robot_x
+            dy = wy - robot_y
+            local_x = c * dx + s * dy
+            local_y = -s * dx + c * dy
+            if abs(local_x) <= half_l and abs(local_y) <= half_w:
+                idx = gy * width + gx
+                if int(grid[idx]) != 0:
+                    grid[idx] = 0
+                    cleared += 1
+    return cleared
 
 
 class MapAugmenter(Node):
@@ -81,11 +152,29 @@ class MapAugmenter(Node):
         # 50 m is safe headroom.
         self.declare_parameter("max_extent_m", 50.0)
         self._max_extent_m = max(1.0, float(self.get_parameter("max_extent_m").value))
+        self.declare_parameter("robot_pose_topic", "odom/nav")
+        self.declare_parameter("clear_robot_footprint_enabled", False)
+        self.declare_parameter("clear_robot_footprint_length_m", 0.70)
+        self.declare_parameter("clear_robot_footprint_width_m", 0.40)
+        self.declare_parameter("clear_robot_footprint_padding_m", 0.04)
 
         local_topic = self.get_parameter("local_map_topic").value
         merged_topic = self.get_parameter("merged_map_topic").value
         out_topic = self.get_parameter("augmented_map_topic").value
         hb_rate = max(0.1, float(self.get_parameter("heartbeat_rate_hz").value))
+        pose_topic = str(self.get_parameter("robot_pose_topic").value)
+        self._clear_robot_footprint_enabled = bool(
+            self.get_parameter("clear_robot_footprint_enabled").value
+        )
+        self._clear_robot_footprint_length_m = max(
+            0.0, float(self.get_parameter("clear_robot_footprint_length_m").value)
+        )
+        self._clear_robot_footprint_width_m = max(
+            0.0, float(self.get_parameter("clear_robot_footprint_width_m").value)
+        )
+        self._clear_robot_footprint_padding_m = max(
+            0.0, float(self.get_parameter("clear_robot_footprint_padding_m").value)
+        )
 
         # Octomap and multirobot_map_merge both publish RELIABLE +
         # TRANSIENT_LOCAL — match or DDS silently drops messages.
@@ -97,6 +186,7 @@ class MapAugmenter(Node):
 
         self._local_msg: OccupancyGrid | None = None
         self._merged_msg: OccupancyGrid | None = None
+        self._latest_odom: Odometry | None = None
         self._merge_count = 0
         self._republish_count = 0
 
@@ -104,11 +194,13 @@ class MapAugmenter(Node):
                                  self._on_local, map_qos)
         self.create_subscription(OccupancyGrid, merged_topic,
                                  self._on_merged, map_qos)
+        self.create_subscription(Odometry, pose_topic, self._on_odom, 10)
         self._pub = self.create_publisher(OccupancyGrid, out_topic, map_qos)
         self.create_timer(1.0 / hb_rate, self._heartbeat)
         self.get_logger().info(
             f"map_augmenter started: local={local_topic} merged={merged_topic} "
-            f"→ {out_topic} (heartbeat={hb_rate:.1f} Hz)"
+            f"→ {out_topic} (heartbeat={hb_rate:.1f} Hz, "
+            f"self_clear={self._clear_robot_footprint_enabled})"
         )
 
     def _on_local(self, msg: OccupancyGrid) -> None:
@@ -120,6 +212,9 @@ class MapAugmenter(Node):
         # Don't republish on every merged update — wait for the next
         # local update or the heartbeat to drive cadence. Otherwise
         # downstream consumers see staircased timestamps.
+
+    def _on_odom(self, msg: Odometry) -> None:
+        self._latest_odom = msg
 
     def _heartbeat(self) -> None:
         # Re-emit the last good augmented map even if no new local
@@ -138,7 +233,7 @@ class MapAugmenter(Node):
             out = OccupancyGrid()
             out.header = local.header
             out.info = local.info
-            out.data = local.data
+            out.data = self._cleared_data(local, local.data)
             self._pub.publish(out)
             self._republish_count += 1
             return
@@ -252,6 +347,8 @@ class MapAugmenter(Node):
             out_arr[local_known] = local_value[local_known]
             self._merge_count += 1
 
+        cleared_cells = self._clear_robot_footprint(out_arr, out_w, out_h, out_res, out_ox, out_oy)
+
         out = OccupancyGrid()
         out.header = local.header  # Keep local frame_id + stamp
         out.info.resolution = out_res
@@ -273,12 +370,51 @@ class MapAugmenter(Node):
             n_unknown = int((out_arr < 0).sum())
             self.get_logger().info(
                 "augment: union geom %dx%d origin=(%.2f,%.2f) "
-                "(%d cells, %d local-override, %d unknown) | "
+                "(%d cells, %d local-override, %d unknown, %d self-cleared) | "
                 "local %dx%d, merged %dx%d"
                 % (out_w, out_h, out_ox, out_oy,
-                   n_total, n_local_overrides, n_unknown,
+                   n_total, n_local_overrides, n_unknown, cleared_cells,
                    lw, lh, mw, mh)
             )
+
+    def _cleared_data(self, msg: OccupancyGrid, data) -> array.array:
+        arr = np.frombuffer(bytes(data), dtype=np.int8).copy()
+        self._clear_robot_footprint(
+            arr,
+            int(msg.info.width),
+            int(msg.info.height),
+            float(msg.info.resolution),
+            float(msg.info.origin.position.x),
+            float(msg.info.origin.position.y),
+        )
+        return array.array("b", arr.tobytes())
+
+    def _clear_robot_footprint(
+        self,
+        arr: np.ndarray,
+        width: int,
+        height: int,
+        resolution: float,
+        origin_x: float,
+        origin_y: float,
+    ) -> int:
+        if not self._clear_robot_footprint_enabled or self._latest_odom is None:
+            return 0
+        pose = self._latest_odom.pose.pose
+        return clear_robot_footprint_cells(
+            arr,
+            width=width,
+            height=height,
+            resolution=resolution,
+            origin_x=origin_x,
+            origin_y=origin_y,
+            robot_x=float(pose.position.x),
+            robot_y=float(pose.position.y),
+            robot_yaw=_yaw_from_quaternion(pose.orientation),
+            footprint_length_m=self._clear_robot_footprint_length_m,
+            footprint_width_m=self._clear_robot_footprint_width_m,
+            padding_m=self._clear_robot_footprint_padding_m,
+        )
 
 
 def main(argv=None) -> int:
